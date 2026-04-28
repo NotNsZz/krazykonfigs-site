@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>KrazyKonfigs | Internal Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg-body: #ffffff; --text-main: #000000; --text-muted: #666666; --border: #eeeeee; --card-bg: #fafafa; }
+        body.dark-mode { --bg-body: #0a0a0a; --text-main: #ffffff; --text-muted: #aaaaaa; --border: #1f1f1f; --card-bg: #111111; }
+
+        body { background: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: 0.3s; margin: 0; padding: 2rem 8%; }
+        
+        .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--text-main); padding-bottom: 1rem; margin-bottom: 3rem; }
+        
+        .user-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; }
+        
+        .admin-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 8px;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .admin-card:hover { border-color: var(--text-main); transform: translateY(-5px); }
+
+        .stat-box { font-size: 0.75rem; background: var(--bg-body); border: 1px solid var(--border); padding: 10px; border-radius: 4px; margin-top: 10px; }
+        
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 1.5rem; }
+        
+        .admin-btn {
+            font-size: 0.7rem; font-weight: 700; padding: 8px; border: 1px solid var(--text-main); cursor: pointer; text-transform: uppercase;
+            background: transparent; color: var(--text-main); transition: 0.2s;
+        }
+
+        .btn-danger { color: #ff4d4d; border-color: #ff4d4d; }
+        .btn-danger:hover { background: #ff4d4d; color: white; }
+        .admin-btn:hover:not(.btn-danger) { background: var(--text-main); color: var(--bg-body); }
+
+        .theme-toggle { background: none; border: none; color: var(--text-main); cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h2 style="font-weight: 900; letter-spacing: -2px;">SYSTEM OVERRIDE <span style="font-weight: 300; font-size: 1rem; margin-left: 10px;">/ KrazyVault</span></h2>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></button>
+    </div>
+
+    <div class="user-grid">
+        <div class="admin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">kriz <span style="font-size:0.6rem; color: #27ae60; border: 1px solid #27ae60; padding: 2px 6px; margin-left:10px;">ACTIVE ADMIN</span></h3>
+                <span style="font-family:monospace; font-size:0.7rem; color:var(--text-muted);">ID: 988436092984393738</span>
+            </div>
+
+            <div class="stat-box">
+                <strong><i class="fas fa-history"></i> Review History:</strong>
+                <p style="margin:5px 0 0 0; color:var(--text-muted);">58 Total Reviews • Last: "Best mid-ping config ever"</p>
+            </div>
+
+            <div class="stat-box">
+                <strong><i class="fas fa-upload"></i> Config Uploads:</strong>
+                <p style="margin:5px 0 0 0; color:var(--text-muted);">12 Active Profiles • "Premium High Ping" (v2.1)</p>
+            </div>
+
+            <div class="btn-group">
+                <button class="admin-btn btn-danger">Ban</button>
+                <button class="admin-btn btn-danger">IP Ban</button>
+                <button class="admin-btn">Demote</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+        if (localStorage.getItem('theme') === 'dark') toggleTheme();
+    </script>
+</body>
+</html>
