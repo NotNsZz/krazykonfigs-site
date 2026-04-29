@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* CSS PRESERVED FROM index_16.html */
         :root {
             --bg-body: #ffffff; --bg-nav: rgba(255, 255, 255, 0.95); --bg-card: #ffffff;
             --text-main: #000000; --text-muted: #666666; --accent: #000000;
@@ -155,7 +154,10 @@
         // --- 2. CONFIG FETCH & RENDER ---
         async function fetchConfigs() {
             const { data, error } = await _supabase.from('configs').select('*').order('created_at', { ascending: false });
-            if (error) return;
+            if (error) {
+                console.error("Fetch error:", error);
+                return;
+            }
             allConfigs = data;
             renderConfigs(allConfigs);
             setupFilters();
@@ -163,8 +165,14 @@
 
         function renderConfigs(configs) {
             const container = document.getElementById('config-container');
+            
+            if (!configs || configs.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:var(--text-muted); width:100%;">No configs found for this selection.</p>`;
+                return;
+            }
+
             container.innerHTML = configs.map(conf => `
-                <div class="config-card" data-weight="${conf.ping_tier}">
+                <div class="config-card">
                     <div class="card-head"><div class="config-title">${conf.title}</div></div>
                     <div class="data-section">
                         <span class="section-label">🎯 PREDICTION</span>
@@ -180,19 +188,19 @@
                     </div>
                     <div class="data-section">
                         <span class="section-label">📊 MULTIPLIERS</span>
-                        <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${conf.vertical}</span></div>
-                        <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${conf.horizontal}</span></div>
+                        <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${conf.vertical || '0'}</span></div>
+                        <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${conf.horizontal || '0'}</span></div>
                     </div>
                     <div class="data-section">
                         <span class="section-label">📍 OFFSETS (X / Y / Z)</span>
-                        <div class="data-row"><span class="data-label">Values</span> <span class="data-val">${conf.offsets}</span></div>
+                        <div class="data-row"><span class="data-label">Values</span> <span class="data-val">${conf.offsets || '0 / 0 / 0'}</span></div>
                     </div>
                     <div class="card-footer">
                         <div style="display:flex; flex-direction:column;">
-                            <span class="system-tag">Revert | ${conf.hit_rate}% Hit Rate</span>
-                            <span class="support-info">Supports: ${conf.support_range}</span>
+                            <span class="system-tag">Revert | ${conf.hit_rate || '0'}% Hit Rate</span>
+                            <span class="support-info">Supports: ${conf.support_range || 'N/A'}</span>
                         </div>
-                        <span class="creator-tag">by ${conf.creator}</span>
+                        <span class="creator-tag">by ${conf.creator || 'Unknown'}</span>
                     </div>
                 </div>
             `).join('');
@@ -202,10 +210,22 @@
             const filterBtns = document.querySelectorAll('.filter-btn');
             filterBtns.forEach(btn => {
                 btn.onclick = () => {
+                    // UI Update
                     filterBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    const f = btn.getAttribute('data-filter');
-                    renderConfigs(f === 'all' ? allConfigs : allConfigs.filter(c => c.ping_tier.toLowerCase() === f.toLowerCase()));
+
+                    const filterValue = btn.getAttribute('data-filter').toLowerCase();
+                    
+                    if (filterValue === 'all') {
+                        renderConfigs(allConfigs);
+                    } else {
+                        // Filter logic: Checks if the ping_tier column includes the filter word
+                        const filtered = allConfigs.filter(c => {
+                            const tier = (c.ping_tier || "").toLowerCase();
+                            return tier.includes(filterValue);
+                        });
+                        renderConfigs(filtered);
+                    }
                 };
             });
         }
@@ -218,7 +238,7 @@
                 <div class="member-card">
                     <div class="member-header"><i class="${m.role_icon}" style="color: ${m.icon_color}"></i><span class="member-name">${m.name}</span></div>
                     <div class="tag-list">
-                        ${m.tags.map(t => `<span class="tag" style="color: var(--clr-${t.toLowerCase().replace(/\s+/g, '')}, var(--text-muted));">${t}</span>`).join('')}
+                        ${m.tags ? m.tags.map(t => `<span class="tag" style="color: var(--clr-${t.toLowerCase().replace(/\s+/g, '')}, var(--text-muted));">${t}</span>`).join('') : ''}
                     </div>
                 </div>
             `).join('');
