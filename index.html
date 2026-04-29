@@ -29,47 +29,85 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
         body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: background-color 0.3s ease; line-height: 1.6; overflow-x: hidden; }
+        
         #cursor-follower { width: 35px; height: 35px; background: var(--text-main); opacity: 0.15; filter: blur(6px); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); display: block; }
+        
         nav { position: fixed; top: 0; width: 100%; padding: 1rem 8%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
         .logo-k { font-size: 1.8rem; font-weight: 900; color: var(--text-main); border: 2px solid var(--text-main); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 4px; letter-spacing: -2px; padding-right: 2px; }
         .brand-text { font-size: 1.3rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px;}
+        
         .nav-right { display: flex; align-items: center; gap: 2rem; }
         .nav-links { display: flex; list-style: none; gap: 2rem; }
         .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 600; font-size: 0.9rem; transition: var(--transition); }
         .nav-links a:hover { color: var(--text-main); }
         .theme-toggle { cursor: pointer; background: none; border: none; color: var(--text-main); font-size: 1.2rem; transition: var(--transition); }
+
         .hero { height: 65vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 5%; margin-top: 60px; }
         .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; margin-bottom: 1rem; letter-spacing: -1.5px; }
         .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin-bottom: 2rem; }
         .btn-get-started { padding: 12px 32px; background: var(--text-main); color: var(--bg-body); text-decoration: none; font-weight: 700; border-radius: 50px; display: inline-block; transition: var(--transition); }
+
         .section-padding { padding: 4rem 10%; }
         .config-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; }
         .config-header h2 { font-size: 2rem; letter-spacing: -1px; margin-bottom: 0; }
         .filter-group { display: flex; gap: 0.8rem; }
         .filter-btn { padding: 8px 20px; border-radius: 50px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
         .filter-btn.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); transform: scale(1.05); }
+
         .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; }
-        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.8rem; transition: var(--transition); }
+        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.8rem; transition: var(--transition); display: flex; flex-direction: column; }
         .card-head { margin-bottom: 1.5rem; border-bottom: 2px solid var(--text-main); padding-bottom: 0.5rem; }
         .config-title { font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
         .data-section { margin-bottom: 1.2rem; }
         .section-label { font-size: 0.75rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; display: block; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
         .data-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem;}
         .data-label { color: var(--text-muted); }
         .data-val { font-family: monospace; font-weight: 700; color: var(--text-main); }
+
         .card-footer { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .support-info { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
-        .creator-tag { font-size: 0.75rem; font-style: italic; color: var(--text-muted); }
         .system-tag { font-size: 0.7rem; font-weight: 900; background: var(--text-main); color: var(--bg-body); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+        .creator-tag { font-size: 0.75rem; font-style: italic; color: var(--text-muted); }
+
+        /* Sleek Twitter-style Review System */
+        .review-trigger { width: 100%; padding: 10px; margin-top: 15px; background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+        .review-trigger:hover { background: var(--tag-bg); color: var(--text-main); }
+        
+        .review-drawer { display: none; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .comment-feed { max-height: 250px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
+        .comment-feed::-webkit-scrollbar { width: 4px; }
+        .comment-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .tweet-comment { display: flex; gap: 12px; margin-bottom: 15px; font-size: 0.85rem; }
+        .tweet-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--tag-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; font-size: 0.7rem; border: 1px solid var(--border); }
+        .tweet-body { flex: 1; }
+        .tweet-user { font-weight: 700; color: var(--text-main); margin-right: 5px; }
+        .tweet-stars { color: #f1c40f; font-size: 0.7rem; }
+        .tweet-text { color: var(--text-main); margin-top: 2px; line-height: 1.4; }
+
+        .post-comment-area { display: flex; flex-direction: column; gap: 10px; background: var(--tag-bg); padding: 12px; border-radius: 12px; }
+        .post-comment-area textarea { background: none; border: none; color: var(--text-main); resize: none; font-family: inherit; font-size: 0.85rem; outline: none; width: 100%; min-height: 40px; }
+        .post-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); pt: 8px; margin-top: 5px; padding-top: 8px; }
+        .star-picker { display: flex; gap: 4px; color: #555; }
+        .star-picker i { cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+        .star-picker i.active { color: #f1c40f; }
+        .btn-tweet { background: var(--text-main); color: var(--bg-body); border: none; padding: 6px 16px; border-radius: 50px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .btn-tweet:hover { opacity: 0.8; }
+
+        /* Contributors Styling */
         .contributor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
         .member-card { background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem; transition: var(--transition); }
         .member-header { display: flex; align-items: center; gap: 12px; }
         .member-name { font-weight: 700; font-size: 1.1rem; }
         .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
         .tag { font-size: 0.65rem; padding: 3px 10px; border-radius: 50px; font-weight: 700; text-transform: uppercase; background: var(--tag-bg); border: 1px solid currentColor; }
+
         footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); }
         footer p { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px; }
+
         @media (max-width: 768px) { .nav-links { display: none; } .section-padding { padding: 4rem 5%; } }
     </style>
 </head>
@@ -99,7 +137,7 @@
         <a href="#configs" class="btn-get-started">Get Started</a>
     </section>
 
-    <!-- DYNAMIC CONFIGS SECTION -->
+    <!-- CONFIGS SECTION -->
     <section class="section-padding" id="configs">
         <div class="config-header">
             <h2>Configs</h2>
@@ -111,18 +149,19 @@
             </div>
         </div>
         <div class="config-grid" id="config-container">
-            <!-- Data will load here -->
+            <!-- Data loads here -->
         </div>
     </section>
 
-    <!-- DYNAMIC CONTRIBUTORS SECTION -->
+    <!-- CONTRIBUTORS SECTION -->
     <section class="section-padding" id="contributors" style="background: var(--tag-bg); transition: 0.3s;">
         <h2>Contributors</h2>
         <div class="contributor-grid" id="contributor-container">
-            <!-- Data will load here -->
+            <!-- Data loads here -->
         </div>
     </section>
 
+    <!-- CONTACT SECTION -->
     <section class="section-padding" id="contact">
         <h2 style="text-align:center; margin-bottom:3rem;">Contact</h2>
         <div class="contact-form-container" style="max-width:600px; margin:0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 12px; background: var(--bg-card);">
@@ -139,25 +178,21 @@
     <footer><p>© 2026 KRAZY KONFIGS • PURE PRECISION</p></footer>
 
     <script>
-        // --- 1. SUPABASE CONNECTION ---
         const SUPABASE_URL = "https://unjdjduiqtldgoybgmnq.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE";
-        
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
         let allConfigs = [];
+        let currentRatings = {}; // Stores temp star selection per config
 
         async function init() {
             await fetchConfigs();
             await fetchContributors();
         }
 
-        // --- 2. CONFIG FETCH & RENDER ---
         async function fetchConfigs() {
             const { data, error } = await _supabase.from('configs').select('*').order('created_at', { ascending: false });
-            if (error) {
-                console.error("Fetch error:", error);
-                return;
-            }
+            if (error) return console.error(error);
             allConfigs = data;
             renderConfigs(allConfigs);
             setupFilters();
@@ -165,9 +200,8 @@
 
         function renderConfigs(configs) {
             const container = document.getElementById('config-container');
-            
             if (!configs || configs.length === 0) {
-                container.innerHTML = `<p style="text-align:center; color:var(--text-muted); width:100%;">No configs found for this selection.</p>`;
+                container.innerHTML = `<p style="text-align:center; color:var(--text-muted); width:100%;">No configs found.</p>`;
                 return;
             }
 
@@ -176,61 +210,98 @@
                     <div class="card-head"><div class="config-title">${conf.title}</div></div>
                     <div class="data-section">
                         <span class="section-label">🎯 PREDICTION</span>
-                        <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">${conf.sim_timer}</span></div>
-                        <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">${conf.pred_interval}</span></div>
+                        <div class="data-row"><span class="data-label">Sim Timer</span> <span class="data-val">${conf.sim_timer}</span></div>
+                        <div class="data-row"><span class="data-label">Interval</span> <span class="data-val">${conf.pred_interval}</span></div>
                     </div>
                     <div class="data-section">
-                        <span class="section-label">⚙️ TOGGLES (ACTIVE)</span>
-                        <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
-                        <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
-                        <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
-                        <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
-                    </div>
-                    <div class="data-section">
-                        <span class="section-label">📊 MULTIPLIERS</span>
-                        <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${conf.vertical || '0'}</span></div>
-                        <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${conf.horizontal || '0'}</span></div>
-                    </div>
-                    <div class="data-section">
-                        <span class="section-label">📍 OFFSETS (X / Y / Z)</span>
+                        <span class="section-label">📍 OFFSETS</span>
                         <div class="data-row"><span class="data-label">Values</span> <span class="data-val">${conf.offsets || '0 / 0 / 0'}</span></div>
                     </div>
                     <div class="card-footer">
-                        <div style="display:flex; flex-direction:column;">
-                            <span class="system-tag">Revert | ${conf.hit_rate || '0'}% Hit Rate</span>
-                            <span class="support-info">Supports: ${conf.support_range || 'N/A'}</span>
+                        <span class="system-tag">${conf.hit_rate || '0'}% Hit Rate</span>
+                        <span class="creator-tag">by ${conf.creator || 'User'}</span>
+                    </div>
+
+                    <!-- Twitter Style Reviews -->
+                    <button class="review-trigger" onclick="toggleReviews(${conf.id})">
+                        <i class="far fa-comment"></i> View Reviews & Ratings
+                    </button>
+
+                    <div class="review-drawer" id="drawer-${conf.id}">
+                        <div class="comment-feed" id="feed-${conf.id}">Loading...</div>
+                        
+                        <div class="post-comment-area">
+                            <textarea id="input-${conf.id}" placeholder="What do you think of this config?"></textarea>
+                            <div class="post-footer">
+                                <div class="star-picker" id="stars-${conf.id}">
+                                    <i class="fas fa-star" onclick="setStar(${conf.id}, 1)"></i>
+                                    <i class="fas fa-star" onclick="setStar(${conf.id}, 2)"></i>
+                                    <i class="fas fa-star" onclick="setStar(${conf.id}, 3)"></i>
+                                    <i class="fas fa-star" onclick="setStar(${conf.id}, 4)"></i>
+                                    <i class="fas fa-star" onclick="setStar(${conf.id}, 5)"></i>
+                                </div>
+                                <button class="btn-tweet" onclick="postReview(${conf.id})">Post</button>
+                            </div>
                         </div>
-                        <span class="creator-tag">by ${conf.creator || 'Unknown'}</span>
                     </div>
                 </div>
             `).join('');
         }
 
-        function setupFilters() {
-            const filterBtns = document.querySelectorAll('.filter-btn');
-            filterBtns.forEach(btn => {
-                btn.onclick = () => {
-                    // UI Update
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    const filterValue = btn.getAttribute('data-filter').toLowerCase();
-                    
-                    if (filterValue === 'all') {
-                        renderConfigs(allConfigs);
-                    } else {
-                        // Filter logic: Checks if the ping_tier column includes the filter word
-                        const filtered = allConfigs.filter(c => {
-                            const tier = (c.ping_tier || "").toLowerCase();
-                            return tier.includes(filterValue);
-                        });
-                        renderConfigs(filtered);
-                    }
-                };
-            });
+        async function toggleReviews(id) {
+            const drawer = document.getElementById(`drawer-${id}`);
+            const isOpen = drawer.style.display === 'block';
+            drawer.style.display = isOpen ? 'none' : 'block';
+            if(!isOpen) fetchReviews(id);
         }
 
-        // --- 3. CONTRIBUTORS FETCH ---
+        async function fetchReviews(id) {
+            const feed = document.getElementById(`feed-${id}`);
+            const { data } = await _supabase.from('reviews').select('*').eq('config_id', id).order('created_at', { ascending: false });
+            
+            if (!data || data.length === 0) {
+                feed.innerHTML = `<p style="font-size:0.75rem; color:var(--text-muted); text-align:center;">No reviews yet. Be the first!</p>`;
+                return;
+            }
+
+            feed.innerHTML = data.map(r => `
+                <div class="tweet-comment">
+                    <div class="tweet-avatar">${r.poster_name ? r.poster_name.substring(0,2).toUpperCase() : 'GU'}</div>
+                    <div class="tweet-body">
+                        <span class="tweet-user">Guest</span>
+                        <span class="tweet-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
+                        <div class="tweet-text">${r.comment}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setStar(configId, val) {
+            currentRatings[configId] = val;
+            const stars = document.getElementById(`stars-${configId}`).children;
+            for(let i=0; i<5; i++) {
+                stars[i].classList.toggle('active', i < val);
+            }
+        }
+
+        async function postReview(configId) {
+            const comment = document.getElementById(`input-${configId}`).value;
+            const rating = currentRatings[configId] || 5;
+
+            if(!comment.trim()) return alert("Please enter a comment!");
+
+            const { error } = await _supabase.from('reviews').insert([
+                { config_id: configId, poster_name: "Guest", comment: comment, rating: rating }
+            ]);
+
+            if (error) {
+                alert("Error posting. Ensure your database 'reviews' table allows 'Guest' as a poster_name.");
+            } else {
+                document.getElementById(`input-${configId}`).value = "";
+                fetchReviews(configId);
+            }
+        }
+
         async function fetchContributors() {
             const { data } = await _supabase.from('contributors').select('*');
             if (!data) return;
@@ -244,44 +315,40 @@
             `).join('');
         }
 
-        // --- 4. DISCORD WEBHOOK LOGIC ---
+        function setupFilters() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.onclick = () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const val = btn.getAttribute('data-filter').toLowerCase();
+                    renderConfigs(val === 'all' ? allConfigs : allConfigs.filter(c => (c.ping_tier || "").toLowerCase().includes(val)));
+                };
+            });
+        }
+
         document.getElementById('webhookForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const lastSent = localStorage.getItem('lastSentTimestamp');
-            if (lastSent && (Date.now() - lastSent < 6 * 60 * 60 * 1000)) return alert('6-hour cooldown active.');
-
             const submitBtn = document.getElementById('submitBtn');
-            const file = document.getElementById('dcFile').files[0];
-            if (file && file.size > 10 * 1024 * 1024) return alert('File exceeds 10MB.');
-
             submitBtn.disabled = true; submitBtn.innerText = "Sending...";
-            const webhookURL = "https://discord.com/api/webhooks/1498387587092709468/EY0XBVlIy5cnAgaIJxWbTliIB8lPvfrywiCXM4tMmw6Y2D7ku5wgIbFFSb-8YC_wCECz";
-
+            
             const formData = new FormData();
             formData.append('payload_json', JSON.stringify({
-                embeds: [{ 
-                    title: "New Config Request", 
-                    fields: [
-                        { name: "User", value: document.getElementById('dcUser').value }, 
-                        { name: "Details", value: document.getElementById('dcDetails').value }
-                    ], 
-                    timestamp: new Date() 
-                }]
+                embeds: [{ title: "New Config Request", fields: [{ name: "User", value: document.getElementById('dcUser').value }, { name: "Details", value: document.getElementById('dcDetails').value }], timestamp: new Date() }]
             }));
-            if (file) formData.append('file', file);
-
+            
             try {
-                const res = await fetch(webhookURL, { method: 'POST', body: formData });
-                if (res.ok) { alert('Sent!'); localStorage.setItem('lastSentTimestamp', Date.now()); this.reset(); }
+                await fetch("https://discord.com/api/webhooks/1498387587092709468/EY0XBVlIy5cnAgaIJxWbTliIB8lPvfrywiCXM4tMmw6Y2D7ku5wgIbFFSb-8YC_wCECz", { method: 'POST', body: formData });
+                alert('Sent!'); this.reset();
             } finally { submitBtn.disabled = false; submitBtn.innerText = "Submit Request"; }
         });
 
-        // --- UI UTILS ---
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
             document.querySelector('#themeBtn i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
         }
+
         const follower = document.getElementById('cursor-follower');
         document.addEventListener('mousemove', (e) => { follower.style.left = e.clientX + 'px'; follower.style.top = e.clientY + 'px'; });
 
