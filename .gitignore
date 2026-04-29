@@ -1,9 +1,0 @@
-# Secret credentials
-.env
-
-# Large library folders (Vercel installs these automatically)
-node_modules/
-
-# System-specific files
-.DS_Store
-Thumbs.db
