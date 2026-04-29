@@ -7,253 +7,71 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
+        /* CSS PRESERVED FROM index_16.html */
         :root {
-            --bg-body: #ffffff;
-            --bg-nav: rgba(255, 255, 255, 0.95);
-            --bg-card: #ffffff;
-            --text-main: #000000;
-            --text-muted: #666666;
-            --accent: #000000;
-            --border: #eeeeee;
-            --tag-bg: #f0f0f0;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-            /* Light Mode Tag Colors */
-            --clr-owner: #e67e22;
-            --clr-staff: #d4ac0d;
-            --clr-guest: #8e44ad;
-            --clr-early: #b7950b;
-            --clr-contributor: #b7950b;
-            --clr-tester: #27ae60;
-            --clr-tuff: #555555;
-            --clr-dev: #1e8449;
+            --bg-body: #ffffff; --bg-nav: rgba(255, 255, 255, 0.95); --bg-card: #ffffff;
+            --text-main: #000000; --text-muted: #666666; --accent: #000000;
+            --border: #eeeeee; --tag-bg: #f0f0f0; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --clr-owner: #e67e22; --clr-staff: #d4ac0d; --clr-guest: #8e44ad;
+            --clr-early: #b7950b; --clr-contributor: #b7950b; --clr-tester: #27ae60;
+            --clr-tuff: #555555; --clr-dev: #1e8449;
         }
-
         body.dark-mode {
-            --bg-body: #0a0a0a;
-            --bg-nav: rgba(10, 10, 10, 0.95);
-            --bg-card: #121212;
-            --text-main: #ffffff;
-            --text-muted: #aaaaaa;
-            --accent: #ffffff;
-            --border: #1f1f1f;
-            --tag-bg: #1a1a1a;
-
-            /* Dark Mode Tag Colors */
-            --clr-owner: #FFA500;
-            --clr-staff: #F5DEB3;
-            --clr-guest: #EE82EE;
-            --clr-early: #FFFF00;
-            --clr-contributor: #FFFF00;
-            --clr-tester: #00FF7F;
-            --clr-tuff: #FFFFFF;
-            --clr-dev: #2E8B57;
+            --bg-body: #0a0a0a; --bg-nav: rgba(10, 10, 10, 0.95); --bg-card: #121212;
+            --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #ffffff;
+            --border: #1f1f1f; --tag-bg: #1a1a1a;
+            --clr-owner: #FFA500; --clr-staff: #F5DEB3; --clr-guest: #EE82EE;
+            --clr-early: #FFFF00; --clr-contributor: #FFFF00; --clr-tester: #00FF7F;
+            --clr-tuff: #FFFFFF; --clr-dev: #2E8B57;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            scroll-behavior: smooth;
-        }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: 'Source Sans Pro', sans-serif;
-            transition: background-color 0.3s ease;
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        #cursor-follower {
-            width: 35px;
-            height: 35px;
-            background: var(--text-main);
-            opacity: 0.15;
-            filter: blur(6px);
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            transform: translate(-50%, -50%);
-            display: block;
-        }
-
-        nav {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 1rem 8%;
-            background: var(--bg-nav);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: background-color 0.3s ease; line-height: 1.6; overflow-x: hidden; }
+        #cursor-follower { width: 35px; height: 35px; background: var(--text-main); opacity: 0.15; filter: blur(6px); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); display: block; }
+        nav { position: fixed; top: 0; width: 100%; padding: 1rem 8%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        
-        /* Fixed centering for the letter K within the box */
-        .logo-k { 
-            font-size: 1.8rem; 
-            font-weight: 900; 
-            color: var(--text-main); 
-            border: 2px solid var(--text-main); 
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px; 
-            letter-spacing: -2px;
-            padding-right: 2px; 
-        }
-
+        .logo-k { font-size: 1.8rem; font-weight: 900; color: var(--text-main); border: 2px solid var(--text-main); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 4px; letter-spacing: -2px; padding-right: 2px; }
         .brand-text { font-size: 1.3rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px;}
-
         .nav-right { display: flex; align-items: center; gap: 2rem; }
         .nav-links { display: flex; list-style: none; gap: 2rem; }
         .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 600; font-size: 0.9rem; transition: var(--transition); }
         .nav-links a:hover { color: var(--text-main); }
-        
-        .theme-toggle { 
-            cursor: pointer; 
-            background: none; 
-            border: none; 
-            color: var(--text-main); 
-            font-size: 1.2rem; 
-            transition: var(--transition);
-        }
-        .theme-toggle:hover { transform: scale(1.2); }
-
-        .hero {
-            height: 65vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 5%;
-            margin-top: 60px;
-        }
+        .theme-toggle { cursor: pointer; background: none; border: none; color: var(--text-main); font-size: 1.2rem; transition: var(--transition); }
+        .hero { height: 65vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 5%; margin-top: 60px; }
         .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; margin-bottom: 1rem; letter-spacing: -1.5px; }
         .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin-bottom: 2rem; }
-
-        .btn-get-started {
-            padding: 12px 32px;
-            background: var(--text-main);
-            color: var(--bg-body);
-            text-decoration: none;
-            font-weight: 700;
-            border-radius: 50px;
-            display: inline-block;
-            transition: var(--transition);
-        }
-        .btn-get-started:hover { transform: scale(1.1); opacity: 0.9; }
-
+        .btn-get-started { padding: 12px 32px; background: var(--text-main); color: var(--bg-body); text-decoration: none; font-weight: 700; border-radius: 50px; display: inline-block; transition: var(--transition); }
         .section-padding { padding: 4rem 10%; }
-        
-        .config-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
+        .config-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; }
         .config-header h2 { font-size: 2rem; letter-spacing: -1px; margin-bottom: 0; }
-
         .filter-group { display: flex; gap: 0.8rem; }
-        .filter-btn {
-            padding: 8px 20px;
-            border-radius: 50px;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            color: var(--text-main);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        .filter-btn:hover { transform: scale(1.1); background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
+        .filter-btn { padding: 8px 20px; border-radius: 50px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
         .filter-btn.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); transform: scale(1.05); }
-
         .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; }
         .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.8rem; transition: var(--transition); }
-        .config-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-
         .card-head { margin-bottom: 1.5rem; border-bottom: 2px solid var(--text-main); padding-bottom: 0.5rem; }
         .config-title { font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-
         .data-section { margin-bottom: 1.2rem; }
         .section-label { font-size: 0.75rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; display: block; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
-
         .data-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem;}
         .data-label { color: var(--text-muted); }
         .data-val { font-family: monospace; font-weight: 700; color: var(--text-main); }
-
-        .card-footer { 
-            margin-top: 1rem; 
-            padding-top: 1rem; 
-            border-top: 1px dashed var(--border); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-        }
+        .card-footer { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center; }
         .support-info { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
         .creator-tag { font-size: 0.75rem; font-style: italic; color: var(--text-muted); }
         .system-tag { font-size: 0.7rem; font-weight: 900; background: var(--text-main); color: var(--bg-body); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
-
         .contributor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-        .member-card { 
-            background: var(--bg-card); 
-            border: 1px solid var(--border); 
-            padding: 1.5rem; 
-            border-radius: 12px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 1rem; 
-            transition: var(--transition);
-        }
-        .member-card:hover { 
-            transform: scale(1.05); 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
-            z-index: 10;
-        }
+        .member-card { background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem; transition: var(--transition); }
         .member-header { display: flex; align-items: center; gap: 12px; }
         .member-name { font-weight: 700; font-size: 1.1rem; }
         .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
-        .tag { 
-            font-size: 0.65rem; 
-            padding: 3px 10px; 
-            border-radius: 50px; 
-            font-weight: 700; 
-            text-transform: uppercase; 
-            background: var(--tag-bg); 
-            border: 1px solid currentColor;
-            transition: color 0.3s ease;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem;
-            border-top: 1px solid var(--border);
-        }
-        footer p {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            letter-spacing: 1px;
-        }
-
-        @media (max-width: 768px) {
-            .nav-links { display: none; }
-            .config-header { flex-direction: column; align-items: flex-start; }
-            .section-padding { padding: 4rem 5%; }
-        }
+        .tag { font-size: 0.65rem; padding: 3px 10px; border-radius: 50px; font-weight: 700; text-transform: uppercase; background: var(--tag-bg); border: 1px solid currentColor; }
+        footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); }
+        footer p { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px; }
+        @media (max-width: 768px) { .nav-links { display: none; } .section-padding { padding: 4rem 5%; } }
     </style>
 </head>
 <body>
@@ -282,6 +100,7 @@
         <a href="#configs" class="btn-get-started">Get Started</a>
     </section>
 
+    <!-- DYNAMIC CONFIGS SECTION -->
     <section class="section-padding" id="configs">
         <div class="config-header">
             <h2>Configs</h2>
@@ -292,248 +111,16 @@
                 <button class="filter-btn" data-filter="high">High Ping</button>
             </div>
         </div>
-
-        <div class="config-grid">
-            <div class="config-card" data-weight="high">
-                <div class="card-head"><div class="config-title">🕸️ PREMIUM | HIGH PING</div></div>
-                <div class="data-section">
-                    <span class="section-label">🎯 PREDICTION</span>
-                    <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">65</span></div>
-                    <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">110</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">⚙️ TOGGLES</span>
-                    <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📊 MULTIPLIERS</span>
-                    <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">155</span></div>
-                    <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">165</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📍 OFFSETS</span>
-                    <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">0 / -5 / 0</span></div>
-                </div>
-                <div class="card-footer">
-                    <div style="display:flex; flex-direction:column;">
-                        <span class="system-tag">Revert | 85% Hit Rate</span>
-                        <span class="support-info">Supports: 150ms - 200ms</span>
-                    </div>
-                    <span class="creator-tag">by Kriz</span>
-                </div>
-            </div>
-
-            <div class="config-card" data-weight="mid">
-                <div class="card-head"><div class="config-title">🧲 Alpha V1 | Mid Ping</div></div>
-                <div class="data-section">
-                    <span class="section-label">🎯 PREDICTION</span>
-                    <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">88</span></div>
-                    <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">285</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">⚙️ TOGGLES</span>
-                    <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📊 MULTIPLIERS</span>
-                    <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">148</span></div>
-                    <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">175</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📍 OFFSETS</span>
-                    <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">-28 / -12 / 0</span></div>
-                </div>
-                <div class="card-footer">
-                    <div style="display:flex; flex-direction:column;">
-                        <span class="system-tag">Revert | 90% Hit Rate</span>
-                        <span class="support-info">Supports: 70ms - 130ms</span>
-                    </div>
-                    <span class="creator-tag">by Shadow</span>
-                </div>
-            </div>
-
-            <div class="config-card" data-weight="mid">
-                <div class="card-head"><div class="config-title">🛸 VIP Config | Mid Ping</div></div>
-                <div class="data-section">
-                    <span class="section-label">🎯 PREDICTION</span>
-                    <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">90</span></div>
-                    <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">430-435</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">⚙️ TOGGLES</span>
-                    <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📊 MULTIPLIERS</span>
-                    <div class="data-row"><span class="data-label">Vertical / Horiz.</span> <span class="data-val">100 / 100</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📍 OFFSETS</span>
-                    <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">-1 / -5/-10 / 0</span></div>
-                </div>
-                <div class="card-footer">
-                    <div style="display:flex; flex-direction:column;">
-                        <span class="system-tag">Revert | 75% Hit Rate</span>
-                        <span class="support-info">Supports: 60ms - 90ms</span>
-                    </div>
-                    <span class="creator-tag">by lzzx</span>
-                </div>
-            </div>
-
-            <div class="config-card" data-weight="low">
-                <div class="card-head"><div class="config-title">⚓ Expert Tier Anchor | Low Ping</div></div>
-                <div class="data-section">
-                    <span class="section-label">🎯 PREDICTION</span>
-                    <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">32</span></div>
-                    <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">110</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">⚙️ TOGGLES</span>
-                    <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📊 MULTIPLIERS</span>
-                    <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">108</span></div>
-                    <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">115</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📍 OFFSETS</span>
-                    <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">-5 / -4 / 0</span></div>
-                </div>
-                <div class="card-footer">
-                    <div style="display:flex; flex-direction:column;">
-                        <span class="system-tag">Revert | 85% Hit Rate</span>
-                        <span class="support-info">Supports: 0ms - 40ms</span>
-                    </div>
-                    <span class="creator-tag">by walter</span>
-                </div>
-            </div>
-
-            <div class="config-card" data-weight="mid">
-                <div class="card-head"><div class="config-title">⚽ Expert Tier Kinetic | Mid Ping</div></div>
-                <div class="data-section">
-                    <span class="section-label">🎯 PREDICTION</span>
-                    <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">45</span></div>
-                    <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">145</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">⚙️ TOGGLES</span>
-                    <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📊 MULTIPLIERS</span>
-                    <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">122</span></div>
-                    <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">132</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📍 OFFSETS</span>
-                    <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">-8 / -5 / 0</span></div>
-                </div>
-                <div class="card-footer">
-                    <div style="display:flex; flex-direction:column;">
-                        <span class="system-tag">Revert | 95% Hit Rate</span>
-                        <span class="support-info">Supports: 60ms - 90ms</span>
-                    </div>
-                    <span class="creator-tag">by walter</span>
-                </div>
-            </div>
-
-            <div class="config-card" data-weight="high">
-                <div class="card-head"><div class="config-title">💎 Diamond Ultra | High Ping</div></div>
-                <div class="data-section">
-                    <span class="section-label">🎯 PREDICTION</span>
-                    <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">44</span></div>
-                    <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">290</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">⚙️ TOGGLES</span>
-                    <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📊 MULTIPLIERS</span>
-                    <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">132</span></div>
-                    <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">116</span></div>
-                </div>
-                <div class="data-section">
-                    <span class="section-label">📍 OFFSETS</span>
-                    <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">-7 / -6 / 0</span></div>
-                </div>
-                <div class="card-footer">
-                    <div style="display:flex; flex-direction:column;">
-                        <span class="system-tag">Revert | 90% Hit Rate</span>
-                        <span class="support-info">Supports: 85ms - 160ms</span>
-                    </div>
-                    <span class="creator-tag">by deannn</span>
-                </div>
-            </div>
-
+        <div class="config-grid" id="config-container">
+            <!-- Data will load here -->
         </div>
     </section>
 
+    <!-- DYNAMIC CONTRIBUTORS SECTION -->
     <section class="section-padding" id="contributors" style="background: var(--tag-bg); transition: 0.3s;">
         <h2>Contributors</h2>
-        <div class="contributor-grid">
-            
-            <div class="member-card">
-                <div class="member-header"><i class="fas fa-crown" style="color: var(--clr-owner)"></i><span class="member-name">Kriz</span></div>
-                <div class="tag-list">
-                    <span class="tag" style="color: var(--clr-owner);">Owner</span>
-                    <span class="tag" style="color: var(--clr-dev);">Developer</span>
-                    <span class="tag" style="color: var(--clr-tuff);">Tuff</span>
-                    <span class="tag" style="color: var(--clr-contributor);">Contributor</span>
-                </div>
-            </div>
-
-            <div class="member-card">
-                <div class="member-header"><i class="fas fa-user-shield" style="color: var(--clr-staff)"></i><span class="member-name">Shadow</span></div>
-                <div class="tag-list">
-                    <span class="tag" style="color: var(--clr-staff);">Staff</span>
-                    <span class="tag" style="color: var(--clr-early);">Early Contributor</span>
-                    <span class="tag" style="color: var(--clr-tester);">Tester</span>
-                    <span class="tag" style="color: var(--clr-tuff);">Tuff</span>
-                </div>
-            </div>
-
-            <div class="member-card">
-                <div class="member-header"><i class="fas fa-user" style="color: var(--clr-guest)"></i><span class="member-name">walter</span></div>
-                <div class="tag-list">
-                    <span class="tag" style="color: var(--clr-guest);">Guest Contributor</span>
-                    <span class="tag" style="color: var(--clr-tuff);">Tuff</span>
-                </div>
-            </div>
-
-            <div class="member-card">
-                <div class="member-header"><i class="fas fa-user" style="color: var(--clr-early)"></i><span class="member-name">lzzx</span></div>
-                <div class="tag-list">
-                    <span class="tag" style="color: var(--clr-early);">Early Contributor</span>
-                </div>
-            </div>
-
-            <div class="member-card">
-                <div class="member-header"><i class="fas fa-user" style="color: var(--clr-early)"></i><span class="member-name">Deannn</span></div>
-                <div class="tag-list">
-                    <span class="tag" style="color: var(--clr-early);">Early Contributor</span>
-                </div>
-            </div>
-
+        <div class="contributor-grid" id="contributor-container">
+            <!-- Data will load here -->
         </div>
     </section>
 
@@ -543,10 +130,8 @@
             <form id="webhookForm">
                 <input type="text" id="dcUser" placeholder="Discord Username" style="width:100%; padding:10px; margin-bottom:1rem; border:1px solid var(--border); border-radius:5px; background: var(--bg-body); color: var(--text-main);" required>
                 <textarea id="dcDetails" rows="5" maxlength="1000" placeholder="Details (Suggestions or Requests)... Max 1000 Chars" style="width:100%; padding:10px; margin-bottom:1rem; border:1px solid var(--border); border-radius:5px; background: var(--bg-body); color: var(--text-main);" required></textarea>
-                
                 <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Include File (Max 10MB)</label>
                 <input type="file" id="dcFile" style="width:100%; margin-bottom:1rem; color: var(--text-muted); font-size: 0.8rem;">
-                
                 <button type="submit" id="submitBtn" style="width:100%; padding:12px; background:var(--text-main); color:var(--bg-body); border:none; font-weight:700; border-radius:5px; cursor:pointer;">Submit Request</button>
             </form>
         </div>
@@ -555,107 +140,132 @@
     <footer><p>© 2026 KRAZY KONFIGS • PURE PRECISION</p></footer>
 
     <script>
-        const follower = document.getElementById('cursor-follower');
-        document.addEventListener('mousemove', (e) => {
-            follower.style.left = e.clientX + 'px';
-            follower.style.top = e.clientY + 'px';
-        });
+        // --- 1. SUPABASE CONNECTION ---
+        const SUPABASE_URL = "https://unjdjduiqtldgoybgmnq.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE";
+        
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let allConfigs = [];
 
-        function toggleTheme() {
-            const body = document.body;
-            const btnIcon = document.querySelector('#themeBtn i');
-            body.classList.toggle('dark-mode');
-            if (body.classList.contains('dark-mode')) {
-                btnIcon.classList.replace('fa-moon', 'fa-sun');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                btnIcon.classList.replace('fa-sun', 'fa-moon');
-                localStorage.setItem('theme', 'light');
-            }
+        async function init() {
+            await fetchConfigs();
+            await fetchContributors();
         }
 
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        const cards = document.querySelectorAll('.config-card');
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                filterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const filter = btn.getAttribute('data-filter');
-                cards.forEach(card => {
-                    if (filter === 'all' || card.getAttribute('data-weight') === filter) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-            });
-        });
+        // --- 2. CONFIG FETCH & RENDER ---
+        async function fetchConfigs() {
+            const { data, error } = await _supabase.from('configs').select('*').order('created_at', { ascending: false });
+            if (error) return;
+            allConfigs = data;
+            renderConfigs(allConfigs);
+            setupFilters();
+        }
 
-        // Webhook Logic with 6hr Cooldown and 10MB File Support
+        function renderConfigs(configs) {
+            const container = document.getElementById('config-container');
+            container.innerHTML = configs.map(conf => `
+                <div class="config-card" data-weight="${conf.ping_tier}">
+                    <div class="card-head"><div class="config-title">${conf.title}</div></div>
+                    <div class="data-section">
+                        <span class="section-label">🎯 PREDICTION</span>
+                        <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">${conf.sim_timer}</span></div>
+                        <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">${conf.pred_interval}</span></div>
+                    </div>
+                    <div class="data-section">
+                        <span class="section-label">⚙️ TOGGLES (ACTIVE)</span>
+                        <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
+                        <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
+                        <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
+                        <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
+                    </div>
+                    <div class="data-section">
+                        <span class="section-label">📊 MULTIPLIERS</span>
+                        <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${conf.vertical}</span></div>
+                        <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${conf.horizontal}</span></div>
+                    </div>
+                    <div class="data-section">
+                        <span class="section-label">📍 OFFSETS (X / Y / Z)</span>
+                        <div class="data-row"><span class="data-label">Values</span> <span class="data-val">${conf.offsets}</span></div>
+                    </div>
+                    <div class="card-footer">
+                        <div style="display:flex; flex-direction:column;">
+                            <span class="system-tag">Revert | ${conf.hit_rate}% Hit Rate</span>
+                            <span class="support-info">Supports: ${conf.support_range}</span>
+                        </div>
+                        <span class="creator-tag">by ${conf.creator}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setupFilters() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.onclick = () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const f = btn.getAttribute('data-filter');
+                    renderConfigs(f === 'all' ? allConfigs : allConfigs.filter(c => c.ping_tier.toLowerCase() === f.toLowerCase()));
+                };
+            });
+        }
+
+        // --- 3. CONTRIBUTORS FETCH ---
+        async function fetchContributors() {
+            const { data } = await _supabase.from('contributors').select('*');
+            if (!data) return;
+            document.getElementById('contributor-container').innerHTML = data.map(m => `
+                <div class="member-card">
+                    <div class="member-header"><i class="${m.role_icon}" style="color: ${m.icon_color}"></i><span class="member-name">${m.name}</span></div>
+                    <div class="tag-list">
+                        ${m.tags.map(t => `<span class="tag" style="color: var(--clr-${t.toLowerCase().replace(/\s+/g, '')}, var(--text-muted));">${t}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- 4. DISCORD WEBHOOK LOGIC ---
         document.getElementById('webhookForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            // 6-Hour Cooldown Logic
             const lastSent = localStorage.getItem('lastSentTimestamp');
-            const now = Date.now();
-            const cooldown = 6 * 60 * 60 * 1000; 
-
-            if (lastSent && (now - lastSent < cooldown)) {
-                const hoursLeft = Math.ceil((cooldown - (now - lastSent)) / (1000 * 60 * 60));
-                alert(`Slow down! You can send another request in ${hoursLeft} hours.`);
-                return;
-            }
+            if (lastSent && (Date.now() - lastSent < 6 * 60 * 60 * 1000)) return alert('6-hour cooldown active.');
 
             const submitBtn = document.getElementById('submitBtn');
-            const user = document.getElementById('dcUser').value;
-            const details = document.getElementById('dcDetails').value;
-            const fileInput = document.getElementById('dcFile');
+            const file = document.getElementById('dcFile').files[0];
+            if (file && file.size > 10 * 1024 * 1024) return alert('File exceeds 10MB.');
+
+            submitBtn.disabled = true; submitBtn.innerText = "Sending...";
             const webhookURL = "https://discord.com/api/webhooks/1498387587092709468/EY0XBVlIy5cnAgaIJxWbTliIB8lPvfrywiCXM4tMmw6Y2D7ku5wgIbFFSb-8YC_wCECz";
 
-            // 10MB Check
-            if (fileInput.files.length > 0 && fileInput.files[0].size > 10 * 1024 * 1024) {
-                alert('File is too large! Maximum limit is 10MB.');
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Sending...";
-
             const formData = new FormData();
-            const payload = {
-                embeds: [{
-                    title: "New Config Request/Suggestion",
-                    color: 0, 
+            formData.append('payload_json', JSON.stringify({
+                embeds: [{ 
+                    title: "New Config Request", 
                     fields: [
-                        { name: "Discord User", value: user, inline: true },
-                        { name: "Message", value: details.substring(0, 1000) }
-                    ],
-                    footer: { text: "KrazyKonfigs Internal System" },
-                    timestamp: new Date()
+                        { name: "User", value: document.getElementById('dcUser').value }, 
+                        { name: "Details", value: document.getElementById('dcDetails').value }
+                    ], 
+                    timestamp: new Date() 
                 }]
-            };
-
-            formData.append('payload_json', JSON.stringify(payload));
-            if (fileInput.files.length > 0) formData.append('file', fileInput.files[0]);
+            }));
+            if (file) formData.append('file', file);
 
             try {
-                const response = await fetch(webhookURL, { method: 'POST', body: formData });
-
-                if (response.ok) {
-                    alert('Success! Your request has been sent.');
-                    localStorage.setItem('lastSentTimestamp', Date.now());
-                    document.getElementById('webhookForm').reset();
-                } else {
-                    alert('Failed to send. Discord might be down.');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('An error occurred while sending.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Submit Request";
-            }
+                const res = await fetch(webhookURL, { method: 'POST', body: formData });
+                if (res.ok) { alert('Sent!'); localStorage.setItem('lastSentTimestamp', Date.now()); this.reset(); }
+            } finally { submitBtn.disabled = false; submitBtn.innerText = "Submit Request"; }
         });
+
+        // --- UI UTILS ---
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.querySelector('#themeBtn i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        const follower = document.getElementById('cursor-follower');
+        document.addEventListener('mousemove', (e) => { follower.style.left = e.clientX + 'px'; follower.style.top = e.clientY + 'px'; });
+
+        init();
     </script>
 </body>
 </html>
