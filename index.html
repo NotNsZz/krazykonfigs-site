@@ -1,202 +1,373 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KrazyKonfigs | Precision Redefined</title>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <style>
-        :root {
-            --bg-body: #ffffff; --bg-nav: rgba(255, 255, 255, 0.95); --bg-card: #ffffff;
-            --text-main: #000000; --text-muted: #666666; --accent: #000000;
-            --border: #eeeeee; --tag-bg: #f0f0f0; --transition: all 0.3s ease;
-        }
-        body.dark-mode {
-            --bg-body: #0a0a0a; --bg-nav: rgba(10, 10, 10, 0.95); --bg-card: #121212;
-            --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #ffffff;
-            --border: #1f1f1f; --tag-bg: #1a1a1a;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: var(--transition); line-height: 1.6; }
-        
-        /* Nav & Hero Restored */
-        nav { position: fixed; top: 0; width: 100%; padding: 1rem 8%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-        .hero { height: 40vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-top: 60px; }
-        .section-padding { padding: 2rem 8%; }
-        
-        /* Config Grid Restored */
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; }
-        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-        .config-title { font-size: 1.2rem; font-weight: 700; border-bottom: 2px solid var(--text-main); padding-bottom: 5px; }
-        
-        /* Sleek Review Form (Always Visible) */
-        .review-form { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .review-form textarea { 
-            background: var(--tag-bg); 
-            border: 1px solid var(--border); 
-            color: var(--text-main); 
-            padding: 12px; 
-            border-radius: 8px; 
-            font-size: 0.85rem; 
-            resize: none;
-            width: 100%;
-            font-family: inherit;
-        }
-        .star-input { color: #555; cursor: pointer; font-size: 1.1rem; display: flex; gap: 4px; }
-        .post-btn { background: var(--text-main); color: var(--bg-body); border: none; padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; align-self: flex-end; }
-        .post-btn:hover { opacity: 0.8; }
 
-        /* Sleek Review List (Toggleable) */
-        .review-toggle-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; font-size: 0.8rem; padding: 5px 0; text-align: left; }
-        .review-toggle-btn:hover { color: var(--text-main); }
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>KrazyKonfigs | Precision Redefined</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    
+
+    <style>
+
+        :root {
+
+            --bg-body: #ffffff; --bg-nav: rgba(255, 255, 255, 0.95); --bg-card: #ffffff;
+
+            --text-main: #000000; --text-muted: #666666; --accent: #000000;
+
+            --border: #eeeeee; --tag-bg: #f0f0f0; --transition: all 0.3s ease;
+
+        }
+
+        body.dark-mode {
+
+            --bg-body: #0a0a0a; --bg-nav: rgba(10, 10, 10, 0.95); --bg-card: #121212;
+
+            --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #ffffff;
+
+            --border: #1f1f1f; --tag-bg: #1a1a1a;
+
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: var(--transition); line-height: 1.6; }
+
+        nav { position: fixed; top: 0; width: 100%; padding: 1rem 8%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+
+        .hero { height: 50vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-top: 60px; }
+
+        .section-padding { padding: 4rem 8%; }
+
         
-        .review-list-container { display: none; margin-top: 10px; }
-        .review-item { display: flex; gap: 12px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .review-pfp { width: 34px; height: 34px; border-radius: 50%; background: #2f3336; flex-shrink: 0; }
-        .review-content { flex: 1; font-size: 0.85rem; }
-        .review-user { font-weight: 700; display: block; margin-bottom: 2px; }
-        .review-stars { color: #f1c40f; font-size: 0.75rem; margin-left: 5px; }
+
+        /* Config Grid */
+
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; }
+
+        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+
+        .config-title { font-size: 1.2rem; font-weight: 700; border-bottom: 2px solid var(--text-main); padding-bottom: 5px; }
+
         
-        /* Filters Restored */
-        .filter-group { display: flex; gap: 10px; margin-bottom: 2rem; justify-content: center; }
-        .filter-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; font-weight: 600; }
+
+        /* Review Section Sleek UI */
+
+        .review-toggle-btn { background: var(--tag-bg); border: none; color: var(--text-main); padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem; width: 100%; margin-top: 10px; }
+
+        .review-box { display: none; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px; }
+
+        .review-list { max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
+
+        .review-item { display: flex; gap: 10px; margin-bottom: 12px; font-size: 0.8rem; }
+
+        .review-pfp { width: 30px; height: 30px; border-radius: 50%; background: #555; }
+
+        .review-content { flex: 1; }
+
+        .review-user { font-weight: 700; display: block; }
+
+        .review-stars { color: #f1c40f; font-size: 0.7rem; }
+
+        
+
+        /* Review Form */
+
+        .review-form { display: flex; flex-direction: column; gap: 8px; }
+
+        .review-form input, .review-form textarea { background: var(--tag-bg); border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 4px; font-size: 0.8rem; }
+
+        .star-input { color: #f1c40f; cursor: pointer; margin-bottom: 5px; }
+
+        .post-btn { background: var(--text-main); color: var(--bg-body); border: none; padding: 6px; border-radius: 4px; font-weight: 700; cursor: pointer; }
+
+
+
+        .filter-group { display: flex; gap: 10px; margin-bottom: 2rem; }
+
+        .filter-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; }
+
         .filter-btn.active { background: var(--text-main); color: var(--bg-body); }
+
     </style>
+
 </head>
+
 <body class="dark-mode">
 
+
+
     <nav>
+
         <div style="font-weight:900; font-size:1.5rem;">KRAZY KONFIGS</div>
-        <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fas fa-adjust"></i></button>
+
+        <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fas fa-moon"></i></button>
+
     </nav>
 
+
+
     <section class="hero">
-        <h1>Precision Redefined</h1>
-        <p>The ultimate technical configurations for competitive performance.</p>
+
+        <h1>Configs & Reviews</h1>
+
+        <p>Real performance. Real feedback.</p>
+
     </section>
+
+
 
     <section class="section-padding">
+
         <div class="filter-group">
+
             <button class="filter-btn active" data-filter="all">All</button>
+
             <button class="filter-btn" data-filter="low">Low</button>
+
             <button class="filter-btn" data-filter="mid">Mid</button>
+
             <button class="filter-btn" data-filter="high">High</button>
+
         </div>
+
         <div class="config-grid" id="config-container"></div>
+
     </section>
 
+
+
     <script>
+
         const SUPABASE_URL = "https://unjdjduiqtldgoybgmnq.supabase.co";
+
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE";
+
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+
+
         let allConfigs = [];
-        let tempRatings = {};
+
+
 
         async function init() {
+
             const { data } = await _supabase.from('configs').select('*').order('created_at', { ascending: false });
+
             allConfigs = data || [];
+
             renderConfigs(allConfigs);
+
             setupFilters();
+
         }
+
+
 
         function renderConfigs(configs) {
-            const container = document.getElementById('config-container');
-            container.innerHTML = configs.map(conf => `
-                <div class="config-card">
-                    <div class="config-title">${conf.title}</div>
-                    <div style="font-size:0.8rem; color:var(--text-muted)">Tier: ${conf.ping_tier} | By ${conf.creator}</div>
-                    
-                    <div class="review-form">
-                        <div class="star-input" id="stars-container-${conf.id}">
-                            <i class="fas fa-star" onclick="setRating(${conf.id}, 1)"></i>
-                            <i class="fas fa-star" onclick="setRating(${conf.id}, 2)"></i>
-                            <i class="fas fa-star" onclick="setRating(${conf.id}, 3)"></i>
-                            <i class="fas fa-star" onclick="setRating(${conf.id}, 4)"></i>
-                            <i class="fas fa-star" onclick="setRating(${conf.id}, 5)"></i>
-                        </div>
-                        <textarea id="comment-${conf.id}" placeholder="Post your review..." rows="2"></textarea>
-                        <button class="post-btn" onclick="postReview(${conf.id})">Post</button>
-                    </div>
 
-                    <button class="review-toggle-btn" onclick="toggleReviewList(${conf.id})">
-                        <i class="far fa-comment"></i> View Reviews
+            const container = document.getElementById('config-container');
+
+            container.innerHTML = configs.map(conf => `
+
+                <div class="config-card">
+
+                    <div class="config-title">${conf.title}</div>
+
+                    <div style="font-size:0.8rem; color:var(--text-muted)">Tier: ${conf.ping_tier} | By ${conf.creator}</div>
+
+                    
+
+                    <button class="review-toggle-btn" onclick="toggleReviews(${conf.id})">
+
+                        <i class="fas fa-comments"></i> View Reviews
+
                     </button>
 
-                    <div class="review-list-container" id="review-list-container-${conf.id}">
-                        <div id="review-list-${conf.id}">Loading...</div>
+
+
+                    <div class="review-box" id="review-box-${conf.id}">
+
+                        <div class="review-list" id="review-list-${conf.id}">Loading...</div>
+
+                        
+
+                        <div class="review-form">
+
+                            <input type="text" id="name-${conf.id}" placeholder="DC Username">
+
+                            <textarea id="comment-${conf.id}" placeholder="Small review..."></textarea>
+
+                            <div class="star-input" id="stars-${conf.id}">
+
+                                <i class="fas fa-star" onclick="setRating(${conf.id}, 1)"></i>
+
+                                <i class="fas fa-star" onclick="setRating(${conf.id}, 2)"></i>
+
+                                <i class="fas fa-star" onclick="setRating(${conf.id}, 3)"></i>
+
+                                <i class="fas fa-star" onclick="setRating(${conf.id}, 4)"></i>
+
+                                <i class="fas fa-star" onclick="setRating(${conf.id}, 5)"></i>
+
+                            </div>
+
+                            <button class="post-btn" onclick="postReview(${conf.id})">Post Review</button>
+
+                        </div>
+
                     </div>
+
                 </div>
+
             `).join('');
+
         }
 
-        async function toggleReviewList(configId) {
-            const container = document.getElementById(`review-list-container-${configId}`);
-            const isVisible = container.style.display === 'block';
-            container.style.display = isVisible ? 'none' : 'block';
+
+
+        async function toggleReviews(configId) {
+
+            const box = document.getElementById(`review-box-${configId}`);
+
+            const isVisible = box.style.display === 'block';
+
+            box.style.display = isVisible ? 'none' : 'block';
+
             if (!isVisible) fetchReviews(configId);
+
         }
+
+
 
         async function fetchReviews(configId) {
+
             const list = document.getElementById(`review-list-${configId}`);
+
             const { data } = await _supabase.from('reviews').select('*').eq('config_id', configId).order('created_at', { ascending: false });
+
             
+
             if (!data || data.length === 0) {
-                list.innerHTML = `<p style="font-size:0.75rem; color:var(--text-muted); padding:10px 0;">No reviews yet.</p>`;
+
+                list.innerHTML = `<p style="font-size:0.7rem; color:var(--text-muted)">No reviews yet.</p>`;
+
                 return;
+
             }
+
+
 
             list.innerHTML = data.map(r => `
+
                 <div class="review-item">
+
                     <div class="review-pfp"></div>
+
                     <div class="review-content">
-                        <span class="review-user">Guest User <span class="review-stars">${'★'.repeat(r.rating)}</span></span>
+
+                        <span class="review-user">${r.poster_name} <span class="review-stars">${'★'.repeat(r.rating)}</span></span>
+
                         <p>${r.comment}</p>
+
                     </div>
+
                 </div>
+
             `).join('');
+
         }
+
+
+
+        let tempRatings = {};
 
         function setRating(id, val) {
+
             tempRatings[id] = val;
-            const stars = document.getElementById(`stars-container-${id}`).children;
+
+            const stars = document.getElementById(`stars-${id}`).children;
+
             for(let i=0; i<5; i++) stars[i].style.color = i < val ? '#f1c40f' : '#555';
+
         }
+
+
 
         async function postReview(configId) {
+
+            const name = document.getElementById(`name-${configId}`).value;
+
             const comment = document.getElementById(`comment-${configId}`).value;
+
             const rating = tempRatings[configId] || 5;
 
-            if(!comment) return alert("Write a comment first!");
 
-            // poster_name set to Guest until auth system is added
+
+            if(!name || !comment) return alert("Fill in the fields!");
+
+
+
             const { error } = await _supabase.from('reviews').insert([
-                { config_id: configId, poster_name: "Guest", comment: comment, rating: rating }
+
+                { config_id: configId, poster_name: name, comment: comment, rating: rating }
+
             ]);
 
-            if (error) alert("Error posting review. Ensure 'reviews' table and RLS are set up!");
+
+
+            if (error) alert("Error posting review. Check RLS policies!");
+
             else {
+
                 document.getElementById(`comment-${configId}`).value = "";
+
                 fetchReviews(configId);
-                document.getElementById(`review-list-container-${configId}`).style.display = 'block';
+
             }
+
         }
+
+
 
         function setupFilters() {
+
             document.querySelectorAll('.filter-btn').forEach(btn => {
+
                 btn.onclick = () => {
+
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+
                     btn.classList.add('active');
+
                     const f = btn.getAttribute('data-filter');
+
                     renderConfigs(f === 'all' ? allConfigs : allConfigs.filter(c => c.ping_tier.toLowerCase().includes(f)));
+
                 };
+
             });
+
         }
 
+
+
         init();
+
     </script>
+
 </body>
+
 </html>
