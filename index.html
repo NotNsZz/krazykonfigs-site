@@ -22,41 +22,46 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: var(--transition); line-height: 1.6; }
         
-        /* Navigation restored */
+        /* Nav & Hero Restored */
         nav { position: fixed; top: 0; width: 100%; padding: 1rem 8%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-        .logo { font-weight: 900; font-size: 1.5rem; letter-spacing: -1px; }
-
-        /* Hero restored */
-        .hero { height: 50vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-top: 60px; }
-        .hero h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 1rem; }
-        .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 600px; }
+        .hero { height: 40vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-top: 60px; }
+        .section-padding { padding: 2rem 8%; }
         
-        .section-padding { padding: 4rem 8%; }
-        
-        /* Config Grid restored */
+        /* Config Grid Restored */
         .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; }
-        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; position: relative; }
+        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
         .config-title { font-size: 1.2rem; font-weight: 700; border-bottom: 2px solid var(--text-main); padding-bottom: 5px; }
         
-        /* Review Section UI */
-        .review-toggle-btn { background: var(--tag-bg); border: none; color: var(--text-main); padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.8rem; width: 100%; margin-top: 10px; transition: var(--transition); }
-        .review-toggle-btn:hover { opacity: 0.8; }
-        
-        .review-box { display: none; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px; }
-        .review-list { max-height: 180px; overflow-y: auto; margin-bottom: 15px; }
-        .review-item { display: flex; gap: 10px; margin-bottom: 12px; font-size: 0.85rem; }
-        .review-pfp { width: 32px; height: 32px; border-radius: 50%; background: #444; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem;}
-        .review-content { flex: 1; }
-        .review-user { font-weight: 700; display: block; margin-bottom: 2px; }
-        .review-stars { color: #f1c40f; font-size: 0.75rem; }
-        
-        /* Simplified Review Form */
-        .review-form { display: flex; flex-direction: column; gap: 10px; background: var(--tag-bg); padding: 12px; border-radius: 8px; }
-        .review-form textarea { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 0.85rem; width: 100%; resize: none; }
-        .star-input { color: #555; cursor: pointer; display: flex; gap: 5px; font-size: 1.1rem; }
-        .post-btn { background: var(--text-main); color: var(--bg-body); border: none; padding: 10px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+        /* Sleek Review Form (Always Visible) */
+        .review-form { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .review-form textarea { 
+            background: var(--tag-bg); 
+            border: 1px solid var(--border); 
+            color: var(--text-main); 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-size: 0.85rem; 
+            resize: none;
+            width: 100%;
+            font-family: inherit;
+        }
+        .star-input { color: #555; cursor: pointer; font-size: 1.1rem; display: flex; gap: 4px; }
+        .post-btn { background: var(--text-main); color: var(--bg-body); border: none; padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; align-self: flex-end; }
+        .post-btn:hover { opacity: 0.8; }
 
-        .filter-group { display: flex; gap: 10px; margin-bottom: 2rem; }
+        /* Sleek Review List (Toggleable) */
+        .review-toggle-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; font-size: 0.8rem; padding: 5px 0; text-align: left; }
+        .review-toggle-btn:hover { color: var(--text-main); }
+        
+        .review-list-container { display: none; margin-top: 10px; }
+        .review-item { display: flex; gap: 12px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .review-pfp { width: 34px; height: 34px; border-radius: 50%; background: #2f3336; flex-shrink: 0; }
+        .review-content { flex: 1; font-size: 0.85rem; }
+        .review-user { font-weight: 700; display: block; margin-bottom: 2px; }
+        .review-stars { color: #f1c40f; font-size: 0.75rem; margin-left: 5px; }
+        
+        /* Filters Restored */
+        .filter-group { display: flex; gap: 10px; margin-bottom: 2rem; justify-content: center; }
         .filter-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; font-weight: 600; }
         .filter-btn.active { background: var(--text-main); color: var(--bg-body); }
     </style>
@@ -64,15 +69,13 @@
 <body class="dark-mode">
 
     <nav>
-        <div class="logo">KRAZY KONFIGS</div>
-        <div style="display: flex; gap: 20px; align-items: center;">
-            <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fas fa-adjust"></i></button>
-        </div>
+        <div style="font-weight:900; font-size:1.5rem;">KRAZY KONFIGS</div>
+        <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fas fa-adjust"></i></button>
     </nav>
 
     <section class="hero">
-        <h1>Configs & Reviews</h1>
-        <p>High-energy technical configurations verified by the community.</p>
+        <h1>Precision Redefined</h1>
+        <p>The ultimate technical configurations for competitive performance.</p>
     </section>
 
     <section class="section-padding">
@@ -91,10 +94,9 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let allConfigs = [];
-        let activeRatings = {};
+        let tempRatings = {};
 
         async function init() {
-            // Re-established fetching for configs
             const { data } = await _supabase.from('configs').select('*').order('created_at', { ascending: false });
             allConfigs = data || [];
             renderConfigs(allConfigs);
@@ -106,37 +108,35 @@
             container.innerHTML = configs.map(conf => `
                 <div class="config-card">
                     <div class="config-title">${conf.title}</div>
-                    <div style="font-size:0.8rem; color:var(--text-muted)">
-                        <i class="fas fa-bolt"></i> Tier: ${conf.ping_tier} | <i class="fas fa-code"></i> By ${conf.creator}
-                    </div>
+                    <div style="font-size:0.8rem; color:var(--text-muted)">Tier: ${conf.ping_tier} | By ${conf.creator}</div>
                     
-                    <button class="review-toggle-btn" onclick="toggleReviews(${conf.id})">
-                        <i class="fas fa-star"></i> View & Leave Reviews
+                    <div class="review-form">
+                        <div class="star-input" id="stars-container-${conf.id}">
+                            <i class="fas fa-star" onclick="setRating(${conf.id}, 1)"></i>
+                            <i class="fas fa-star" onclick="setRating(${conf.id}, 2)"></i>
+                            <i class="fas fa-star" onclick="setRating(${conf.id}, 3)"></i>
+                            <i class="fas fa-star" onclick="setRating(${conf.id}, 4)"></i>
+                            <i class="fas fa-star" onclick="setRating(${conf.id}, 5)"></i>
+                        </div>
+                        <textarea id="comment-${conf.id}" placeholder="Post your review..." rows="2"></textarea>
+                        <button class="post-btn" onclick="postReview(${conf.id})">Post</button>
+                    </div>
+
+                    <button class="review-toggle-btn" onclick="toggleReviewList(${conf.id})">
+                        <i class="far fa-comment"></i> View Reviews
                     </button>
 
-                    <div class="review-box" id="review-box-${conf.id}">
-                        <div class="review-list" id="review-list-${conf.id}"></div>
-                        
-                        <div class="review-form">
-                            <div class="star-input" id="stars-${conf.id}">
-                                <i class="fas fa-star" onclick="setRating(${conf.id}, 1)"></i>
-                                <i class="fas fa-star" onclick="setRating(${conf.id}, 2)"></i>
-                                <i class="fas fa-star" onclick="setRating(${conf.id}, 3)"></i>
-                                <i class="fas fa-star" onclick="setRating(${conf.id}, 4)"></i>
-                                <i class="fas fa-star" onclick="setRating(${conf.id}, 5)"></i>
-                            </div>
-                            <textarea id="comment-${conf.id}" placeholder="What do you think of this config?" rows="2"></textarea>
-                            <button class="post-btn" onclick="postReview(${conf.id})">Post Review</button>
-                        </div>
+                    <div class="review-list-container" id="review-list-container-${conf.id}">
+                        <div id="review-list-${conf.id}">Loading...</div>
                     </div>
                 </div>
             `).join('');
         }
 
-        async function toggleReviews(configId) {
-            const box = document.getElementById(`review-box-${configId}`);
-            const isVisible = box.style.display === 'block';
-            box.style.display = isVisible ? 'none' : 'block';
+        async function toggleReviewList(configId) {
+            const container = document.getElementById(`review-list-container-${configId}`);
+            const isVisible = container.style.display === 'block';
+            container.style.display = isVisible ? 'none' : 'block';
             if (!isVisible) fetchReviews(configId);
         }
 
@@ -145,15 +145,15 @@
             const { data } = await _supabase.from('reviews').select('*').eq('config_id', configId).order('created_at', { ascending: false });
             
             if (!data || data.length === 0) {
-                list.innerHTML = `<p style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:10px;">No reviews yet.</p>`;
+                list.innerHTML = `<p style="font-size:0.75rem; color:var(--text-muted); padding:10px 0;">No reviews yet.</p>`;
                 return;
             }
 
             list.innerHTML = data.map(r => `
                 <div class="review-item">
-                    <div class="review-pfp"><i class="fas fa-user"></i></div>
+                    <div class="review-pfp"></div>
                     <div class="review-content">
-                        <span class="review-user">${r.poster_name || 'Guest'} <span class="review-stars">${'★'.repeat(r.rating)}</span></span>
+                        <span class="review-user">Guest User <span class="review-stars">${'★'.repeat(r.rating)}</span></span>
                         <p>${r.comment}</p>
                     </div>
                 </div>
@@ -161,28 +161,27 @@
         }
 
         function setRating(id, val) {
-            activeRatings[id] = val;
-            const stars = document.getElementById(`stars-${id}`).children;
+            tempRatings[id] = val;
+            const stars = document.getElementById(`stars-container-${id}`).children;
             for(let i=0; i<5; i++) stars[i].style.color = i < val ? '#f1c40f' : '#555';
         }
 
         async function postReview(configId) {
             const comment = document.getElementById(`comment-${configId}`).value;
-            const rating = activeRatings[configId] || 5;
+            const rating = tempRatings[configId] || 5;
 
-            if(!comment) return alert("Please write a comment first!");
+            if(!comment) return alert("Write a comment first!");
 
-            // poster_name set to Guest for now until auth system is linked
+            // poster_name set to Guest until auth system is added
             const { error } = await _supabase.from('reviews').insert([
-                { config_id: configId, poster_name: "Guest User", comment: comment, rating: rating }
+                { config_id: configId, poster_name: "Guest", comment: comment, rating: rating }
             ]);
 
-            if (error) {
-                console.error(error);
-                alert("Database error. Check your RLS settings!");
-            } else {
+            if (error) alert("Error posting review. Ensure 'reviews' table and RLS are set up!");
+            else {
                 document.getElementById(`comment-${configId}`).value = "";
                 fetchReviews(configId);
+                document.getElementById(`review-list-container-${configId}`).style.display = 'block';
             }
         }
 
