@@ -7,92 +7,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --bg-body: #ffffff;
-            --text-main: #000000;
-            --text-muted: #666666;
-            --border: #eeeeee;
-            --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        body.dark-mode {
-            --bg-body: #0a0a0a;
-            --text-main: #ffffff;
-            --text-muted: #aaaaaa;
-            --border: #1f1f1f;
-        }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: 'Source Sans Pro', sans-serif;
-            margin: 0;
-            transition: background-color 0.4s ease, color 0.4s ease;
-        }
-
-        /* Animations */
+        :root { --bg-body: #ffffff; --text-main: #000000; --text-muted: #666666; --border: #eeeeee; --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        body.dark-mode { --bg-body: #0a0a0a; --text-main: #ffffff; --text-muted: #aaaaaa; --border: #1f1f1f; }
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; margin: 0; transition: background-color 0.4s ease, color 0.4s ease; }
         .reveal { opacity: 0; transform: translateY(30px); animation: reveal 1s forwards; }
         @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
-
-        nav {
-            padding: 1.5rem 8%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: fixed;
-            width: 100%;
-            z-index: 100;
-            background: var(--bg-body);
-        }
-
-        .hero {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 10%;
-        }
-
+        nav { padding: 1.5rem 8%; display: flex; justify-content: space-between; align-items: center; position: fixed; width: 100%; z-index: 100; background: var(--bg-body); }
+        .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 10%; }
         h1 { font-size: clamp(3rem, 10vw, 5.5rem); font-weight: 900; letter-spacing: -4px; margin-bottom: 1rem; text-transform: uppercase; }
-        
-        .how-we-work {
-            max-width: 600px;
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            margin-bottom: 3rem;
-            line-height: 1.8;
-        }
-
-        .btn-get-started {
-            padding: 16px 45px;
-            background: var(--text-main);
-            color: var(--bg-body);
-            text-decoration: none;
-            font-weight: 700;
-            border-radius: 4px;
-            letter-spacing: 1px;
-            transition: var(--transition);
-            border: 2px solid var(--text-main);
-        }
-
-        .btn-get-started:hover {
-            background: transparent;
-            color: var(--text-main);
-            transform: scale(1.05);
-        }
-
+        .how-we-work { max-width: 600px; color: var(--text-muted); font-size: 1.1rem; margin-bottom: 3rem; line-height: 1.8; }
+        .btn-get-started { padding: 16px 45px; background: var(--text-main); color: var(--bg-body); text-decoration: none; font-weight: 700; border-radius: 4px; letter-spacing: 1px; transition: var(--transition); border: 2px solid var(--text-main); }
+        .btn-get-started:hover { background: transparent; color: var(--text-main); transform: scale(1.05); }
         .theme-toggle { background: none; border: none; color: var(--text-main); cursor: pointer; font-size: 1.2rem; }
     </style>
 </head>
 <body>
-
     <nav>
         <div style="font-weight: 900; border: 2px solid var(--text-main); padding: 5px 12px;">K</div>
         <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></button>
     </nav>
-
     <section class="hero reveal">
         <h1>KRAZY KONFIGS</h1>
         <div class="how-we-work">
@@ -100,7 +33,6 @@
         </div>
         <a href="login.html" class="btn-get-started">GET STARTED <i class="fas fa-arrow-right" style="margin-left:10px;"></i></a>
     </section>
-
     <script>
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
@@ -108,7 +40,7 @@
             document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
-        if (localStorage.getItem('theme') === 'dark') toggleTheme();
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
     </script>
 </body>
 </html>
