@@ -3,159 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Roblox UI Designer</title>
-    <!-- Supabase JS Client -->
+    <title>Dashboard | Krazy Konfigs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        :root {
+            --bg: #0a0a0a;
+            --card-bg: #111111;
+            --border: #1f1f1f;
+            --accent: #3b82f6;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a; /* Sleek navy/charcoal background */
-            color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Source Sans Pro', sans-serif;
             margin: 0;
+            padding: 2rem 5%;
         }
-        .container {
-            background-color: #1e293b;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
+
+        /* --- Profile Header --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2rem;
+            margin-bottom: 3rem;
         }
-        img#avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            border: 2px solid #3b82f6; /* Subtle glow/border */
+
+        .user-info { display: flex; align-items: center; gap: 1rem; }
+        .user-info img { width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--border); }
+        .user-info h2 { font-weight: 900; margin: 0; font-size: 1.5rem; letter-spacing: -1px; }
+
+        /* --- Section Grid --- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 3rem;
+        }
+
+        h3 { text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+
+        /* --- Config Cards --- */
+        .config-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 4px;
             margin-bottom: 1rem;
-            display: none;
+            transition: border-color 0.3s ease;
         }
-        button {
-            background-color: #ef4444;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 1rem;
-            transition: background-color 0.2s;
+        .config-card:hover { border-color: var(--accent); }
+        .config-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .config-title { font-weight: 700; font-size: 1.1rem; }
+        .ping-badge { font-size: 0.7rem; padding: 3px 8px; border: 1px solid var(--accent); color: var(--accent); border-radius: 2px; }
+        
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; }
+        .stat-item { font-size: 0.8rem; color: var(--text-muted); }
+        .stat-value { color: var(--text-main); font-weight: 600; display: block; }
+
+        /* --- Contributors Sidebar --- */
+        .contributor-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--border);
         }
-        button:hover {
-            background-color: #dc2626;
-        }
-        #error-message {
-            color: #ef4444;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
+        .role-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 0.7rem; }
+
+        button.logout { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; cursor: pointer; }
+        button.logout:hover { color: white; border-color: white; }
+
+        .loading-state { text-align: center; margin-top: 5rem; color: var(--text-muted); }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2 id="status">Verifying Login...</h2>
-        <img id="avatar" src="" alt="User Avatar">
-        <h3 id="username"></h3>
-        <p id="error-message"></p>
-        
-        <!-- Dashboard Content Goes Here -->
-        <div id="dashboard-content" style="display: none; margin-top: 20px;">
-            <p>Welcome to your Premium Dashboard.</p>
+    <div id="loading" class="loading-state">Initializing secure session...</div>
+
+    <div id="main-content" style="display: none;">
+        <div class="header">
+            <div class="user-info">
+                <img id="user-avatar" src="" alt="">
+                <div>
+                    <h2 id="user-display-name">USER</h2>
+                    <span id="user-role" style="font-size: 0.7rem; color: var(--accent); text-transform: uppercase;">Authenticated Member</span>
+                </div>
+            </div>
+            <button class="logout" onclick="logout()">LOGOUT</button>
         </div>
 
-        <button id="logout-btn" style="display: none;" onclick="logout()">Logout</button>
+        <div class="grid-container">
+            <!-- Left: Configurations -->
+            <section>
+                <h3>Active Configurations</h3>
+                <div id="configs-list">
+                    <!-- Configs will load here -->
+                </div>
+            </section>
+
+            <!-- Right: Contributors -->
+            <aside>
+                <h3>Contributors</h3>
+                <div id="contributors-list">
+                    <!-- Contributors will load here -->
+                </div>
+            </aside>
+        </div>
     </div>
 
     <script>
-        // ==========================================
-        // 1. INITIALIZE SUPABASE
-        // ==========================================
         const SUPABASE_URL = 'https://unjdjduiqtldgoybgmnq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE';
         
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ==========================================
-        // 2. MAIN AUTH & SYNC FUNCTION
-        // ==========================================
-        async function checkAuthAndSyncUser() {
-            try {
-                // A. Check if the user is actually logged in
-                const { data: { session }, error: authError } = await _supabase.auth.getSession();
+        async function start() {
+            // 1. Auth Check & Sync (Matches image_bfcd23.png schema)
+            const { data: { session }, error: authError } = await _supabase.auth.getSession();
+            if (authError || !session) { window.location.href = 'index.html'; return; }
 
-                if (authError || !session) {
-                    console.error("Auth Error or No Session:", authError);
-                    // Redirect back to login if no valid session is found
-                    window.location.href = 'index.html'; 
-                    return;
-                }
+            const user = session.user;
+            const meta = user.user_metadata;
 
-                const user = session.user;
-                console.log("Logged in as:", user);
+            const { error: syncError } = await _supabase.from('users').upsert({
+                id: user.id, // Primary Key UUID
+                discord_id: user.id,
+                username: meta.full_name || meta.custom_claims?.global_name || 'Designer',
+                avatar_url: meta.avatar_url,
+                last_login: new Date().toISOString()
+            });
 
-                // Update UI to show loading is done
-                document.getElementById('status').innerText = "Syncing Profile...";
+            if (syncError) console.error("Sync Error:", syncError);
 
-                // Extract Discord Metadata (handles different ways Discord might send the name)
-                const displayName = user.user_metadata.full_name || user.user_metadata.custom_claims?.global_name || 'Discord User';
-                const avatarUrl = user.user_metadata.avatar_url;
+            // 2. Load UI Data
+            document.getElementById('user-avatar').src = meta.avatar_url;
+            document.getElementById('user-display-name').innerText = (meta.full_name || 'USER').toUpperCase();
+            
+            await Promise.all([fetchConfigs(), fetchContributors()]);
 
-                // B. Attempt the Upsert into the 'users' table
-                const { error: dbError } = await _supabase
-                    .from('users')
-                    .upsert({
-                        id: user.id, // This is a UUID
-                        name: displayName,
-                        avatar_url: avatarUrl,
-                        last_login: new Date().toISOString()
-                    });
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        }
 
-                // C. Handle Database Errors (This will catch the UUID/BigInt issue if it still exists)
-                if (dbError) {
-                    console.error("CRITICAL DATABASE ERROR:", dbError);
-                    document.getElementById('status').innerText = "Database Error";
-                    document.getElementById('error-message').innerText = `Error: ${dbError.message}. Check console (F12) for details.`;
-                    
-                    // Notice we DO NOT redirect here. This lets you actually read the error on the screen/console!
-                    return;
-                }
-
-                // D. Success! Update the UI
-                console.log("Database sync successful!");
-                document.getElementById('status').innerText = "Dashboard Ready";
-                document.getElementById('username').innerText = displayName;
-                
-                const avatarImg = document.getElementById('avatar');
-                if (avatarUrl) {
-                    avatarImg.src = avatarUrl;
-                    avatarImg.style.display = 'inline-block';
-                }
-
-                document.getElementById('dashboard-content').style.display = 'block';
-                document.getElementById('logout-btn').style.display = 'inline-block';
-
-            } catch (err) {
-                console.error("Unexpected Error:", err);
-                document.getElementById('status').innerText = "An unexpected error occurred.";
+        async function fetchConfigs() {
+            const { data, error } = await _supabase.from('configs').select('*').order('created_at', { ascending: false });
+            const list = document.getElementById('configs-list');
+            
+            if (data) {
+                list.innerHTML = data.map(cfg => `
+                    <div class="config-card">
+                        <div class="config-header">
+                            <span class="config-title">${cfg.title}</span>
+                            <span class="ping-badge">${cfg.ping_tier}</span>
+                        </div>
+                        <div class="stats-row">
+                            <div class="stat-item">SIM TIMER <span class="stat-value">${cfg.sim_timer}</span></div>
+                            <div class="stat-item">PRED INTERVAL <span class="stat-value">${cfg.pred_interval}</span></div>
+                            <div class="stat-item">HIT RATE <span class="stat-value">${cfg.hit_rate}</span></div>
+                            <div class="stat-item">CREATOR <span class="stat-value">${cfg.creator}</span></div>
+                        </div>
+                    </div>
+                `).join('');
             }
         }
 
-        // ==========================================
-        // 3. LOGOUT FUNCTION
-        // ==========================================
+        async function fetchContributors() {
+            // Mapping to your schema: nama, role_icon, icon_color
+            const { data, error } = await _supabase.from('contributors').select('*');
+            const list = document.getElementById('contributors-list');
+
+            if (data) {
+                list.innerHTML = data.map(con => `
+                    <div class="contributor-item">
+                        <div class="role-icon" style="background: ${con.icon_color}22; color: ${con.icon_color}; border: 1px solid ${con.icon_color}44;">
+                            ${con.role_icon || 'ID'}
+                        </div>
+                        <div style="font-size: 0.9rem; font-weight: 600;">${con.nama}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
         async function logout() {
             await _supabase.auth.signOut();
             window.location.href = 'index.html';
         }
 
-        // Run the check as soon as the page loads
-        document.addEventListener('DOMContentLoaded', checkAuthAndSyncUser);
+        document.addEventListener('DOMContentLoaded', start);
     </script>
 </body>
 </html>
