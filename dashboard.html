@@ -19,30 +19,27 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: background-color 0.3s; display: none; }
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; display: none; }
         
-        /* Cursor Follower Fix */
-        #cursor-follower { width: 30px; height: 30px; background: var(--text-main); opacity: 0.1; filter: blur(8px); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: transform 0.1s ease-out; }
+        #cursor-follower { width: 30px; height: 30px; background: var(--text-main); opacity: 0.1; filter: blur(8px); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: transform 0.1s ease-out, background 0.3s ease; }
 
-        nav { position: fixed; top: 0; width: 100%; padding: 1rem 8%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        nav { position: fixed; top: 0; width: 100%; padding: 1rem 8%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); transition: background-color 0.3s ease, border-color 0.3s ease; }
         .user-profile { display: flex; align-items: center; gap: 12px; }
-        .header-pfp { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--text-main); }
+        .header-pfp { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--text-main); transition: border-color 0.3s ease; }
 
         .section-padding { padding: 6rem 10% 4rem; }
         .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; }
         
-        /* Config Card Fixes */
         .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; transition: 0.3s; }
         .config-card:hover { border-color: var(--text-main); }
-        .system-tag { font-size: 0.7rem; font-weight: 900; background: var(--text-main); color: var(--bg-body); padding: 3px 8px; border-radius: 4px; }
+        .system-tag { font-size: 0.7rem; font-weight: 900; background: var(--text-main); color: var(--bg-body); padding: 3px 8px; border-radius: 4px; transition: background-color 0.3s ease, color 0.3s ease; }
 
-        /* Contributor Tags Fix */
         .role-tag { font-size: 0.65rem; font-weight: 900; padding: 2px 8px; border-radius: 50px; text-transform: uppercase; border: 1px solid currentColor; }
         
         .filter-btn { padding: 8px 16px; background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; border-radius: 4px; font-weight: 700; transition: 0.2s; }
         .filter-btn.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
 
-        .form-input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 4px; }
+        .form-input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 4px; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
     </style>
 </head>
 <body id="body">
@@ -50,12 +47,11 @@
 
     <nav>
         <div style="display:flex; gap: 2rem; align-items: center;">
-            <div style="font-weight: 900; border: 2px solid var(--text-main); padding: 4px 10px;">K</div>
-            <!-- Restore Scroll Button -->
+            <div style="font-weight: 900; border: 2px solid var(--text-main); padding: 4px 10px; transition: border-color 0.3s ease;">K</div>
             <span onclick="scrollToSection('contact')" style="cursor:pointer; font-weight:700; font-size: 0.8rem; text-transform: uppercase;">Requests</span>
         </div>
         <div style="display:flex; align-items: center; gap: 1.5rem;">
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" style="background:none; border:none; color:var(--text-main); cursor:pointer;"><i class="fas fa-moon"></i></button>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" style="background:none; border:none; color:var(--text-main); cursor:pointer; font-size:1.2rem; transition: color 0.3s ease;"><i class="fas fa-moon"></i></button>
             <div class="user-profile">
                 <img src="" id="navPfp" class="header-pfp">
                 <span id="navName" style="font-weight:700; font-size:0.85rem;">...</span>
@@ -77,20 +73,18 @@
         <div class="config-grid" id="config-container"></div>
     </section>
 
-    <!-- Contributor Section (Fixed Background) -->
     <section class="section-padding" id="contributors">
         <h2 style="margin-bottom:2rem; letter-spacing:-1px;">TEAM</h2>
         <div id="contributor-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;"></div>
     </section>
 
-    <!-- Webhook Section -->
     <section class="section-padding" id="contact">
-        <div style="max-width: 500px; margin: 0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 8px;">
+        <div style="max-width: 500px; margin: 0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 8px; background: var(--bg-card); transition: background-color 0.3s ease, border-color 0.3s ease;">
             <h3 style="margin-bottom:1.5rem; text-align:center;">SUBMIT REQUEST</h3>
             <form id="webhookForm">
                 <input type="text" id="dcUser" placeholder="Discord Tag (User#0000)" class="form-input" required>
                 <textarea id="dcDetails" placeholder="What settings are you looking for?" class="form-input" rows="4" required></textarea>
-                <button type="submit" id="submitBtn" style="width:100%; padding:12px; background:var(--text-main); color:var(--bg-body); border:none; font-weight:900; border-radius:4px; cursor:pointer;">SEND TO WEBHOOK</button>
+                <button type="submit" id="submitBtn" style="width:100%; padding:12px; background:var(--text-main); color:var(--bg-body); border:none; font-weight:900; border-radius:4px; cursor:pointer; transition: background-color 0.3s ease, color 0.3s ease;">SEND TO WEBHOOK</button>
                 <p id="cooldownMsg" style="color:red; font-size:0.75rem; margin-top:10px; display:none; text-align:center;"></p>
             </form>
         </div>
@@ -101,7 +95,6 @@
         let currentUser = null;
         let allConfigs = [];
 
-        // Smooth Cursor Follower
         const follower = document.getElementById('cursor-follower');
         document.addEventListener('mousemove', (e) => {
             follower.style.left = e.clientX + 'px';
@@ -114,6 +107,23 @@
                 window.location.href = 'login.html';
             } else {
                 currentUser = session.user;
+                
+                // ---- DATABASE ENTRY CREATION LOGIC ADDED HERE ----
+                // This will insert the user into your 'users' table, or update their data if they already exist.
+                try {
+                    const { error } = await _supabase.from('users').upsert([{
+                        id: currentUser.id,
+                        name: currentUser.user_metadata.full_name || currentUser.user_metadata.name,
+                        avatar_url: currentUser.user_metadata.avatar_url,
+                        last_login: new Date().toISOString()
+                    }], { onConflict: 'id' });
+                    
+                    if (error) console.error("Database Entry Creation Failed:", error);
+                } catch (e) {
+                    console.error("Failed to execute database upsert:", e);
+                }
+                // --------------------------------------------------
+
                 document.getElementById('navName').innerText = currentUser.user_metadata.full_name;
                 document.getElementById('navPfp').src = currentUser.user_metadata.avatar_url;
                 document.body.style.display = 'block';
@@ -122,10 +132,15 @@
         }
 
         async function init() {
-            if (localStorage.getItem('theme') === 'dark') {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeBtn').innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('themeBtn').innerHTML = '<i class="fas fa-moon"></i>';
             }
+
             fetchConfigs();
             fetchContributors();
         }
@@ -163,11 +178,10 @@
             const { data } = await _supabase.from('contributors').select('*');
             const container = document.getElementById('contributor-container');
             container.innerHTML = data.map(m => {
-                // Correct Color Logic
                 const tagColor = m.role_color || (m.role === 'Owner' ? 'var(--clr-owner)' : 'var(--clr-contributor)');
                 return `
-                    <div style="display:flex; align-items:center; gap:15px; background:var(--bg-card); border:1px solid var(--border); padding:1rem; border-radius:8px;">
-                        <img src="${m.avatar_url}" style="width:40px; height:40px; border-radius:50%; border: 1px solid ${tagColor}">
+                    <div style="display:flex; align-items:center; gap:15px; background:var(--bg-card); border:1px solid var(--border); padding:1rem; border-radius:8px; transition: background-color 0.3s ease, border-color 0.3s ease;">
+                        <img src="${m.avatar_url}" style="width:40px; height:40px; border-radius:50%; border: 1px solid ${tagColor};">
                         <div>
                             <div style="font-weight:900; font-size:0.9rem;">${m.name}</div>
                             <span class="role-tag" style="color:${tagColor}">${m.role}</span>
@@ -177,7 +191,6 @@
             }).join('');
         }
 
-        // Webhook Cooldown Logic (6 Hours)
         document.getElementById('webhookForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const lastSent = localStorage.getItem('lastWebhook');
@@ -192,7 +205,6 @@
                 return;
             }
 
-            // Mock Webhook Trigger
             const btn = document.getElementById('submitBtn');
             btn.innerText = "SENDING...";
             setTimeout(() => {
