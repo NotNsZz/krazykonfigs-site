@@ -3,198 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Krazy Konfigs</title>
+    <title>KrazyKonfigs | Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg: #0a0a0a;
-            --card-bg: #111111;
-            --border: #1f1f1f;
-            --accent: #3b82f6;
-            --text-main: #ffffff;
-            --text-muted: #888888;
+            --bg-body: #ffffff; --bg-nav: rgba(255, 255, 255, 0.95); --bg-card: #ffffff;
+            --text-main: #000000; --text-muted: #666666; --border: #eeeeee; --tag-bg: #f5f5f5;
+        }
+        body.dark-mode {
+            --bg-body: #0a0a0a; --bg-nav: rgba(10, 10, 10, 0.95); --bg-card: #121212;
+            --text-main: #ffffff; --text-muted: #aaaaaa; --border: #1f1f1f; --tag-bg: #1a1a1a;
         }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            font-family: 'Source Sans Pro', sans-serif;
-            margin: 0;
-            padding: 2rem 5%;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            font-family: 'Source Sans Pro', sans-serif; 
+            transition: background-color 0.3s; 
+            display: none; /* Hidden until auth checks out */
+            overflow-x: hidden;
         }
-
-        /* --- Profile Header --- */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 2rem;
-            margin-bottom: 3rem;
-        }
-
-        .user-info { display: flex; align-items: center; gap: 1rem; }
-        .user-info img { width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--border); }
-        .user-info h2 { font-weight: 900; margin: 0; font-size: 1.5rem; letter-spacing: -1px; }
-
-        /* --- Section Grid --- */
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 3rem;
-        }
-
-        h3 { text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem; }
-
-        /* --- Config Cards --- */
-        .config-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            transition: border-color 0.3s ease;
-        }
-        .config-card:hover { border-color: var(--accent); }
-        .config-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .config-title { font-weight: 700; font-size: 1.1rem; }
-        .ping-badge { font-size: 0.7rem; padding: 3px 8px; border: 1px solid var(--accent); color: var(--accent); border-radius: 2px; }
         
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; }
-        .stat-item { font-size: 0.8rem; color: var(--text-muted); }
-        .stat-value { color: var(--text-main); font-weight: 600; display: block; }
-
-        /* --- Contributors Sidebar --- */
-        .contributor-item {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 0.8rem 0;
-            border-bottom: 1px solid var(--border);
+        /* Cursor Follower */
+        #cursor-follower { 
+            width: 30px; height: 30px; 
+            background: var(--text-main); 
+            opacity: 0.1; filter: blur(8px); 
+            border-radius: 50%; position: fixed; 
+            pointer-events: none; z-index: 9999; 
+            transform: translate(-50%, -50%); 
+            transition: transform 0.1s ease-out; 
         }
-        .role-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 0.7rem; }
 
-        button.logout { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; cursor: pointer; }
-        button.logout:hover { color: white; border-color: white; }
+        nav { 
+            position: fixed; top: 0; width: 100%; padding: 1rem 8%; 
+            background: var(--bg-nav); backdrop-filter: blur(10px); 
+            z-index: 1000; display: flex; justify-content: space-between; 
+            align-items: center; border-bottom: 1px solid var(--border); 
+        }
+        .user-profile { display: flex; align-items: center; gap: 12px; }
+        .header-pfp { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--text-main); }
 
-        .loading-state { text-align: center; margin-top: 5rem; color: var(--text-muted); }
+        .section-padding { padding: 6rem 10% 4rem; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; }
+        
+        /* Cards */
+        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; transition: 0.3s; }
+        .config-card:hover { border-color: var(--text-main); }
+        .system-tag { font-size: 0.7rem; font-weight: 900; background: var(--text-main); color: var(--bg-body); padding: 3px 8px; border-radius: 4px; }
+
+        /* Contributor Tags */
+        .role-tag { font-size: 0.65rem; font-weight: 900; padding: 2px 8px; border-radius: 50px; text-transform: uppercase; border: 1px solid currentColor; }
+        
+        .filter-btn { padding: 8px 16px; background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; border-radius: 4px; font-weight: 700; transition: 0.2s; }
+        .filter-btn.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
+
+        .form-input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 4px; }
     </style>
 </head>
-<body>
+<body id="body">
+    <div id="cursor-follower"></div>
 
-    <div id="loading" class="loading-state">Initializing secure session...</div>
-
-    <div id="main-content" style="display: none;">
-        <div class="header">
-            <div class="user-info">
-                <img id="user-avatar" src="" alt="">
-                <div>
-                    <h2 id="user-display-name">USER</h2>
-                    <span id="user-role" style="font-size: 0.7rem; color: var(--accent); text-transform: uppercase;">Authenticated Member</span>
-                </div>
+    <nav>
+        <div style="display:flex; gap: 2rem; align-items: center;">
+            <div style="font-weight: 900; border: 2px solid var(--text-main); padding: 4px 10px;">K</div>
+            <span onclick="scrollToSection('contact')" style="cursor:pointer; font-weight:700; font-size: 0.8rem; text-transform: uppercase;">Requests</span>
+        </div>
+        <div style="display:flex; align-items: center; gap: 1.5rem;">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" style="background:none; border:none; color:var(--text-main); cursor:pointer;"><i class="fas fa-moon"></i></button>
+            <div class="user-profile">
+                <img src="" id="navPfp" class="header-pfp" alt="PFP">
+                <span id="navName" style="font-weight:700; font-size:0.85rem;">...</span>
+                <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; margin-left: 10px; font-size: 0.8rem;" title="Logout"></i>
             </div>
-            <button class="logout" onclick="logout()">LOGOUT</button>
         </div>
+    </nav>
 
-        <div class="grid-container">
-            <!-- Left: Configurations -->
-            <section>
-                <h3>Active Configurations</h3>
-                <div id="configs-list">
-                    <!-- Configs will load here -->
-                </div>
-            </section>
-
-            <!-- Right: Contributors -->
-            <aside>
-                <h3>Contributors</h3>
-                <div id="contributors-list">
-                    <!-- Contributors will load here -->
-                </div>
-            </aside>
+    <!-- Configs Section -->
+    <section class="section-padding">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+            <h2 style="letter-spacing:-1px;">CONFIG INDEX</h2>
+            <div style="display:flex; gap:8px;">
+                <button class="filter-btn active" onclick="filterConfigs('all', this)">All</button>
+                <button class="filter-btn" onclick="filterConfigs('low', this)">Low</button>
+                <button class="filter-btn" onclick="filterConfigs('mid', this)">Mid</button>
+                <button class="filter-btn" onclick="filterConfigs('high', this)">High</button>
+            </div>
         </div>
-    </div>
+        <div class="config-grid" id="config-container"></div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="section-padding" id="contributors" style="padding-top: 0;">
+        <h2 style="margin-bottom:2rem; letter-spacing:-1px;">TEAM</h2>
+        <div id="contributor-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;"></div>
+    </section>
+
+    <!-- Webhook Section -->
+    <section class="section-padding" id="contact" style="padding-top: 0;">
+        <div style="max-width: 500px; margin: 0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 8px;">
+            <h3 style="margin-bottom:1.5rem; text-align:center;">SUBMIT REQUEST</h3>
+            <form id="webhookForm">
+                <input type="text" id="dcUser" placeholder="Discord Tag (User#0000)" class="form-input" required>
+                <textarea id="dcDetails" placeholder="What settings are you looking for?" class="form-input" rows="4" required></textarea>
+                <button type="submit" id="submitBtn" style="width:100%; padding:12px; background:var(--text-main); color:var(--bg-body); border:none; font-weight:900; border-radius:4px; cursor:pointer; transition: background 0.3s;">SEND TO WEBHOOK</button>
+                <p id="cooldownMsg" style="color:#f85149; font-size:0.75rem; margin-top:10px; display:none; text-align:center;"></p>
+            </form>
+        </div>
+    </section>
 
     <script>
-        const SUPABASE_URL = 'https://unjdjduiqtldgoybgmnq.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE';
-        
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const _supabase = supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE');
+        let allConfigs = [];
 
-        async function start() {
-            // 1. Auth Check & Sync (Matches image_bfcd23.png schema)
+        // Smooth Cursor Follower
+        const follower = document.getElementById('cursor-follower');
+        document.addEventListener('mousemove', (e) => {
+            follower.style.left = e.clientX + 'px';
+            follower.style.top = e.clientY + 'px';
+        });
+
+        async function checkAuthAndSync() {
             const { data: { session }, error: authError } = await _supabase.auth.getSession();
-            if (authError || !session) { window.location.href = 'index.html'; return; }
+            
+            if (authError || !session) {
+                window.location.href = 'index.html'; // Redirect if not logged in
+                return;
+            }
 
             const user = session.user;
             const meta = user.user_metadata;
+            const userName = meta.full_name || meta.custom_claims?.global_name || 'User';
 
-            const { error: syncError } = await _supabase.from('users').upsert({
-                id: user.id, // Primary Key UUID
+            // Sync user to database (Your exact schema + last_login)
+            await _supabase.from('users').upsert({
+                id: user.id, 
                 discord_id: user.id,
-                username: meta.full_name || meta.custom_claims?.global_name || 'Designer',
+                username: userName,
                 avatar_url: meta.avatar_url,
                 last_login: new Date().toISOString()
             });
 
-            if (syncError) console.error("Sync Error:", syncError);
-
-            // 2. Load UI Data
-            document.getElementById('user-avatar').src = meta.avatar_url;
-            document.getElementById('user-display-name').innerText = (meta.full_name || 'USER').toUpperCase();
+            // Update Nav UI
+            document.getElementById('navName').innerText = userName;
+            document.getElementById('navPfp').src = meta.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png';
             
+            // Show Page
+            document.body.style.display = 'block';
+            init();
+        }
+
+        async function init() {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeBtn').innerHTML = '<i class="fas fa-sun"></i>';
+            }
             await Promise.all([fetchConfigs(), fetchContributors()]);
-
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('main-content').style.display = 'block';
         }
 
+        // Fetching Configs (Mapping your specific columns)
         async function fetchConfigs() {
-            const { data, error } = await _supabase.from('configs').select('*').order('created_at', { ascending: false });
-            const list = document.getElementById('configs-list');
-            
-            if (data) {
-                list.innerHTML = data.map(cfg => `
-                    <div class="config-card">
-                        <div class="config-header">
-                            <span class="config-title">${cfg.title}</span>
-                            <span class="ping-badge">${cfg.ping_tier}</span>
-                        </div>
-                        <div class="stats-row">
-                            <div class="stat-item">SIM TIMER <span class="stat-value">${cfg.sim_timer}</span></div>
-                            <div class="stat-item">PRED INTERVAL <span class="stat-value">${cfg.pred_interval}</span></div>
-                            <div class="stat-item">HIT RATE <span class="stat-value">${cfg.hit_rate}</span></div>
-                            <div class="stat-item">CREATOR <span class="stat-value">${cfg.creator}</span></div>
-                        </div>
+            const { data } = await _supabase.from('configs').select('*').order('created_at', {ascending: false});
+            allConfigs = data || [];
+            renderConfigs(allConfigs);
+        }
+
+        function renderConfigs(configs) {
+            const container = document.getElementById('config-container');
+            container.innerHTML = configs.map(c => `
+                <div class="config-card">
+                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                        <span style="font-weight:900; font-size:1.2rem;">${c.title}</span>
+                        <span class="system-tag">${c.hit_rate || '0'}% HIT</span>
                     </div>
-                `).join('');
+                    <div style="font-size:0.85rem; color:var(--text-muted); display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div>Timer: <b style="color:var(--text-main)">${c.sim_timer}</b></div>
+                        <div>Interval: <b style="color:var(--text-main)">${c.pred_interval}</b></div>
+                        <div>Creator: <b style="color:var(--text-main)">${c.creator || 'Community'}</b></div>
+                        <div>Tier: <b style="color:var(--text-main); text-transform:uppercase;">${c.ping_tier || 'N/A'}</b></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter based on ping_tier
+        function filterConfigs(tier, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (tier === 'all') {
+                renderConfigs(allConfigs);
+            } else {
+                renderConfigs(allConfigs.filter(c => c.ping_tier?.toLowerCase() === tier));
             }
         }
 
+        // Fetching Contributors (Mapping nama, role_icon, icon_color)
         async function fetchContributors() {
-            // Mapping to your schema: nama, role_icon, icon_color
-            const { data, error } = await _supabase.from('contributors').select('*');
-            const list = document.getElementById('contributors-list');
+            const { data } = await _supabase.from('contributors').select('*');
+            const container = document.getElementById('contributor-container');
+            
+            container.innerHTML = (data || []).map(m => {
+                const tagColor = m.icon_color || 'var(--text-main)';
+                const initial = m.nama ? m.nama.charAt(0).toUpperCase() : '?';
+                const avatar = m.avatar_url 
+                    ? `<img src="${m.avatar_url}" style="width:40px; height:40px; border-radius:50%; border: 1px solid ${tagColor}; object-fit: cover;">`
+                    : `<div style="width:40px; height:40px; border-radius:50%; border: 1px solid ${tagColor}; display:flex; align-items:center; justify-content:center; background:${tagColor}22; color:${tagColor}; font-weight:bold; font-size: 1.2rem;">${initial}</div>`;
 
-            if (data) {
-                list.innerHTML = data.map(con => `
-                    <div class="contributor-item">
-                        <div class="role-icon" style="background: ${con.icon_color}22; color: ${con.icon_color}; border: 1px solid ${con.icon_color}44;">
-                            ${con.role_icon || 'ID'}
+                return `
+                    <div style="display:flex; align-items:center; gap:15px; background:var(--bg-card); border:1px solid var(--border); padding:1rem; border-radius:8px;">
+                        ${avatar}
+                        <div>
+                            <div style="font-weight:900; font-size:1rem;">${m.nama}</div>
+                            <span class="role-tag" style="color:${tagColor}; border-color:${tagColor}">${m.role_icon}</span>
                         </div>
-                        <div style="font-size: 0.9rem; font-weight: 600;">${con.nama}</div>
                     </div>
-                `).join('');
+                `;
+            }).join('');
+        }
+
+        // Webhook Cooldown Logic (6 Hours)
+        document.getElementById('webhookForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const lastSent = localStorage.getItem('lastWebhook');
+            const now = Date.now();
+            const sixHours = 6 * 60 * 60 * 1000;
+
+            if (lastSent && (now - lastSent < sixHours)) {
+                const remaining = Math.ceil((sixHours - (now - lastSent)) / (60 * 60 * 1000));
+                const msg = document.getElementById('cooldownMsg');
+                msg.innerText = `Cooldown active. Try again in ${remaining} hours.`;
+                msg.style.display = 'block';
+                return;
             }
+
+            // Mocking the webhook send for UI feedback
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "SENDING...";
+            setTimeout(() => {
+                localStorage.setItem('lastWebhook', Date.now());
+                btn.innerText = "SENT SUCCESSFULLY";
+                btn.style.background = "#238636"; // Success green
+                btn.style.color = "#ffffff";
+                document.getElementById('cooldownMsg').style.display = 'none';
+                document.getElementById('dcUser').value = '';
+                document.getElementById('dcDetails').value = '';
+            }, 1000);
+        });
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
         }
 
-        async function logout() {
-            await _supabase.auth.signOut();
-            window.location.href = 'index.html';
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
 
-        document.addEventListener('DOMContentLoaded', start);
+        async function logout() { 
+            await _supabase.auth.signOut(); 
+            window.location.href = 'index.html'; 
+        }
+
+        // Initialize App
+        checkAuthAndSync();
     </script>
 </body>
 </html>
