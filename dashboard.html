@@ -10,58 +10,49 @@
     <style>
         :root {
             --bg-body: #ffffff; --bg-nav: rgba(255, 255, 255, 0.95); --bg-card: #ffffff;
-            --text-main: #000000; --text-muted: #666666; --border: #eeeeee; --tag-bg: #f5f5f5;
+            --text-main: #000000; --text-muted: #666666; --border: #eeeeee; --tag-bg: #f0f0f0;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --clr-owner: #e67e22; --clr-dev: #1e8449; --clr-contributor: #b7950b; --clr-tuff: #555555;
         }
         body.dark-mode {
             --bg-body: #0a0a0a; --bg-nav: rgba(10, 10, 10, 0.95); --bg-card: #121212;
             --text-main: #ffffff; --text-muted: #aaaaaa; --border: #1f1f1f; --tag-bg: #1a1a1a;
+            --clr-owner: #FFA500; --clr-dev: #2E8B57; --clr-contributor: #FFFF00; --clr-tuff: #FFFFFF;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            background-color: var(--bg-body); 
-            color: var(--text-main); 
-            font-family: 'Source Sans Pro', sans-serif; 
-            transition: background-color 0.3s; 
-            display: none; /* Hidden until auth checks out */
-            overflow-x: hidden;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: background-color 0.3s; display: none; overflow-x: hidden; }
         
-        /* Cursor Follower */
-        #cursor-follower { 
-            width: 30px; height: 30px; 
-            background: var(--text-main); 
-            opacity: 0.1; filter: blur(8px); 
-            border-radius: 50%; position: fixed; 
-            pointer-events: none; z-index: 9999; 
-            transform: translate(-50%, -50%); 
-            transition: transform 0.1s ease-out; 
-        }
+        #cursor-follower { width: 35px; height: 35px; background: var(--text-main); opacity: 0.15; filter: blur(6px); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); }
 
-        nav { 
-            position: fixed; top: 0; width: 100%; padding: 1rem 8%; 
-            background: var(--bg-nav); backdrop-filter: blur(10px); 
-            z-index: 1000; display: flex; justify-content: space-between; 
-            align-items: center; border-bottom: 1px solid var(--border); 
-        }
+        nav { position: fixed; top: 0; width: 100%; padding: 1rem 8%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .logo-k { font-size: 1.8rem; font-weight: 900; color: var(--text-main); border: 2px solid var(--text-main); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 4px; letter-spacing: -2px; padding-right: 2px; }
         .user-profile { display: flex; align-items: center; gap: 12px; }
-        .header-pfp { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--text-main); }
+        .header-pfp { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--text-main); object-fit: cover; }
 
-        .section-padding { padding: 6rem 10% 4rem; }
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; }
-        
-        /* Cards */
-        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; transition: 0.3s; }
-        .config-card:hover { border-color: var(--text-main); }
-        .system-tag { font-size: 0.7rem; font-weight: 900; background: var(--text-main); color: var(--bg-body); padding: 3px 8px; border-radius: 4px; }
+        .hero { height: 65vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 5%; margin-top: 60px; }
+        .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; margin-bottom: 1rem; letter-spacing: -1.5px; }
+        .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin-bottom: 2rem; }
 
-        /* Contributor Tags */
-        .role-tag { font-size: 0.65rem; font-weight: 900; padding: 2px 8px; border-radius: 50px; text-transform: uppercase; border: 1px solid currentColor; }
-        
-        .filter-btn { padding: 8px 16px; background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; border-radius: 4px; font-weight: 700; transition: 0.2s; }
+        .section-padding { padding: 4rem 10%; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; }
+        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.8rem; transition: var(--transition); }
+        .config-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+        .card-head { margin-bottom: 1.5rem; border-bottom: 2px solid var(--text-main); padding-bottom: 0.5rem; }
+        .section-label { font-size: 0.75rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; display: block; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
+        .data-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; }
+        .data-val { font-family: monospace; font-weight: 700; color: var(--text-main); }
+        .system-tag { font-size: 0.7rem; font-weight: 900; background: var(--text-main); color: var(--bg-body); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+
+        .filter-btn { padding: 8px 20px; border-radius: 50px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
         .filter-btn.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
 
-        .form-input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 4px; }
+        .member-card { background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem; transition: var(--transition); }
+        .member-card:hover { transform: scale(1.05); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .tag { font-size: 0.65rem; padding: 3px 10px; border-radius: 50px; font-weight: 700; text-transform: uppercase; background: var(--tag-bg); border: 1px solid currentColor; }
+
+        .form-input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 5px; font-family: inherit; }
     </style>
 </head>
 <body id="body">
@@ -69,48 +60,52 @@
 
     <nav>
         <div style="display:flex; gap: 2rem; align-items: center;">
-            <div style="font-weight: 900; border: 2px solid var(--text-main); padding: 4px 10px;">K</div>
+            <div class="logo-k">K</div>
             <span onclick="scrollToSection('contact')" style="cursor:pointer; font-weight:700; font-size: 0.8rem; text-transform: uppercase;">Requests</span>
         </div>
         <div style="display:flex; align-items: center; gap: 1.5rem;">
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" style="background:none; border:none; color:var(--text-main); cursor:pointer;"><i class="fas fa-moon"></i></button>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></button>
             <div class="user-profile">
                 <img src="" id="navPfp" class="header-pfp" alt="PFP">
                 <span id="navName" style="font-weight:700; font-size:0.85rem;">...</span>
-                <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; margin-left: 10px; font-size: 0.8rem;" title="Logout"></i>
+                <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; margin-left: 10px; font-size: 0.8rem;"></i>
             </div>
         </div>
     </nav>
 
-    <!-- Configs Section -->
-    <section class="section-padding">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
-            <h2 style="letter-spacing:-1px;">CONFIG INDEX</h2>
-            <div style="display:flex; gap:8px;">
-                <button class="filter-btn active" onclick="filterConfigs('all', this)">All</button>
-                <button class="filter-btn" onclick="filterConfigs('low', this)">Low</button>
-                <button class="filter-btn" onclick="filterConfigs('mid', this)">Mid</button>
-                <button class="filter-btn" onclick="filterConfigs('high', this)">High</button>
+    <section class="hero">
+        <h1>Krazy Konfigs</h1>
+        <p>Premium optimization presets for competitive play. Precision-tuned profiles for every connection type.</p>
+        <a href="#configs" class="filter-btn active" style="text-decoration:none;">GET STARTED</a>
+    </section>
+
+    <section class="section-padding" id="configs">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2>CONFIG INDEX</h2>
+            <div style="display:flex; gap: 0.8rem;">
+                <button class="filter-btn active" onclick="filterConfigs('all', this)">All Pings</button>
+                <button class="filter-btn" onclick="filterConfigs('low', this)">Low Ping</button>
+                <button class="filter-btn" onclick="filterConfigs('mid', this)">Mid Ping</button>
+                <button class="filter-btn" onclick="filterConfigs('high', this)">High Ping</button>
             </div>
         </div>
         <div class="config-grid" id="config-container"></div>
     </section>
 
-    <!-- Team Section -->
-    <section class="section-padding" id="contributors" style="padding-top: 0;">
-        <h2 style="margin-bottom:2rem; letter-spacing:-1px;">TEAM</h2>
-        <div id="contributor-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;"></div>
+    <section class="section-padding" id="contributors" style="background: var(--tag-bg);">
+        <h2 style="margin-bottom:2rem;">TEAM</h2>
+        <div id="contributor-container" class="config-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));"></div>
     </section>
 
-    <!-- Webhook Section -->
-    <section class="section-padding" id="contact" style="padding-top: 0;">
-        <div style="max-width: 500px; margin: 0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 8px;">
-            <h3 style="margin-bottom:1.5rem; text-align:center;">SUBMIT REQUEST</h3>
+    <section class="section-padding" id="contact">
+        <div style="max-width:600px; margin:0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 12px; background: var(--bg-card);">
+            <h3 style="text-align:center; margin-bottom:2rem;">SUBMIT REQUEST</h3>
             <form id="webhookForm">
-                <input type="text" id="dcUser" placeholder="Discord Tag (User#0000)" class="form-input" required>
-                <textarea id="dcDetails" placeholder="What settings are you looking for?" class="form-input" rows="4" required></textarea>
-                <button type="submit" id="submitBtn" style="width:100%; padding:12px; background:var(--text-main); color:var(--bg-body); border:none; font-weight:900; border-radius:4px; cursor:pointer; transition: background 0.3s;">SEND TO WEBHOOK</button>
-                <p id="cooldownMsg" style="color:#f85149; font-size:0.75rem; margin-top:10px; display:none; text-align:center;"></p>
+                <input type="text" id="dcUser" placeholder="Discord Username" class="form-input" required>
+                <textarea id="dcDetails" rows="5" placeholder="Details (Suggestions or Requests)..." class="form-input" required></textarea>
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Include File (Max 10MB)</label>
+                <input type="file" id="dcFile" style="width:100%; margin-bottom:1rem; color: var(--text-muted); font-size: 0.8rem;">
+                <button type="submit" id="submitBtn" style="width:100%; padding:12px; background:var(--text-main); color:var(--bg-body); border:none; font-weight:700; border-radius:5px; cursor:pointer;">Submit Request</button>
             </form>
         </div>
     </section>
@@ -119,7 +114,7 @@
         const _supabase = supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE');
         let allConfigs = [];
 
-        // Smooth Cursor Follower
+        // Cursor Follower logic[cite: 3]
         const follower = document.getElementById('cursor-follower');
         document.addEventListener('mousemove', (e) => {
             follower.style.left = e.clientX + 'px';
@@ -127,31 +122,23 @@
         });
 
         async function checkAuthAndSync() {
-            const { data: { session }, error: authError } = await _supabase.auth.getSession();
-            
-            if (authError || !session) {
-                window.location.href = 'index.html'; // Redirect if not logged in
-                return;
-            }
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) { window.location.href = 'index.html'; return; }
 
             const user = session.user;
             const meta = user.user_metadata;
-            const userName = meta.full_name || meta.custom_claims?.global_name || 'User';
 
-            // Sync user to database (Your exact schema + last_login)
+            // Database Sync[cite: 3]
             await _supabase.from('users').upsert({
                 id: user.id, 
                 discord_id: user.id,
-                username: userName,
+                username: meta.full_name || 'User',
                 avatar_url: meta.avatar_url,
                 last_login: new Date().toISOString()
             });
 
-            // Update Nav UI
-            document.getElementById('navName').innerText = userName;
-            document.getElementById('navPfp').src = meta.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png';
-            
-            // Show Page
+            document.getElementById('navName').innerText = meta.full_name || 'USER';
+            document.getElementById('navPfp').src = meta.avatar_url || '';
             document.body.style.display = 'block';
             init();
         }
@@ -161,10 +148,10 @@
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeBtn').innerHTML = '<i class="fas fa-sun"></i>';
             }
-            await Promise.all([fetchConfigs(), fetchContributors()]);
+            fetchConfigs();
+            fetchContributors();
         }
 
-        // Fetching Configs (Mapping your specific columns)
         async function fetchConfigs() {
             const { data } = await _supabase.from('configs').select('*').order('created_at', {ascending: false});
             allConfigs = data || [];
@@ -175,87 +162,76 @@
             const container = document.getElementById('config-container');
             container.innerHTML = configs.map(c => `
                 <div class="config-card">
-                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
-                        <span style="font-weight:900; font-size:1.2rem;">${c.title}</span>
-                        <span class="system-tag">${c.hit_rate || '0'}% HIT</span>
+                    <div class="card-head"><div style="font-weight:700; font-size:1.2rem;">${c.title}</div></div>
+                    <div class="data-section">
+                        <span class="section-label">🎯 PREDICTION</span>
+                        <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${c.sim_timer}</span></div>
+                        <div class="data-row"><span style="color:var(--text-muted)">Prediction Interval</span> <span class="data-val">${c.pred_interval}</span></div>
                     </div>
-                    <div style="font-size:0.85rem; color:var(--text-muted); display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <div>Timer: <b style="color:var(--text-main)">${c.sim_timer}</b></div>
-                        <div>Interval: <b style="color:var(--text-main)">${c.pred_interval}</b></div>
-                        <div>Creator: <b style="color:var(--text-main)">${c.creator || 'Community'}</b></div>
-                        <div>Tier: <b style="color:var(--text-main); text-transform:uppercase;">${c.ping_tier || 'N/A'}</b></div>
+                    <div style="margin-top:1rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span class="system-tag">${c.hit_rate || 0}% HIT RATE</span>
+                        <span style="font-size:0.75rem; font-style:italic; color:var(--text-muted)">by ${c.creator || 'Staff'}</span>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Filter based on ping_tier
         function filterConfigs(tier, btn) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            if (tier === 'all') {
-                renderConfigs(allConfigs);
-            } else {
-                renderConfigs(allConfigs.filter(c => c.ping_tier?.toLowerCase() === tier));
-            }
+            renderConfigs(tier === 'all' ? allConfigs : allConfigs.filter(c => c.ping_tier?.toLowerCase() === tier));
         }
 
-        // Fetching Contributors (Mapping nama, role_icon, icon_color)
         async function fetchContributors() {
             const { data } = await _supabase.from('contributors').select('*');
             const container = document.getElementById('contributor-container');
-            
-            container.innerHTML = (data || []).map(m => {
-                const tagColor = m.icon_color || 'var(--text-main)';
-                const initial = m.nama ? m.nama.charAt(0).toUpperCase() : '?';
-                const avatar = m.avatar_url 
-                    ? `<img src="${m.avatar_url}" style="width:40px; height:40px; border-radius:50%; border: 1px solid ${tagColor}; object-fit: cover;">`
-                    : `<div style="width:40px; height:40px; border-radius:50%; border: 1px solid ${tagColor}; display:flex; align-items:center; justify-content:center; background:${tagColor}22; color:${tagColor}; font-weight:bold; font-size: 1.2rem;">${initial}</div>`;
-
-                return `
-                    <div style="display:flex; align-items:center; gap:15px; background:var(--bg-card); border:1px solid var(--border); padding:1rem; border-radius:8px;">
-                        ${avatar}
-                        <div>
-                            <div style="font-weight:900; font-size:1rem;">${m.nama}</div>
-                            <span class="role-tag" style="color:${tagColor}; border-color:${tagColor}">${m.role_icon}</span>
-                        </div>
+            container.innerHTML = (data || []).map(m => `
+                <div class="member-card">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="${m.avatar_url || ''}" style="width:45px; height:45px; border-radius:50%; border:1px solid ${m.icon_color || 'var(--border)'}">
+                        <span style="font-weight:700;">${m.nama}</span>
                     </div>
-                `;
-            }).join('');
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        <span class="tag" style="color:${m.icon_color || 'var(--text-main)'}">${m.role_icon || 'Member'}</span>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // Webhook Cooldown Logic (6 Hours)
-        document.getElementById('webhookForm').addEventListener('submit', async (e) => {
+        // Webhook System[cite: 3]
+        document.getElementById('webhookForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const lastSent = localStorage.getItem('lastWebhook');
-            const now = Date.now();
-            const sixHours = 6 * 60 * 60 * 1000;
+            const lastSent = localStorage.getItem('lastSentTimestamp');
+            const cooldown = 6 * 60 * 60 * 1000; 
 
-            if (lastSent && (now - lastSent < sixHours)) {
-                const remaining = Math.ceil((sixHours - (now - lastSent)) / (60 * 60 * 1000));
-                const msg = document.getElementById('cooldownMsg');
-                msg.innerText = `Cooldown active. Try again in ${remaining} hours.`;
-                msg.style.display = 'block';
+            if (lastSent && (Date.now() - lastSent < cooldown)) {
+                alert(`Cooldown active. Try again in ${Math.ceil((cooldown - (Date.now() - lastSent)) / 3600000)} hours.`);
                 return;
             }
 
-            // Mocking the webhook send for UI feedback
-            const btn = document.getElementById('submitBtn');
-            btn.innerText = "SENDING...";
-            setTimeout(() => {
-                localStorage.setItem('lastWebhook', Date.now());
-                btn.innerText = "SENT SUCCESSFULLY";
-                btn.style.background = "#238636"; // Success green
-                btn.style.color = "#ffffff";
-                document.getElementById('cooldownMsg').style.display = 'none';
-                document.getElementById('dcUser').value = '';
-                document.getElementById('dcDetails').value = '';
-            }, 1000);
-        });
+            const fileInput = document.getElementById('dcFile');
+            if (fileInput.files.length > 0 && fileInput.files[0].size > 10 * 1024 * 1024) {
+                alert('File is too large! (10MB Max)'); return;
+            }
 
-        function scrollToSection(id) {
-            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
-        }
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true; submitBtn.innerText = "Sending...";
+
+            const formData = new FormData();
+            formData.append('payload_json', JSON.stringify({
+                embeds: [{ title: "New Config Request", fields: [
+                    { name: "User", value: document.getElementById('dcUser').value, inline: true },
+                    { name: "Message", value: document.getElementById('dcDetails').value }
+                ], timestamp: new Date() }]
+            }));
+            if (fileInput.files.length > 0) formData.append('file', fileInput.files[0]);
+
+            try {
+                const res = await fetch("https://discord.com/api/webhooks/1498387587092709468/EY0XBVlIy5cnAgaIJxWbTliIB8lPvfrywiCXM4tMmw6Y2D7ku5wgIbFFSb-8YC_wCECz", { method: 'POST', body: formData });
+                if (res.ok) { alert('Sent!'); localStorage.setItem('lastSentTimestamp', Date.now()); document.getElementById('webhookForm').reset(); }
+            } catch (err) { alert('Error sending request.'); }
+            submitBtn.disabled = false; submitBtn.innerText = "Submit Request";
+        });
 
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
@@ -264,12 +240,9 @@
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
 
-        async function logout() { 
-            await _supabase.auth.signOut(); 
-            window.location.href = 'index.html'; 
-        }
-
-        // Initialize App
+        function scrollToSection(id) { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); }
+        async function logout() { await _supabase.auth.signOut(); window.location.href = 'index.html'; }
+        
         checkAuthAndSync();
     </script>
 </body>
