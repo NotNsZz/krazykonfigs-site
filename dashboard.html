@@ -12,12 +12,12 @@
             --bg-body: #ffffff; --bg-nav: rgba(255, 255, 255, 0.95); --bg-card: #ffffff;
             --text-main: #000000; --text-muted: #666666; --border: #eeeeee; --tag-bg: #f0f0f0;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --clr-owner: #e67e22; --clr-dev: #1e8449; --clr-contributor: #b7950b; --clr-tuff: #555555;
+            --glow-color: rgba(0, 0, 0, 0.15);
         }
         body.dark-mode {
             --bg-body: #0a0a0a; --bg-nav: rgba(10, 10, 10, 0.95); --bg-card: #121212;
             --text-main: #ffffff; --text-muted: #aaaaaa; --border: #1f1f1f; --tag-bg: #1a1a1a;
-            --clr-owner: #FFA500; --clr-dev: #2E8B57; --clr-contributor: #FFFF00; --clr-tuff: #FFFFFF;
+            --glow-color: rgba(255, 255, 255, 0.15);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
@@ -25,63 +25,97 @@
         
         #cursor-follower { width: 35px; height: 35px; background: var(--text-main); opacity: 0.15; filter: blur(6px); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); }
 
-        nav { position: fixed; top: 0; width: 100%; padding: 1rem 8%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-        .logo-k { font-size: 1.8rem; font-weight: 900; color: var(--text-main); border: 2px solid var(--text-main); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 4px; letter-spacing: -2px; padding-right: 2px; }
+        /* Header Fixes */
+        nav { position: fixed; top: 0; width: 100%; padding: 1rem 5%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .logo-k { font-size: 1.8rem; font-weight: 900; color: var(--text-main); border: 2px solid var(--text-main); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 4px; letter-spacing: -2px; padding-right: 2px; position: absolute; left: 50%; transform: translateX(-50%); }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .nav-link { cursor: pointer; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; text-decoration: none; color: var(--text-main); transition: var(--transition); }
+        .nav-link:hover { color: var(--text-muted); }
+        .theme-toggle { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); padding: 0; display: flex; align-items: center; transition: var(--transition); }
+        .theme-toggle:hover { transform: scale(1.1); }
         .user-profile { display: flex; align-items: center; gap: 12px; }
         .header-pfp { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--text-main); object-fit: cover; }
 
+        /* Hero Fixes */
         .hero { height: 65vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 5%; margin-top: 60px; }
         .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; margin-bottom: 1rem; letter-spacing: -1.5px; }
-        .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin-bottom: 2rem; }
+        .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin-bottom: 2.5rem; }
+        .hero-btn { padding: 16px 40px; border-radius: 50px; background: var(--text-main); color: var(--bg-body); font-size: 1.1rem; font-weight: 800; cursor: pointer; text-decoration: none; transition: var(--transition); box-shadow: 0 4px 15px var(--glow-color); border: 2px solid var(--text-main); }
+        .hero-btn:hover { transform: scale(1.05) translateY(-3px); box-shadow: 0 10px 30px var(--glow-color); background: transparent; color: var(--text-main); }
 
         .section-padding { padding: 4rem 10%; }
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; }
-        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.8rem; transition: var(--transition); }
-        .config-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem; }
+        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.8rem; transition: var(--transition); display: flex; flex-direction: column; justify-content: space-between; }
+        .config-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
 
-        .card-head { margin-bottom: 1.5rem; border-bottom: 2px solid var(--text-main); padding-bottom: 0.5rem; }
-        .section-label { font-size: 0.75rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; display: block; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
-        .data-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; }
+        .card-head { margin-bottom: 1.5rem; border-bottom: 2px solid var(--text-main); padding-bottom: 0.8rem; display: flex; justify-content: space-between; align-items: flex-end; }
+        .section-label { font-size: 0.75rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; display: block; border-bottom: 1px solid var(--border); padding-bottom: 2px; text-transform: uppercase; }
+        .data-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.85rem; }
         .data-val { font-family: monospace; font-weight: 700; color: var(--text-main); }
-        .system-tag { font-size: 0.7rem; font-weight: 900; background: var(--text-main); color: var(--bg-body); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+        .system-tag { font-size: 0.7rem; font-weight: 900; background: var(--text-main); color: var(--bg-body); padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
 
         .filter-btn { padding: 8px 20px; border-radius: 50px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
         .filter-btn.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
 
         .member-card { background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem; transition: var(--transition); }
-        .member-card:hover { transform: scale(1.05); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
-        .tag { font-size: 0.65rem; padding: 3px 10px; border-radius: 50px; font-weight: 700; text-transform: uppercase; background: var(--tag-bg); border: 1px solid currentColor; }
+        .member-card:hover { transform: scale(1.03); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        /* Dynamic Theme-Adaptive Tags */
+        .dynamic-tag { 
+            font-size: 0.65rem; padding: 4px 12px; border-radius: 50px; font-weight: 800; text-transform: uppercase; 
+            color: hsl(var(--tag-hue), 70%, 40%);
+            background: hsl(var(--tag-hue), 70%, 92%);
+            border: 1px solid hsl(var(--tag-hue), 70%, 80%);
+        }
+        body.dark-mode .dynamic-tag {
+            color: hsl(var(--tag-hue), 70%, 75%);
+            background: hsl(var(--tag-hue), 60%, 15%);
+            border: 1px solid hsl(var(--tag-hue), 60%, 25%);
+        }
 
         .form-input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 5px; font-family: inherit; }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .logo-k { position: static; transform: none; }
+        }
     </style>
 </head>
 <body id="body">
     <div id="cursor-follower"></div>
 
     <nav>
-        <div style="display:flex; gap: 2rem; align-items: center;">
-            <div class="logo-k">K</div>
-            <span onclick="scrollToSection('contact')" style="cursor:pointer; font-weight:700; font-size: 0.8rem; text-transform: uppercase;">Requests</span>
+        <div style="display:flex; align-items: center; gap: 1rem;">
+            <span style="font-weight:900; font-size: 1.2rem; letter-spacing: 0.5px;">KrazyKonfigs</span>
         </div>
-        <div style="display:flex; align-items: center; gap: 1.5rem;">
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></button>
+        
+        <div class="logo-k">K</div>
+        
+        <div style="display:flex; align-items: center; gap: 2rem;">
+            <div class="nav-links">
+                <a href="#about" class="nav-link">About</a>
+                <a href="#configs" class="nav-link">Configs</a>
+                <a href="#contributors" class="nav-link">Contributors</a>
+                <a href="#contact" class="nav-link">Request</a>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme"><i class="fas fa-moon"></i></button>
             <div class="user-profile">
                 <img src="" id="navPfp" class="header-pfp" alt="PFP">
                 <span id="navName" style="font-weight:700; font-size:0.85rem;">...</span>
-                <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; margin-left: 10px; font-size: 0.8rem;"></i>
+                <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer; margin-left: 10px; font-size: 0.8rem;" title="Logout"></i>
             </div>
         </div>
     </nav>
 
-    <section class="hero">
+    <section class="hero" id="about">
         <h1>Krazy Konfigs</h1>
-        <p>Premium optimization presets for competitive play. Precision-tuned profiles for every connection type.</p>
-        <a href="#configs" class="filter-btn active" style="text-decoration:none;">GET STARTED</a>
+        <p>Premium optimization presets for competitive play. Precision-tuned profiles mapped directly to your exact connection type.</p>
+        <a href="#configs" class="hero-btn">GET STARTED</a>
     </section>
 
     <section class="section-padding" id="configs">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; flex-wrap: wrap; gap: 1rem;">
-            <h2>CONFIG INDEX</h2>
+            <h2>CONFIGS</h2>
             <div style="display:flex; gap: 0.8rem;">
                 <button class="filter-btn active" onclick="filterConfigs('all', this)">All Pings</button>
                 <button class="filter-btn" onclick="filterConfigs('low', this)">Low Ping</button>
@@ -93,19 +127,19 @@
     </section>
 
     <section class="section-padding" id="contributors" style="background: var(--tag-bg);">
-        <h2 style="margin-bottom:2rem;">TEAM</h2>
+        <h2 style="margin-bottom:2rem;">CONTRIBUTORS</h2>
         <div id="contributor-container" class="config-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));"></div>
     </section>
 
     <section class="section-padding" id="contact">
-        <div style="max-width:600px; margin:0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 12px; background: var(--bg-card);">
+        <div style="max-width:600px; margin:0 auto; border: 1px solid var(--border); padding: 2.5rem; border-radius: 12px; background: var(--bg-card); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
             <h3 style="text-align:center; margin-bottom:2rem;">SUBMIT REQUEST</h3>
             <form id="webhookForm">
                 <input type="text" id="dcUser" placeholder="Discord Username" class="form-input" required>
                 <textarea id="dcDetails" rows="5" placeholder="Details (Suggestions or Requests)..." class="form-input" required></textarea>
                 <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Include File (Max 10MB)</label>
-                <input type="file" id="dcFile" style="width:100%; margin-bottom:1rem; color: var(--text-muted); font-size: 0.8rem;">
-                <button type="submit" id="submitBtn" style="width:100%; padding:12px; background:var(--text-main); color:var(--bg-body); border:none; font-weight:700; border-radius:5px; cursor:pointer;">Submit Request</button>
+                <input type="file" id="dcFile" style="width:100%; margin-bottom:1.5rem; color: var(--text-muted); font-size: 0.8rem;">
+                <button type="submit" id="submitBtn" class="hero-btn" style="width:100%; padding:14px; border-radius: 5px;">Submit Request</button>
             </form>
         </div>
     </section>
@@ -114,7 +148,6 @@
         const _supabase = supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE');
         let allConfigs = [];
 
-        // Cursor Follower logic[cite: 3]
         const follower = document.getElementById('cursor-follower');
         document.addEventListener('mousemove', (e) => {
             follower.style.left = e.clientX + 'px';
@@ -128,7 +161,6 @@
             const user = session.user;
             const meta = user.user_metadata;
 
-            // Database Sync[cite: 3]
             await _supabase.from('users').upsert({
                 id: user.id, 
                 discord_id: user.id,
@@ -162,43 +194,87 @@
             const container = document.getElementById('config-container');
             container.innerHTML = configs.map(c => `
                 <div class="config-card">
-                    <div class="card-head"><div style="font-weight:700; font-size:1.2rem;">${c.title}</div></div>
-                    <div class="data-section">
-                        <span class="section-label">🎯 PREDICTION</span>
-                        <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${c.sim_timer}</span></div>
-                        <div class="data-row"><span style="color:var(--text-muted)">Prediction Interval</span> <span class="data-val">${c.pred_interval}</span></div>
+                    <div>
+                        <div class="card-head">
+                            <div style="font-weight:800; font-size:1.3rem;">${c.title}</div>
+                            <span class="system-tag" style="background: var(--tag-bg); color: var(--text-main); border: 1px solid var(--border);">${c.ping_tier || 'N/A'} PING</span>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <span class="section-label">🎯 Prediction & Timing</span>
+                            <div class="data-row"><span style="color:var(--text-muted)">Sim Timer</span> <span class="data-val">${c.sim_timer ?? '-'}</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Pred Interval</span> <span class="data-val">${c.pred_interval || '-'}</span></div>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <span class="section-label">🕹️ Tracking Parameters</span>
+                            <div class="data-row"><span style="color:var(--text-muted)">Vertical</span> <span class="data-val">${c.vertical ?? '-'}</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Horizontal</span> <span class="data-val">${c.horizontal ?? '-'}</span></div>
+                        </div>
+
+                        <div>
+                            <span class="section-label">⚙️ Configuration Details</span>
+                            <div class="data-row"><span style="color:var(--text-muted)">Offsets</span> <span class="data-val">${c.offsets || '-'}</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Support Range</span> <span class="data-val">${c.support_range || '-'}</span></div>
+                        </div>
                     </div>
-                    <div style="margin-top:1rem; display:flex; justify-content:space-between; align-items:center;">
+
+                    <div style="margin-top:1.5rem; display:flex; justify-content:space-between; align-items:center; padding-top: 1rem; border-top: 1px solid var(--border);">
                         <span class="system-tag">${c.hit_rate || 0}% HIT RATE</span>
-                        <span style="font-size:0.75rem; font-style:italic; color:var(--text-muted)">by ${c.creator || 'Staff'}</span>
+                        <span style="font-size:0.75rem; font-style:italic; font-weight: 600; color:var(--text-muted)">by ${c.creator || 'Staff'}</span>
                     </div>
                 </div>
             `).join('');
         }
 
         function filterConfigs(tier, btn) {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#configs .filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            renderConfigs(tier === 'all' ? allConfigs : allConfigs.filter(c => c.ping_tier?.toLowerCase() === tier));
+            
+            // Filters based on the ping_tier column in the database
+            const filtered = tier === 'all' 
+                ? allConfigs 
+                : allConfigs.filter(c => c.ping_tier && c.ping_tier.toLowerCase().includes(tier.toLowerCase()));
+            
+            renderConfigs(filtered);
         }
 
         async function fetchContributors() {
-            const { data } = await _supabase.from('contributors').select('*');
+            const { data } = await _supabase.from('contributors').select('*').order('created_at', {ascending: true});
             const container = document.getElementById('contributor-container');
-            container.innerHTML = (data || []).map(m => `
+            
+            container.innerHTML = (data || []).map(m => {
+                // Ensure tags is handled correctly whether it's an array or a comma-separated string
+                let tagsArray = [];
+                if (Array.isArray(m.tags)) tagsArray = m.tags;
+                else if (typeof m.tags === 'string') tagsArray = m.tags.split(',').map(t => t.trim());
+
+                // Generate consistent, unique colors for tags using a simple string hash
+                const tagsHtml = tagsArray.map(tag => {
+                    let hash = 0;
+                    for (let i = 0; i < tag.length; i++) hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+                    const hue = Math.abs(hash % 360);
+                    return `<span class="dynamic-tag" style="--tag-hue: ${hue};">${tag}</span>`;
+                }).join('');
+
+                return `
                 <div class="member-card">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <img src="${m.avatar_url || ''}" style="width:45px; height:45px; border-radius:50%; border:1px solid ${m.icon_color || 'var(--border)'}">
-                        <span style="font-weight:700;">${m.nama}</span>
+                    <div style="display:flex; align-items:center; gap:15px; margin-bottom: 5px;">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: ${m.icon_color ? m.icon_color + '20' : 'var(--tag-bg)'}; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: ${m.icon_color || 'var(--text-main)'}; border: 1px solid ${m.icon_color ? m.icon_color + '50' : 'var(--border)'};">
+                            <i class="${m.role_icon || 'fas fa-user'}"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:800; font-size:1.15rem; letter-spacing: -0.5px;">${m.name || 'Unknown'}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); font-weight: 600;">Contributor</div>
+                        </div>
                     </div>
-                    <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                        <span class="tag" style="color:${m.icon_color || 'var(--text-main)'}">${m.role_icon || 'Member'}</span>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                        ${tagsHtml}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
-        // Webhook System[cite: 3]
         document.getElementById('webhookForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const lastSent = localStorage.getItem('lastSentTimestamp');
@@ -240,7 +316,6 @@
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
 
-        function scrollToSection(id) { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); }
         async function logout() { await _supabase.auth.signOut(); window.location.href = 'index.html'; }
         
         checkAuthAndSync();
