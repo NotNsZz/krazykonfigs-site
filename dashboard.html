@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Krazy Konfigs | Dashboard</title>
-    <!-- Source Sans Pro Font -->
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -28,9 +27,7 @@
         
         #cursor-follower { width: 35px; height: 35px; background: var(--text-main); opacity: 0.15; filter: blur(6px); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); }
 
-        /* --- Header Fixes --- */
         nav { position: fixed; top: 0; width: 100%; padding: 1rem 5%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-        
         .brand-container { display: flex; align-items: center; gap: 0.8rem; }
         .logo-k { font-size: 1.4rem; font-weight: 900; color: var(--text-main); border: 2px solid var(--text-main); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; letter-spacing: -1px; padding-right: 1px; }
         
@@ -38,7 +35,6 @@
         .nav-link { cursor: pointer; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; text-decoration: none; color: var(--text-main); transition: var(--transition); }
         .nav-link:hover { color: var(--text-muted); }
         
-        /* User Profile & Hover Expand */
         .user-profile { display: flex; align-items: center; }
         .username-container {
             max-width: 0; overflow: hidden; white-space: nowrap; 
@@ -47,7 +43,6 @@
         }
         .user-profile:hover .username-container { max-width: 150px; opacity: 1; margin-right: 12px; }
         
-        /* Dropdown Fix */
         .pfp-container { position: relative; cursor: pointer; display: flex; align-items: center; }
         .header-pfp { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); object-fit: cover; }
         .dropdown-menu {
@@ -63,7 +58,6 @@
 
         .theme-toggle { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); padding: 0; display: flex; align-items: center; transition: var(--transition); }
         
-        /* --- Hero --- */
         .hero { height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 5%; margin-top: 60px; }
         .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; margin-bottom: 1rem; letter-spacing: -1.5px; text-transform: uppercase; }
         .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin-bottom: 2.5rem; }
@@ -72,7 +66,6 @@
 
         .section-padding { padding: 4rem 10%; }
         
-        /* --- Config Cards Redesign --- */
         .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; }
         .config-card { background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; padding: 2rem; transition: var(--transition); display: flex; flex-direction: column; justify-content: space-between; position: relative; }
         
@@ -92,11 +85,13 @@
         .filter-btn { padding: 8px 20px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-inner); color: var(--text-main); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: var(--transition); text-transform: uppercase; }
         .filter-btn.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
 
-        /* --- Contributor Cards Redesign --- */
+        /* Deletion Styles */
+        .delete-btn { color: #ed4245; cursor: pointer; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; border: none; background: none; margin-left: 10px; transition: var(--transition); }
+        .delete-btn:hover { text-decoration: underline; opacity: 0.8; }
+
         .member-card { background: var(--card-inner); border: 1px solid var(--border); padding: 1.5rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; transition: var(--transition); }
         .member-header { display: flex; align-items: center; gap: 12px; }
         
-        /* Vibrant Badges */
         .badge-tag { 
             font-size: 0.65rem; padding: 4px 10px; border-radius: 20px; font-weight: 800; text-transform: uppercase; 
             background: transparent; border: 1px solid currentColor;
@@ -104,12 +99,10 @@
         }
         body:not(.dark-mode) .badge-tag { filter: saturate(1.5) brightness(0.8); }
 
-        /* --- Request Form Fix --- */
         .request-container { max-width: 450px; margin: 0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 8px; background: var(--card-inner); }
         .form-input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 4px; font-family: inherit; font-weight: 600; outline: none; transition: border-color 0.3s; }
         .form-input:focus { border-color: var(--text-main); }
 
-        /* --- Review Modal System --- */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.show { display: flex; opacity: 1; }
         .modal-content { background: var(--bg-card); width: 95%; max-width: 500px; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
@@ -159,6 +152,7 @@
                 <div class="pfp-container" onclick="toggleUserDropdown(event)">
                     <img src="https://via.placeholder.com/32" id="navPfp" class="header-pfp" alt="PFP">
                     <div class="dropdown-menu" id="userDropdown">
+                        <!-- Admin Panel Button (Conditional UI) -->
                         <div id="adminPanelOption" style="display:none;" class="dropdown-item admin-btn"><i class="fas fa-shield-alt"></i> Admin Panel</div>
                         <div class="dropdown-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
                     </div>
@@ -170,7 +164,8 @@
     <section class="hero" id="about">
         <h1>Krazy Konfigs</h1>
         <p>Precision-engineered simulation presets mapped directly to your exact connection type.</p>
-        <a href="#configs" class="hero-btn">Explore Database</a>
+        <!-- Hero Button Text Update -->
+        <a href="#configs" class="hero-btn">View Configs</a>
     </section>
 
     <section class="section-padding" id="configs">
@@ -204,16 +199,13 @@
         </div>
     </section>
 
-    <!-- Review Modal System -->
     <div id="reviewModal" class="modal-overlay" onclick="closeReviews(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <h3 style="font-weight: 900; margin: 0; font-size: 1.2rem;">Config Reviews</h3>
                 <button onclick="closeReviews()" style="background:none; border:none; color:var(--text-main); font-size:1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
             </div>
-            <div class="modal-body" id="reviewList">
-                <!-- Reviews populated here -->
-            </div>
+            <div class="modal-body" id="reviewList"></div>
             <div class="review-input-area">
                 <div class="input-stars" id="starSelector">
                     <i class="fas fa-star input-star active" data-val="1"></i>
@@ -238,14 +230,12 @@
         let activeConfigId = null;
         let currentRatingInput = 5;
 
-        // Custom Cursor Tracker
         const follower = document.getElementById('cursor-follower');
         document.addEventListener('mousemove', (e) => {
             follower.style.left = e.clientX + 'px';
             follower.style.top = e.clientY + 'px';
         });
 
-        // Dropdown toggle logic
         function toggleUserDropdown(e) {
             e.stopPropagation();
             document.getElementById('userDropdown').classList.toggle('show');
@@ -254,7 +244,6 @@
             document.getElementById('userDropdown').classList.remove('show');
         });
 
-        // --- Auth & Session Logic ---
         _supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
                 if (session) handleSession(session);
@@ -265,36 +254,34 @@
         async function handleSession(session) {
             const user = session.user;
             const meta = user.user_metadata;
-            // Get actual Discord ID from provider metadata
             const discordId = meta.provider_id || user.id;
+
+            // Fetch profile to get the rank column
+            const { data: profile } = await _supabase.from('users').select('rank').eq('id', user.id).single();
 
             currentUser = {
                 id: user.id,
                 discord_id: discordId,
                 username: meta.full_name || meta.name || 'User',
                 avatar_url: meta.avatar_url,
-                role: meta.role || 'user'
+                rank: profile?.rank || 'user'
             };
 
-            // Safely Upsert user
             try {
-                const { error } = await _supabase.from('users').upsert({
+                await _supabase.from('users').upsert({
                     id: currentUser.id, 
                     discord_id: currentUser.discord_id,
                     username: currentUser.username,
                     avatar_url: currentUser.avatar_url,
                     last_login: new Date().toISOString()
                 });
-                if(error) console.warn("Upsert issue (Check RLS Policies): ", error.message);
-            } catch (err) {
-                console.error("DB Sync Error:", err);
-            }
+            } catch (err) { console.error("DB Sync Error:", err); }
 
-            // Update UI
             document.getElementById('navName').innerText = currentUser.username;
             document.getElementById('navPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
             
-            if(currentUser.role === 'admin') {
+            // Conditional UI: Show Admin Panel Button
+            if(currentUser.rank === 'admin') {
                 document.getElementById('adminPanelOption').style.display = 'block';
             }
 
@@ -311,7 +298,6 @@
             fetchContributors();
         }
 
-        // --- Config Logic ---
         async function fetchConfigs() {
             const { data } = await _supabase.from('configs').select('*').order('created_at', {ascending: false});
             allConfigs = data || [];
@@ -330,7 +316,8 @@
                         <div class="card-divider"></div>
                         
                         <div style="margin-bottom: 1.2rem;">
-                            <div class="section-label"><i class="fas fa-bullseye" style="color:#ed4245;"></i> PREDICTION</div>
+                            <!-- Emoji Enhancement: Prediction -->
+                            <div class="section-label">🎯 PREDICTION</div>
                             <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${c.sim_timer ?? '-'}</span></div>
                             <div class="data-row"><span style="color:var(--text-muted)">Prediction Interval</span> <span class="data-val">${c.pred_interval || '-'}</span></div>
                         </div>
@@ -350,7 +337,8 @@
                         </div>
 
                         <div style="margin-bottom: 1.2rem;">
-                            <div class="section-label"><i class="fas fa-thumbtack" style="color:#e83e8c;"></i> OFFSETS</div>
+                            <!-- Emoji Enhancement: Offsets -->
+                            <div class="section-label">📍 OFFSETS</div>
                             <div class="data-row"><span style="color:var(--text-muted)">X / Y / Z</span> <span class="data-val">${c.offsets || '0 / -5 / 0'}</span></div>
                         </div>
                     </div>
@@ -361,7 +349,11 @@
                                 <div class="revert-badge">REVERT | ${c.hit_rate || 85}% HIT RATE</div>
                                 <div style="font-size:0.75rem; font-weight: 700; color:var(--text-muted); margin-top: 8px;">Supports: ${c.support_range || '150ms - 200ms'}</div>
                             </div>
-                            <span style="font-size:0.8rem; font-style:italic; font-weight: 600; color:var(--text-muted)">by ${c.creator || 'Kriz'}</span>
+                            <div style="text-align: right;">
+                                <span style="font-size:0.8rem; font-style:italic; font-weight: 600; color:var(--text-muted); display: block;">by ${c.creator || 'Kriz'}</span>
+                                <!-- Config ID Display -->
+                                <span style="font-size:0.65rem; color:var(--text-muted); font-weight: 600;">ID: ${c.id}</span>
+                            </div>
                         </div>
                         <button class="review-trigger-btn" onclick="openReviews(${c.id})"><i class="fas fa-star"></i> View Reviews</button>
                     </div>
@@ -372,78 +364,78 @@
         function filterConfigs(tier, btn) {
             document.querySelectorAll('#configs .filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const filtered = tier === 'all' 
-                ? allConfigs 
-                : allConfigs.filter(c => c.ping_tier && c.ping_tier.toLowerCase().includes(tier.toLowerCase()));
+            const filtered = tier === 'all' ? allConfigs : allConfigs.filter(c => c.ping_tier?.toLowerCase().includes(tier.toLowerCase()));
             renderConfigs(filtered);
         }
 
-        // --- Contributors Logic ---
         function getBadgeColor(tag) {
             const t = tag.toUpperCase();
-            if(t.includes('OWNER') || t.includes('EARLY')) return '#f1c40f'; // Yellow/Orange
-            if(t.includes('DEVELOPER') || t.includes('TESTER')) return '#2ecc71'; // Green
-            if(t.includes('GUEST')) return '#9b59b6'; // Purple
-            if(t.includes('STAFF') || t.includes('TUFF')) return 'var(--text-main)'; // White/Black based on theme
+            if(t.includes('OWNER') || t.includes('EARLY')) return '#f1c40f';
+            if(t.includes('DEVELOPER') || t.includes('TESTER')) return '#2ecc71';
+            if(t.includes('GUEST')) return '#9b59b6';
             return 'var(--text-muted)';
         }
 
         async function fetchContributors() {
             const { data } = await _supabase.from('contributors').select('*').order('created_at', {ascending: true});
             const container = document.getElementById('contributor-container');
-            
             container.innerHTML = (data || []).map(m => {
-                let tagsArray = [];
-                if (Array.isArray(m.tags)) tagsArray = m.tags;
-                else if (typeof m.tags === 'string') tagsArray = m.tags.split(',').map(t => t.trim());
-
-                const tagsHtml = tagsArray.map(tag => {
-                    const color = getBadgeColor(tag);
-                    return `<span class="badge-tag" style="color: ${color};">${tag}</span>`;
-                }).join('');
-
+                let tagsArray = Array.isArray(m.tags) ? m.tags : (m.tags?.split(',').map(t => t.trim()) || []);
+                const tagsHtml = tagsArray.map(tag => `<span class="badge-tag" style="color: ${getBadgeColor(tag)};">${tag}</span>`).join('');
                 return `
                 <div class="member-card">
                     <div class="member-header">
                         <i class="${m.role_icon || 'fas fa-crown'}" style="color: ${m.icon_color || '#f1c40f'}; font-size: 1.2rem;"></i>
                         <span style="font-weight: 900; font-size: 1.2rem;">${m.name || 'Unknown'}</span>
                     </div>
-                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                        ${tagsHtml}
-                    </div>
-                </div>
-            `}).join('');
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">${tagsHtml}</div>
+                </div>`;
+            }).join('');
         }
 
-        // --- Review System Logic ---
         async function openReviews(configId) {
             activeConfigId = configId;
             document.getElementById('reviewModal').classList.add('show');
-            document.getElementById('reviewList').innerHTML = `<p style="text-align:center; color:var(--text-muted);">Loading reviews...</p>`;
-            
-            const { data, error } = await _supabase.from('reviews').select('*').eq('config_id', configId).order('created_at', {ascending: false});
-            
+            const { data } = await _supabase.from('reviews').select('*').eq('config_id', configId).order('created_at', {ascending: false});
             const container = document.getElementById('reviewList');
-            if(error || !data || data.length === 0) {
-                container.innerHTML = `<p style="text-align:center; font-weight:700; color:var(--text-muted);">No reviews yet. Be the first!</p>`;
+            
+            if(!data || data.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:var(--text-muted);">No reviews yet.</p>`;
                 return;
             }
 
             container.innerHTML = data.map(r => {
                 const stars = Array(5).fill(0).map((_,i) => i < r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('');
+                
+                // Logic: Match poster_id with current user's discord_id for deletion
+                const isOwner = currentUser && String(r.poster_id) === String(currentUser.discord_id);
+                const deleteAction = isOwner ? `<button class="delete-btn" onclick="deleteReview(${r.id})">Delete</button>` : '';
+
                 return `
-                <div class="review-item">
+                <div class="review-item" id="review-${r.id}">
                     <img src="${r.poster_avatar || 'https://via.placeholder.com/40'}" class="review-avatar">
                     <div class="review-content">
                         <div class="review-user-row">
-                            <span style="font-weight: 800; font-size:0.9rem;">${r.poster_username || 'Anonymous'}</span>
-                            <span class="review-stars">${stars}</span>
+                            <span style="font-weight: 800; font-size:0.9rem;">${r.poster_username}</span>
+                            <div>
+                                <span class="review-stars">${stars}</span>
+                                ${deleteAction}
+                            </div>
                         </div>
-                        <p style="font-size:0.9rem; color:var(--text-muted); line-height: 1.4;">${r.comment}</p>
+                        <p style="font-size:0.9rem; color:var(--text-muted);">${r.comment}</p>
                     </div>
-                </div>
-                `;
+                </div>`;
             }).join('');
+        }
+
+        async function deleteReview(reviewId) {
+            if(!confirm("Are you sure you want to delete your review?")) return;
+            const { error } = await _supabase.from('reviews').delete().eq('id', reviewId);
+            if(!error) {
+                // UI updates immediately after deletion
+                const el = document.getElementById(`review-${reviewId}`);
+                if(el) el.remove();
+            } else { alert("Error deleting review."); }
         }
 
         function closeReviews(e) {
@@ -452,21 +444,14 @@
             activeConfigId = null;
         }
 
-        // Star Selection Logic
         document.querySelectorAll('.input-star').forEach(star => {
             star.addEventListener('click', (e) => {
                 currentRatingInput = parseInt(e.target.getAttribute('data-val'));
                 document.querySelectorAll('.input-star').forEach(s => {
                     const val = parseInt(s.getAttribute('data-val'));
-                    if(val <= currentRatingInput) s.classList.add('active');
-                    else s.classList.remove('active');
+                    s.classList.toggle('active', val <= currentRatingInput);
                 });
             });
-        });
-
-        // Submit via Enter Key
-        document.getElementById('reviewTextInput').addEventListener('keypress', function(e) {
-            if(e.key === 'Enter') submitReview();
         });
 
         async function submitReview() {
@@ -475,7 +460,6 @@
             if(!comment || !activeConfigId || !currentUser) return;
 
             input.disabled = true;
-            
             const { error } = await _supabase.from('reviews').insert({
                 config_id: activeConfigId,
                 poster_id: currentUser.discord_id,
@@ -487,51 +471,8 @@
             });
 
             input.disabled = false;
-            
-            if(!error) {
-                input.value = '';
-                openReviews(activeConfigId); // refresh
-            } else {
-                alert("Failed to post review. Check console.");
-                console.error(error);
-            }
+            if(!error) { input.value = ''; openReviews(activeConfigId); }
         }
-
-        // --- Webhook Form Logic ---
-        document.getElementById('webhookForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const lastSent = localStorage.getItem('lastSentTimestamp');
-            const cooldown = 6 * 60 * 60 * 1000; 
-
-            if (lastSent && (Date.now() - lastSent < cooldown)) {
-                alert(`Cooldown active. Try again in ${Math.ceil((cooldown - (Date.now() - lastSent)) / 3600000)} hours.`);
-                return;
-            }
-
-            const fileInput = document.getElementById('dcFile');
-            if (fileInput.files.length > 0 && fileInput.files[0].size > 10 * 1024 * 1024) {
-                alert('File is too large! (10MB Max)'); return;
-            }
-
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true; submitBtn.innerText = "Sending...";
-
-            const formData = new FormData();
-            formData.append('payload_json', JSON.stringify({
-                embeds: [{ title: "New Config Request", fields: [
-                    { name: "User", value: document.getElementById('dcUser').value, inline: true },
-                    { name: "Message", value: document.getElementById('dcDetails').value }
-                ], timestamp: new Date() }]
-            }));
-            if (fileInput.files.length > 0) formData.append('file', fileInput.files[0]);
-
-            try {
-                // Ensure to replace this webhook URL if it's dead, currently using the one provided
-                const res = await fetch("https://discord.com/api/webhooks/1498387587092709468/EY0XBVlIy5cnAgaIJxWbTliIB8lPvfrywiCXM4tMmw6Y2D7ku5wgIbFFSb-8YC_wCECz", { method: 'POST', body: formData });
-                if (res.ok) { alert('Sent!'); localStorage.setItem('lastSentTimestamp', Date.now()); document.getElementById('webhookForm').reset(); }
-            } catch (err) { alert('Error sending request.'); }
-            submitBtn.disabled = false; submitBtn.innerText = "Submit Request";
-        });
 
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
@@ -541,7 +482,6 @@
         }
 
         async function logout() { await _supabase.auth.signOut(); window.location.href = 'login.html'; }
-        
     </script>
 </body>
 </html>
