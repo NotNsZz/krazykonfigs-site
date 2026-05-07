@@ -280,7 +280,35 @@
         });
 
         // Run Security on Load
-        checkSecurity();
+        async function checkSecurity() {
+    const { data: { session } } = await _supabase.auth.getSession();
+    
+    if (!session) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // DEBUG: Let's see what your profile actually contains
+    const { data: profile, error } = await _supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+    console.log("Logged in user profile:", profile);
+
+    // If 'profile.rank' is undefined, check your column name in Supabase!
+    // It might be 'rank', 'Rank', or 'role'.
+    if (error || !profile || profile.rank.toLowerCase() !== 'admin') {
+        alert("Security Check Failed: Your rank is " + (profile ? profile.rank : "unknown"));
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    currentAdmin = profile;
+    initUI();
+    document.getElementById('security-guard').style.display = 'none';
+}
 
         // Continuous Session Validation
         setInterval(async () => {
