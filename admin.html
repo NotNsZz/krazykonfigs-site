@@ -146,51 +146,43 @@
 
         let currentUser = null;
 
-        // --- STEP 5: SECURITY LOGIC ---
+        // --- EDITED SECURITY LOGIC (Fixing 406 & Redirect) ---
         async function runSecurityAudit() {
-            const { data: { session }, error: sessionError } = await _supabase.auth.getSession();
+            const { data: { session } } = await _supabase.auth.getSession();
             
-            // 1. Basic Session Check
-            if (!session || sessionError) {
-                console.error("No active session found.");
-                window.location.href = 'login.html';
-                return;
+            if (!session) { 
+                window.location.href = 'login.html'; 
+                return; 
             }
-        
-            // 2. Fetch Rank (Using .select() instead of .single() to prevent 406 error)
-            const { data: profiles, error: dbError } = await _supabase
+
+            // Fixed: Use .select() instead of .single() to avoid 406 Error
+            const { data: profiles, error } = await _supabase
                 .from('users')
                 .select('rank, username, avatar_url')
                 .eq('id', session.user.id);
-        
-            // 3. Handle Database/RLS Errors
-            if (dbError) {
-                console.error("Database Error:", dbError.message);
-                // If you see this in console, your RLS policy is definitely blocking you
+
+            if (error) {
+                console.error("Audit Error:", error.message);
                 return;
             }
-        
-            // 4. Verify Admin Status
-            const profile = profiles ? profiles[0] : null;
-        
+
+            const profile = profiles && profiles.length > 0 ? profiles[0] : null;
+
+            // Strict check for lowercase 'admin'
             if (!profile || profile.rank !== 'admin') {
-                console.warn("Access Denied: Rank is", profile ? profile.rank : "NULL");
-                // Only redirect if we definitely aren't an admin
+                console.warn("Unauthorized. Found rank:", profile ? profile.rank : "None");
                 window.location.href = 'dashboard.html';
                 return;
             }
-        
-            // 5. Success
+
             currentUser = profile;
             initAdminPanel();
-            }    
+        }
 
         function initAdminPanel() {
-            // Set User Data
             document.getElementById('adminName').innerText = currentUser.username;
             document.getElementById('adminPfp').src = currentUser.avatar_url;
 
-            // Lift Guard
             const guard = document.getElementById('security-guard');
             guard.style.opacity = '0';
             setTimeout(() => {
@@ -199,15 +191,11 @@
             }, 500);
         }
 
-        // --- STEP 3: DYNAMIC CONTENT SYSTEM ---
         async function loadContent(module, btnElement) {
             const container = document.getElementById('dynamic-container');
-            
-            // Update Sidebar UI
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btnElement.classList.add('active');
 
-            // Implementation of the "Home Menu"
             if (module === 'home') {
                 const { count: userCount } = await _supabase.from('users').select('*', { count: 'exact', head: true });
                 const { count: configCount } = await _supabase.from('configs').select('*', { count: 'exact', head: true });
@@ -245,7 +233,6 @@
             }
         }
 
-        // --- UI UTILITIES ---
         function toggleDropdown(e) {
             e.stopPropagation();
             document.getElementById('profileDropdown').classList.toggle('active');
@@ -258,7 +245,6 @@
             window.location.href = 'login.html';
         }
 
-        // Start Audit on Load
         runSecurityAudit();
     </script>
 </body>
