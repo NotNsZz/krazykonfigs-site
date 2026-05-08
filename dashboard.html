@@ -281,13 +281,16 @@
             document.getElementById('navPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
             
             // Conditional UI: Show Admin Panel Button
-            if(currentUser.rank === 'admin') {
-                document.getElementById('adminPanelOption').style.display = 'block';
+           // Replace lines 292-294 in your dashboard.html with this:
+            if (profile && profile.rank && profile.rank.toLowerCase() === "admin") {
+                const adminButton = document.getElementById('adminBtn');
+                if (adminButton) {
+                    adminButton.setAttribute('style', 'display: flex !important;');
+                    console.log("Admin verified. Button forced visible.");
+                }
+            } else {
+                console.log("Rank is:", profile ? profile.rank : "No profile found");
             }
-
-            document.body.style.display = 'block';
-            init();
-        }
 
         async function init() {
             if (localStorage.getItem('theme') === 'dark') {
