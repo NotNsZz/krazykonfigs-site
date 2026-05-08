@@ -148,28 +148,42 @@
 
         // --- STEP 5: SECURITY LOGIC ---
         async function runSecurityAudit() {
-            const { data: { session } } = await _supabase.auth.getSession();
+            const { data: { session }, error: sessionError } = await _supabase.auth.getSession();
             
-            // Redirect if no session
-            if (!session) { window.location.href = 'login.html'; return; }
-
-            // Fetch server-side rank validation
-            const { data: profile, error } = await _supabase
+            // 1. Basic Session Check
+            if (!session || sessionError) {
+                console.error("No active session found.");
+                window.location.href = 'login.html';
+                return;
+            }
+        
+            // 2. Fetch Rank (Using .select() instead of .single() to prevent 406 error)
+            const { data: profiles, error: dbError } = await _supabase
                 .from('users')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-
-            // Strict Rank Verification
+                .select('rank, username, avatar_url')
+                .eq('id', session.user.id);
+        
+            // 3. Handle Database/RLS Errors
+            if (dbError) {
+                console.error("Database Error:", dbError.message);
+                // If you see this in console, your RLS policy is definitely blocking you
+                return;
+            }
+        
+            // 4. Verify Admin Status
+            const profile = profiles ? profiles[0] : null;
+        
             if (!profile || profile.rank !== 'admin') {
-                console.error("Unauthorized Access Detected.");
+                console.warn("Access Denied: Rank is", profile ? profile.rank : "NULL");
+                // Only redirect if we definitely aren't an admin
                 window.location.href = 'dashboard.html';
                 return;
             }
-
+        
+            // 5. Success
             currentUser = profile;
             initAdminPanel();
-        }
+            }    
 
         function initAdminPanel() {
             // Set User Data
