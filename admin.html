@@ -9,312 +9,237 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-sidebar: #0f0f0f;
-            --bg-main: #0a0a0a;
-            --bg-card: #151515;
-            --accent: #5865F2; /* Discord Blue */
+            --bg-sidebar: #0a0a0a;
+            --bg-main: #0f0f0f;
+            --bg-card: #161616;
+            --accent: #5865F2; /* Discord Blurple */
             --text-main: #ffffff;
             --text-muted: #888888;
             --border: #1f1f1f;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Source Sans Pro', sans-serif; }
         
-        /* Security Overlay - Hidden only when Admin is verified */
-        #security-guard {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
-            color: var(--text-main); font-weight: 900; letter-spacing: 2px;
-        }
-
         body { background: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-        /* Sidebar Design (Following PDF Page 1) */
-        .sidebar {
-            width: 280px; background: var(--bg-sidebar); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; padding: 1.5rem;
+        /* --- 1. SECURITY GUARD OVERLAY --- */
+        #security-guard {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000000; z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; transition: opacity 0.4s ease;
         }
+        .spinner { border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .brand-section { display: flex; align-items: center; gap: 12px; margin-bottom: 2.5rem; padding-left: 10px; }
-        .logo-box { 
-            width: 35px; height: 35px; border: 2px solid var(--text-main); 
-            display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 6px; 
-        }
-
-        .menu-category { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin: 1.5rem 0 0.8rem 10px; }
+        /* --- 2. SIDEBAR STRUCTURE --- */
+        .sidebar { width: 280px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+        .brand { padding: 1.5rem; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+        .logo-box { width: 35px; height: 35px; border: 2px solid var(--text-main); display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 6px; }
         
-        .nav-item {
-            padding: 12px 15px; border-radius: 8px; cursor: pointer; color: var(--text-muted);
-            font-weight: 600; font-size: 0.9rem; transition: var(--transition);
-            display: flex; align-items: center; gap: 12px; margin-bottom: 4px;
-        }
-        .nav-item i { width: 20px; font-size: 1rem; }
-        .nav-item:hover, .nav-item.active { background: var(--bg-card); color: var(--text-main); }
-        .nav-item.active { border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; }
+        .nav-category { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.2px; margin: 1rem 1.5rem 0.5rem; }
+        .nav-item { padding: 10px 1.5rem; color: var(--text-muted); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition); border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
+        .nav-item.active { border-left-color: var(--accent); color: var(--text-main); background: rgba(88, 101, 242, 0.05); }
+        .nav-item i { width: 20px; text-align: center; font-size: 1.1rem; }
 
-        .sub-menu { padding-left: 32px; margin-bottom: 10px; display: none; }
-        .sub-menu.show { display: block; }
-        .sub-item {
-            padding: 8px 10px; font-size: 0.85rem; color: var(--text-muted); 
-            cursor: pointer; transition: var(--transition); border-radius: 4px;
-        }
-        .sub-item:hover { color: var(--accent); background: rgba(88, 101, 242, 0.05); }
-
-        /* Main Content Area */
+        /* --- 3. MAIN LAYOUT & HEADER --- */
         .main-wrapper { flex: 1; display: flex; flex-direction: column; position: relative; }
-
-        /* Header / Profile (Following Profile Behavior Req) */
-        .top-bar {
-            height: 70px; padding: 0 2rem; display: flex; justify-content: flex-end; align-items: center;
-            border-bottom: 1px solid var(--border); background: var(--bg-main);
-        }
-
-        .profile-trigger {
-            display: flex; align-items: center; gap: 12px; cursor: pointer;
-            padding: 6px 12px; border-radius: 30px; transition: var(--transition); position: relative;
-        }
-        .profile-trigger:hover { background: var(--bg-card); }
-
-        .profile-name {
-            font-weight: 700; font-size: 0.9rem; max-width: 0; overflow: hidden;
-            white-space: nowrap; transition: max-width 0.5s ease, opacity 0.3s; opacity: 0;
-        }
-        .profile-trigger:hover .profile-name { max-width: 150px; opacity: 1; }
-
-        .profile-pfp { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--border); object-fit: cover; }
         
+        .top-bar { height: 70px; border-bottom: 1px solid var(--border); display: flex; justify-content: flex-end; align-items: center; padding: 0 2rem; background: var(--bg-main); }
+        
+        /* PFP & Hover Logic */
+        .profile-trigger { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 6px 12px; border-radius: 30px; border: 1px solid transparent; transition: var(--transition); position: relative; }
+        .profile-trigger:hover { background: var(--bg-card); border-color: var(--border); }
+        
+        .profile-name { font-weight: 700; font-size: 0.9rem; max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; transition: max-width 0.4s ease, opacity 0.3s ease; }
+        .profile-trigger:hover .profile-name { max-width: 150px; opacity: 1; }
+        
+        .profile-pfp { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); transition: var(--transition); }
+        .profile-trigger:hover .profile-pfp { border-color: var(--accent); }
+
         /* Dropdown */
-        .dropdown {
-            position: absolute; top: 110%; right: 0; background: var(--bg-card);
-            border: 1px solid var(--border); border-radius: 12px; padding: 8px;
-            min-width: 180px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100;
-        }
-        .dropdown.show { display: block; animation: slideIn 0.2s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .dropdown { position: absolute; top: calc(100% + 5px); right: 0; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: 10px; width: 180px; display: none; flex-direction: column; padding: 0.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000; }
+        .dropdown.show { display: flex; animation: slideDown 0.2s ease forwards; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .drop-item { padding: 10px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 10px; }
+        .drop-item:hover { background: var(--bg-card); color: var(--text-main); }
+        .drop-item.logout:hover { color: #ed4245; background: rgba(237, 66, 69, 0.1); }
 
-        .drop-item {
-            padding: 10px 15px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);
-            border-radius: 6px; display: flex; align-items: center; gap: 10px; transition: var(--transition);
-        }
-        .drop-item:hover { background: var(--bg-sidebar); color: var(--text-main); }
-        .drop-item.logout:hover { color: #ff4757; }
-
-        /* Dynamic Content Container (Gray Area from PDF) */
-        #content-stage {
-            flex: 1; padding: 2.5rem; overflow-y: auto;
-            background: linear-gradient(135deg, #0a0a0a 0%, #111111 100%);
-        }
-
-        .home-welcome { max-width: 800px; }
-        .home-welcome h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; }
-        .home-welcome p { color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem; }
-
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
-        .stat-card {
-            background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px;
-            transition: var(--transition);
-        }
-        .stat-card:hover { border-color: var(--accent); transform: translateY(-3px); }
-        .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; }
-        .stat-value { font-size: 1.8rem; font-weight: 900; margin-top: 5px; color: var(--accent); }
-
+        /* --- 4. DYNAMIC CONTAINER STAGE --- */
+        #dynamic-stage { flex: 1; padding: 2.5rem; overflow-y: auto; background: var(--bg-main); position: relative; }
+        
+        /* Home Overview Styles (Default Module) */
+        .home-header h1 { font-size: 2.5rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 5px; }
+        .home-header p { color: var(--text-muted); font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
-    <div id="security-guard">VERIFYING PERMISSIONS...</div>
+    <div id="security-guard">
+        <div class="spinner"></div>
+        <h3 style="font-weight: 800; letter-spacing: 1px;">VERIFYING PERMISSIONS</h3>
+    </div>
 
     <aside class="sidebar">
-        <div class="brand-section">
+        <div class="brand">
             <div class="logo-box">K</div>
-            <span style="font-weight:900; font-size: 1.1rem; letter-spacing: 1px;">ADMIN PANEL</span>
+            <span style="font-weight: 900; font-size: 1.2rem; letter-spacing: 1px;">ADMIN</span>
         </div>
 
-        <div class="menu-category">User Management</div>
-        <div class="nav-item" onclick="toggleSub('sub-users')"><i class="fas fa-users"></i> Users</div>
-        <div id="sub-users" class="sub-menu">
-            <div class="sub-item" onclick="loadModule('rank-mgmt')">Rank Management</div>
-            <div class="sub-item" onclick="loadModule('blacklist')">Blacklisting</div>
-        </div>
+        <div class="nav-category">User Management</div>
+        <div class="nav-item active" onclick="loadModule('home', this)"><i class="fas fa-home"></i> Home Overview</div>
+        <div class="nav-item" onclick="loadModule('users', this)"><i class="fas fa-users"></i> Users</div>
+        <div class="nav-item" onclick="loadModule('rank-mgmt', this)"><i class="fas fa-user-shield"></i> Rank Management</div>
+        <div class="nav-item" onclick="loadModule('blacklist', this)"><i class="fas fa-ban"></i> Account Blacklisting</div>
 
-        <div class="menu-category">Config Management</div>
-        <div class="nav-item" onclick="toggleSub('sub-configs')"><i class="fas fa-sliders-h"></i> Configs</div>
-        <div id="sub-configs" class="sub-menu">
-            <div class="sub-item" onclick="loadModule('config-editor')">Config Editor</div>
-            <div class="sub-item" onclick="loadModule('archive')">Draft & Archive</div>
-        </div>
+        <div class="nav-category">Config Management</div>
+        <div class="nav-item" onclick="loadModule('config-editor', this)"><i class="fas fa-sliders-h"></i> Config Editor</div>
+        <div class="nav-item" onclick="loadModule('archive', this)"><i class="fas fa-box-archive"></i> Draft & Archive</div>
 
-        <div class="menu-category">Moderation</div>
-        <div class="nav-item" onclick="loadModule('reviews')"><i class="fas fa-comment-alt"></i> Reviews/Comments</div>
-        <div class="nav-item" onclick="loadModule('contributors')"><i class="fas fa-medal"></i> Contributors</div>
+        <div class="nav-category">Moderation & Community</div>
+        <div class="nav-item" onclick="loadModule('reviews', this)"><i class="fas fa-comments"></i> Reviews/Comments</div>
+        <div class="nav-item" onclick="loadModule('contributors', this)"><i class="fas fa-medal"></i> Contributor Directory</div>
 
-        <div class="menu-category">System</div>
-        <div class="nav-item" onclick="loadModule('db-overview')"><i class="fas fa-database"></i> Database Overview</div>
-        <div class="nav-item" onclick="loadModule('settings')"><i class="fas fa-cog"></i> Website Settings</div>
+        <div class="nav-category">System Health</div>
+        <div class="nav-item" onclick="loadModule('db-overview', this)"><i class="fas fa-database"></i> Database Overview</div>
+        <div class="nav-item" onclick="loadModule('settings', this)"><i class="fas fa-cog"></i> Website Settings</div>
     </aside>
 
-    <section class="main-wrapper">
+    <div class="main-wrapper">
         <header class="top-bar">
-            <div class="profile-trigger" onclick="toggleDropdown(event)">
-                <span class="profile-name" id="adminName">Admin User</span>
-                <img src="" id="adminPfp" class="profile-pfp" alt="PFP">
+            <div class="profile-trigger" id="profileBtn" onclick="toggleDropdown(event)">
+                <span class="profile-name" id="adminName">Loading...</span>
+                <img src="https://via.placeholder.com/36" id="adminPfp" class="profile-pfp" alt="Admin PFP">
+                
                 <div class="dropdown" id="adminDropdown">
-                    <div class="drop-item" onclick="window.location.href='dashboard.html'"><i class="fas fa-home"></i> Dashboard</div>
-                    <div class="drop-item logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+                    <div class="drop-item" onclick="window.location.href='dashboard.html'"><i class="fas fa-columns"></i> Main Dashboard</div>
+                    <div class="drop-item logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Secure Logout</div>
                 </div>
             </div>
         </header>
 
-        <main id="content-stage">
-            <div class="home-welcome">
-                <h1>Welcome back, <span id="welcomeName" style="color: var(--accent);">Admin</span>.</h1>
-                <p>Monitor system health, moderate user generated content, and refine configuration presets from your centralized command center.</p>
-                
-                <div class="stat-grid" id="quickStats">
-                    <div class="stat-card">
-                        <div class="stat-label">Total Users</div>
-                        <div class="stat-value" id="statUsers">--</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Total Configs</div>
-                        <div class="stat-value" id="statConfigs">--</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Active Reviews</div>
-                        <div class="stat-value" id="statReviews">--</div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </section>
+        <main id="dynamic-stage">
+            </main>
+    </div>
 
     <script>
-        const _supabase = supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co', 'YOUR_KEY');
+        // Supabase Initialization
+        const _supabase = supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co/', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE');
 
         let currentAdmin = null;
 
-        // 1. SECURITY GUARD: Instant Auth Check
-        async function checkSecurity() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            
-            if (!session) {
-                window.location.href = 'login.html';
+        // --- CORE SECURITY LOGIC ---
+        async function authenticateAdmin() {
+            // 1. Check valid local session
+            const { data: { session }, error: sessionError } = await _supabase.auth.getSession();
+            if (!session || sessionError) {
+                window.location.replace('login.html');
                 return;
             }
 
-            // Database-side Rank Validation (Cannot be bypassed by local storage)
-            const { data: profile, error } = await _supabase
+            // 2. Perform strictly verified DB call to check rank
+            // Uses users table linking to auth.users.id
+            const { data: profile, error: profileError } = await _supabase
                 .from('users')
-                .select('*')
+                .select('rank, username, avatar_url')
                 .eq('id', session.user.id)
                 .single();
 
-            if (error || !profile || profile.rank !== 'admin') {
-                console.error("Access Denied: Admin privileges required.");
-                window.location.href = 'dashboard.html'; // Redirect non-admins
+            // 3. Kick if fetch fails, profile doesn't exist, or rank is NOT exactly 'admin'
+            if (profileError || !profile || profile.rank !== 'admin') {
+                console.warn("Security Alert: Unauthorized admin access attempt blocked.");
+                window.location.replace('dashboard.html');
                 return;
             }
 
-            // Success: User is Admin
+            // 4. Success -> Initialize UI
             currentAdmin = profile;
-            initUI();
-            document.getElementById('security-guard').style.display = 'none';
+            setupUI();
         }
 
-        function initUI() {
+        function setupUI() {
+            // Populate Header Data
             document.getElementById('adminName').innerText = currentAdmin.username;
-            document.getElementById('welcomeName').innerText = currentAdmin.username;
-            document.getElementById('adminPfp').src = currentAdmin.avatar_url;
-            fetchQuickStats();
-        }
-
-        // 2. MODULAR NAVIGATION: Dynamic Loading
-        function loadModule(moduleId) {
-            const stage = document.getElementById('content-stage');
-            stage.style.opacity = '0'; // Smooth transition start
+            document.getElementById('adminPfp').src = currentAdmin.avatar_url || 'https://via.placeholder.com/36';
             
+            // Remove Security Guard smoothly
+            const guard = document.getElementById('security-guard');
+            guard.style.opacity = '0';
             setTimeout(() => {
-                switch(moduleId) {
-                    case 'db-overview':
-                        stage.innerHTML = `<h2>Database Overview</h2><p>Coming in Phase 2...</p>`;
-                        break;
-                    case 'config-editor':
-                        stage.innerHTML = `<h2>Config Editor</h2><p>Coming in Phase 2...</p>`;
-                        break;
-                    default:
-                        // Re-render Home Menu if unknown or home
-                        location.reload(); 
-                }
-                stage.style.opacity = '1';
-            }, 200);
+                guard.style.display = 'none';
+                loadModule('home', document.querySelector('.nav-item.active')); // Load default module
+            }, 400);
+
+            // Establish background session watcher
+            setInterval(verifySessionHealth, 30000); // Check every 30s
         }
 
-        async function fetchQuickStats() {
-            const { count: users } = await _supabase.from('users').select('*', { count: 'exact', head: true });
-            const { count: configs } = await _supabase.from('configs').select('*', { count: 'exact', head: true });
-            const { count: reviews } = await _supabase.from('reviews').select('*', { count: 'exact', head: true });
-            
-            document.getElementById('statUsers').innerText = users || 0;
-            document.getElementById('statConfigs').innerText = configs || 0;
-            document.getElementById('statReviews').innerText = reviews || 0;
+        async function verifySessionHealth() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) window.location.replace('login.html');
         }
 
-        // 3. UI BEHAVIORS
-        function toggleSub(id) {
-            document.getElementById(id).classList.toggle('show');
-        }
-
+        // --- UI & DROPDOWN LOGIC ---
         function toggleDropdown(e) {
             e.stopPropagation();
             document.getElementById('adminDropdown').classList.toggle('show');
         }
 
-        async function handleLogout() {
-            await _supabase.auth.signOut();
-            window.location.href = 'login.html';
-        }
-
+        // Close dropdown when clicking outside
         document.addEventListener('click', () => {
-            document.getElementById('adminDropdown').classList.remove('show');
+            const dropdown = document.getElementById('adminDropdown');
+            if (dropdown.classList.contains('show')) dropdown.classList.remove('show');
         });
 
-        // Run Security on Load
-        async function checkSecurity() {
-    const { data: { session } } = await _supabase.auth.getSession();
-    
-    if (!session) {
-        window.location.href = 'login.html';
-        return;
-    }
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.replace('login.html');
+        }
 
-    // DEBUG: Let's see what your profile actually contains
-    const { data: profile, error } = await _supabase
-        .from('users')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
+        // --- DYNAMIC MODULE LOADER ---
+        // This is where future modules (Config Editor, Users, etc.) will be injected
+        function loadModule(moduleName, navElement) {
+            // Update active state in sidebar
+            if (navElement) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                navElement.classList.add('active');
+            }
 
-    console.log("Logged in user profile:", profile);
+            const stage = document.getElementById('dynamic-stage');
+            
+            // Clean slate transition
+            stage.style.opacity = '0';
+            
+            setTimeout(() => {
+                switch(moduleName) {
+                    case 'home':
+                        stage.innerHTML = `
+                            <div class="home-header">
+                                <h1>System Overview</h1>
+                                <p>Welcome back, <span style="color: var(--accent); font-weight: 700;">${currentAdmin.username}</span>. Select a module from the sidebar to begin.</p>
+                            </div>
+                            `;
+                        break;
+                    default:
+                        // Placeholder for Phase 2+ modules
+                        stage.innerHTML = `
+                            <div class="home-header">
+                                <h1>${navElement.innerText.trim()}</h1>
+                                <p>This module is pending implementation in Phase 2.</p>
+                            </div>
+                        `;
+                }
+                
+                // Fade back in
+                stage.style.transition = 'opacity 0.3s ease';
+                stage.style.opacity = '1';
+            }, 200);
+        }
 
-    // If 'profile.rank' is undefined, check your column name in Supabase!
-    // It might be 'rank', 'Rank', or 'role'.
-    if (error || !profile || profile.rank.toLowerCase() !== 'admin') {
-        alert("Security Check Failed: Your rank is " + (profile ? profile.rank : "unknown"));
-        window.location.href = 'dashboard.html';
-        return;
-    }
-
-    currentAdmin = profile;
-    initUI();
-    document.getElementById('security-guard').style.display = 'none';
-}
-
-        // Continuous Session Validation
-        setInterval(async () => {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) window.location.href = 'login.html';
-        }, 30000); // Check every 30s
+        // Execute Security Routine on Load
+        authenticateAdmin();
     </script>
 </body>
 </html>
