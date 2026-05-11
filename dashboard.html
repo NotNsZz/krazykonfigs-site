@@ -52,7 +52,7 @@
             flex-direction: column; z-index: 1000;
         }
         .dropdown-menu.show { display: flex; }
-        .dropdown-item { padding: 10px 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 4px; transition: var(--transition); }
+        .dropdown-item { padding: 10px 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 4px; transition: var(--transition); text-decoration: none; color: var(--text-main); }
         .dropdown-item:hover { background: var(--tag-bg); color: #ed4245; }
         .dropdown-item.admin-btn:hover { color: #5865F2; }
 
@@ -85,7 +85,6 @@
         .filter-btn { padding: 8px 20px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-inner); color: var(--text-main); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: var(--transition); text-transform: uppercase; }
         .filter-btn.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
 
-        /* Deletion Styles */
         .delete-btn { color: #ed4245; cursor: pointer; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; border: none; background: none; margin-left: 10px; transition: var(--transition); }
         .delete-btn:hover { text-decoration: underline; opacity: 0.8; }
 
@@ -152,8 +151,7 @@
                 <div class="pfp-container" onclick="toggleUserDropdown(event)">
                     <img src="https://via.placeholder.com/32" id="navPfp" class="header-pfp" alt="PFP">
                     <div class="dropdown-menu" id="userDropdown">
-                        <!-- Admin Panel Button (Conditional UI) -->
-                        <div id="adminPanelOption" style="display:none;" class="dropdown-item admin-btn"><i class="fas fa-shield-alt"></i> Admin Panel</div>
+                        <a href="admin.html" id="adminPanelOption" class="dropdown-item admin-btn" style="display:flex;"><i class="fas fa-shield-alt"></i> Admin Panel</a>
                         <div class="dropdown-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
                     </div>
                 </div>
@@ -164,7 +162,6 @@
     <section class="hero" id="about">
         <h1>Krazy Konfigs</h1>
         <p>Precision-engineered simulation presets mapped directly to your exact connection type.</p>
-        <!-- Hero Button Text Update -->
         <a href="#configs" class="hero-btn">View Configs</a>
     </section>
 
@@ -256,7 +253,7 @@
             const meta = user.user_metadata;
             const discordId = meta.provider_id || user.id;
 
-            // Fetch profile to get the rank column
+            // Fetch profile
             const { data: profile } = await _supabase.from('users').select('rank').eq('id', user.id).single();
 
             currentUser = {
@@ -280,17 +277,10 @@
             document.getElementById('navName').innerText = currentUser.username;
             document.getElementById('navPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
             
-            // Conditional UI: Show Admin Panel Button
-           // Replace lines 292-294 in your dashboard.html with this:
-            if (profile && profile.rank && profile.rank.toLowerCase() === "admin") {
-                const adminButton = document.getElementById('adminBtn');
-                if (adminButton) {
-                    adminButton.setAttribute('style', 'display: flex !important;');
-                    console.log("Admin verified. Button forced visible.");
-                }
-            } else {
-                console.log("Rank is:", profile ? profile.rank : "No profile found");
-            }
+            // Initialization flow called after session is successfully established
+            document.body.style.display = 'block'; // Ensure body is visible
+            init();
+        }
 
         async function init() {
             if (localStorage.getItem('theme') === 'dark') {
@@ -319,7 +309,6 @@
                         <div class="card-divider"></div>
                         
                         <div style="margin-bottom: 1.2rem;">
-                            <!-- Emoji Enhancement: Prediction -->
                             <div class="section-label">🎯 PREDICTION</div>
                             <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${c.sim_timer ?? '-'}</span></div>
                             <div class="data-row"><span style="color:var(--text-muted)">Prediction Interval</span> <span class="data-val">${c.pred_interval || '-'}</span></div>
@@ -340,7 +329,6 @@
                         </div>
 
                         <div style="margin-bottom: 1.2rem;">
-                            <!-- Emoji Enhancement: Offsets -->
                             <div class="section-label">📍 OFFSETS</div>
                             <div class="data-row"><span style="color:var(--text-muted)">X / Y / Z</span> <span class="data-val">${c.offsets || '0 / -5 / 0'}</span></div>
                         </div>
@@ -354,7 +342,6 @@
                             </div>
                             <div style="text-align: right;">
                                 <span style="font-size:0.8rem; font-style:italic; font-weight: 600; color:var(--text-muted); display: block;">by ${c.creator || 'Kriz'}</span>
-                                <!-- Config ID Display -->
                                 <span style="font-size:0.65rem; color:var(--text-muted); font-weight: 600;">ID: ${c.id}</span>
                             </div>
                         </div>
@@ -410,7 +397,6 @@
             container.innerHTML = data.map(r => {
                 const stars = Array(5).fill(0).map((_,i) => i < r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('');
                 
-                // Logic: Match poster_id with current user's discord_id for deletion
                 const isOwner = currentUser && String(r.poster_id) === String(currentUser.discord_id);
                 const deleteAction = isOwner ? `<button class="delete-btn" onclick="deleteReview(${r.id})">Delete</button>` : '';
 
@@ -435,7 +421,6 @@
             if(!confirm("Are you sure you want to delete your review?")) return;
             const { error } = await _supabase.from('reviews').delete().eq('id', reviewId);
             if(!error) {
-                // UI updates immediately after deletion
                 const el = document.getElementById(`review-${reviewId}`);
                 if(el) el.remove();
             } else { alert("Error deleting review."); }
