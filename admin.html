@@ -13,15 +13,19 @@
             --main-bg: #0f0f0f;
             --card-bg: #161616;
             --accent: #5865F2;
+            --danger: #ed4245;
+            --success: #2ecc71;
             --text: #ffffff;
             --text-dim: #888888;
             --border: #1f1f1f;
+            --input-bg: #111111;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Source Sans Pro', sans-serif; }
         body { background: var(--main-bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
+        /* Security Screen */
         #security-guard {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999; display: flex; flex-direction: column;
@@ -30,31 +34,32 @@
         .guard-spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--accent); border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 1.5rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Sidebar */
         .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
         .sidebar-brand { padding: 2rem 1.5rem; display: flex; align-items: center; gap: 12px; }
         .logo-box { width: 35px; height: 35px; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 8px; }
         
         .nav-group { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin: 1.5rem 1.5rem 0.5rem; font-weight: 800; }
-        .nav-btn { padding: 12px 1.5rem; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition); font-weight: 600; border-left: 3px solid transparent; }
+        .nav-btn { padding: 12px 1.5rem; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition); font-weight: 600; border-left: 3px solid transparent; font-size: 0.95rem; }
         .nav-btn:hover { background: rgba(255,255,255,0.03); color: #fff; }
         .nav-btn.active { background: rgba(88, 101, 242, 0.05); color: #fff; border-left-color: var(--accent); }
         .nav-btn i { width: 20px; text-align: center; }
 
-        .wrapper { flex: 1; display: flex; flex-direction: column; }
-        .header { height: 80px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 2.5rem; }
+        /* Top Header */
+        .wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .header { height: 70px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 2.5rem; background: var(--main-bg); }
 
         .profile-container { position: relative; }
         .profile-trigger { 
             display: flex; align-items: center; gap: 0; cursor: pointer; 
-            padding: 6px; border-radius: 40px; background: var(--card-bg); 
+            padding: 4px; border-radius: 40px; background: var(--card-bg); 
             border: 1px solid var(--border); transition: var(--transition);
         }
-        .profile-trigger:hover { gap: 12px; padding: 6px 18px 6px 6px; border-color: var(--accent); }
-        
-        .username-reveal { max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; font-weight: 700; transition: var(--transition); }
+        .profile-trigger:hover { gap: 12px; padding: 4px 18px 4px 4px; border-color: var(--accent); }
+        .username-reveal { max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; font-weight: 700; transition: var(--transition); font-size: 0.9rem; }
         .profile-trigger:hover .username-reveal { max-width: 150px; opacity: 1; }
+        .profile-pfp { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); }
         
-        .profile-pfp { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--border); }
         .dropdown { 
             position: absolute; top: calc(100% + 10px); right: 0; width: 180px; 
             background: var(--sidebar-bg); border: 1px solid var(--border); 
@@ -64,11 +69,57 @@
         .drop-link { padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-dim); text-decoration: none; display: flex; align-items: center; gap: 10px; }
         .drop-link:hover { background: var(--card-bg); color: #fff; }
 
-        #dynamic-container { flex: 1; padding: 3rem; overflow-y: auto; }
-        .home-hero h1 { font-size: 3rem; font-weight: 900; margin-bottom: 8px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
-        .stat-box { background: var(--card-bg); border: 1px solid var(--border); padding: 1.5rem; border-radius: 16px; }
-        .stat-box h2 { font-size: 2.2rem; font-weight: 900; color: var(--accent); }
+        /* Content Area */
+        #dynamic-container { flex: 1; padding: 2.5rem; overflow-y: auto; }
+        
+        /* UI Components from PDF */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .page-header h1 { font-size: 2rem; font-weight: 900; letter-spacing: -0.5px; }
+        
+        .search-bar { 
+            background: var(--input-bg); border: 1px solid var(--border); padding: 10px 16px; 
+            border-radius: 8px; color: var(--text); width: 250px; outline: none; font-family: inherit; font-size: 0.9rem;
+        }
+        .search-bar:focus { border-color: var(--accent); }
+
+        .btn-primary { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+        .btn-primary:hover { filter: brightness(1.1); }
+        .btn-danger { background: rgba(237, 66, 69, 0.1); color: var(--danger); border: 1px solid rgba(237, 66, 69, 0.2); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+        .btn-danger:hover { background: var(--danger); color: #fff; }
+        .btn-secondary { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+        .btn-secondary:hover { background: var(--border); }
+
+        /* Grid Layouts */
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        
+        /* Config Card Style */
+        .item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; }
+        .item-card h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
+        .card-section { margin-bottom: 1rem; }
+        .card-section h4 { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; font-weight: 800; }
+        .data-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px; }
+        .data-label { color: var(--text-dim); font-weight: 600; }
+        .data-val { font-weight: 700; }
+        .card-actions { display: flex; gap: 10px; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border); }
+
+        /* Table Style */
+        .data-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+        .data-table th, .data-table td { padding: 14px 20px; text-align: left; font-size: 0.95rem; border-bottom: 1px solid var(--border); }
+        .data-table th { background: rgba(255,255,255,0.02); color: var(--text-dim); font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tbody tr:hover { background: rgba(255,255,255,0.01); }
+
+        /* Toggle Switch */
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: var(--text-dim); transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(20px); background-color: #fff; }
+
+        /* Dropdown Select */
+        .status-select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; outline: none; font-weight: 600; }
+
     </style>
 </head>
 <body>
@@ -81,15 +132,25 @@
     <aside class="sidebar">
         <div class="sidebar-brand">
             <div class="logo-box">K</div>
-            <span style="font-weight: 900; font-size: 1.3rem;">KRAZY PANEL</span>
+            <span style="font-weight: 900; font-size: 1.3rem;">ADMIN PANEL</span>
         </div>
 
         <div class="nav-group">User Management</div>
-        <div class="nav-btn active" onclick="loadContent('home', this)"><i class="fas fa-chart-pie"></i> Home Overview</div>
-        <div class="nav-btn" onclick="loadContent('users', this)"><i class="fas fa-users"></i> Users</div>
+        <div class="nav-btn active" onclick="loadContent('users', this)"><i class="fas fa-users"></i> Users</div>
+        <div class="nav-btn" onclick="loadContent('rank', this)"><i class="fas fa-user-shield"></i> Rank Management</div>
+        <div class="nav-btn" onclick="loadContent('blacklist', this)"><i class="fas fa-ban"></i> Account Blacklisting</div>
+
+        <div class="nav-group">Config Management</div>
+        <div class="nav-btn" onclick="loadContent('config-editor', this)"><i class="fas fa-code"></i> Config Editor</div>
+        <div class="nav-btn" onclick="loadContent('drafts', this)"><i class="fas fa-archive"></i> Draft & Archive</div>
+
+        <div class="nav-group">Moderation & Community</div>
+        <div class="nav-btn" onclick="loadContent('reviews', this)"><i class="fas fa-comments"></i> Reviews/Comments</div>
+        <div class="nav-btn" onclick="loadContent('contributors', this)"><i class="fas fa-address-book"></i> Contributor Directory</div>
 
         <div class="nav-group">System Health</div>
-        <div class="nav-btn" onclick="loadContent('db', this)"><i class="fas fa-database"></i> DB Overview</div>
+        <div class="nav-btn" onclick="loadContent('db', this)"><i class="fas fa-database"></i> Database Overview</div>
+        <div class="nav-btn" onclick="loadContent('settings', this)"><i class="fas fa-cog"></i> Website Settings</div>
     </aside>
 
     <div class="wrapper">
@@ -100,7 +161,7 @@
                     <span class="username-reveal" id="adminName">Admin</span>
                 </div>
                 <div class="dropdown" id="profileDropdown">
-                    <a href="dashboard.html" class="drop-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    <a href="dashboard.html" class="drop-link"><i class="fas fa-tachometer-alt"></i> Back to Dashboard</a>
                     <a href="#" class="drop-link" style="color:#ff4757" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                 </div>
             </div>
@@ -116,7 +177,6 @@
 
         let currentUser = null;
 
-        // FIXED SECURITY LOGIC (No .single(), handles 406 error)
         async function runSecurityAudit() {
             const { data: { session } } = await _supabase.auth.getSession();
             if (!session) { window.location.href = 'login.html'; return; }
@@ -143,28 +203,248 @@
             document.getElementById('adminName').innerText = currentUser.username;
             document.getElementById('adminPfp').src = currentUser.avatar_url;
             document.getElementById('security-guard').style.display = 'none';
-            loadContent('home', document.querySelector('.nav-btn.active'));
+            loadContent('users', document.querySelector('.nav-btn.active'));
         }
 
-        async function loadContent(module, btnElement) {
+        // Modular view rendering based on PDF specifics
+        function loadContent(module, btnElement) {
             const container = document.getElementById('dynamic-container');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btnElement.classList.add('active');
+            if(btnElement) btnElement.classList.add('active');
 
-            if (module === 'home') {
-                const { count: userCount } = await _supabase.from('users').select('*', { count: 'exact', head: true });
-                container.innerHTML = `
-                    <div class="home-hero">
-                        <h1>System Overview</h1>
-                        <div class="stats-grid">
-                            <div class="stat-box"><span>Registered Users</span><h2>${userCount || 0}</h2></div>
-                            <div class="stat-box"><span>Status</span><h2 style="color: #2ecc71;">ONLINE</h2></div>
+            let html = '';
+
+            switch(module) {
+                case 'users':
+                    html = `
+                        <div class="page-header">
+                            <h1>Users</h1>
+                            <input type="text" class="search-bar" placeholder="Search...">
+                        </div>
+                        <table class="data-table">
+                            <thead><tr><th>UserName</th><th>Rank</th><th>Is Blacklisted</th><th>Last Login</th><th>Account Created On</th></tr></thead>
+                            <tbody>
+                                <tr><td>KrizTheDev</td><td><span style="color:var(--accent); font-weight:bold;">Admin</span></td><td>False</td><td>20/05/26</td><td>01/01/26</td></tr>
+                                <tr><td>ShadowUser</td><td>User</td><td>True</td><td>15/05/26</td><td>10/02/26</td></tr>
+                            </tbody>
+                        </table>
+                    `;
+                    break;
+
+                case 'rank':
+                    html = `
+                        <div class="page-header">
+                            <h1>Rank Management</h1>
+                            <input type="text" class="search-bar" placeholder="Search...">
+                        </div>
+                        <table class="data-table">
+                            <thead><tr><th>UserName</th><th>Current Rank</th><th>Action</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>ShadowUser</td>
+                                    <td>User</td>
+                                    <td>
+                                        <select class="status-select">
+                                            <option value="user" selected>User</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `;
+                    break;
+
+                case 'blacklist':
+                    html = `
+                        <div class="page-header">
+                            <h1>Account Blacklisting</h1>
+                            <input type="text" class="search-bar" placeholder="Search...">
+                        </div>
+                        <table class="data-table">
+                            <thead><tr><th>UserName</th><th>Status</th><th>Toggle Blacklist</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>ShadowUser</td>
+                                    <td><span style="color:var(--danger); font-weight:bold;">Blacklisted</span></td>
+                                    <td>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>NormalGuy</td>
+                                    <td>Active</td>
+                                    <td>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `;
+                    break;
+
+                case 'config-editor':
+                    html = `
+                        <div class="page-header">
+                            <h1>Config Editor</h1>
+                            <div style="display:flex; gap:15px;">
+                                <input type="text" class="search-bar" placeholder="Search...">
+                                <button class="btn-primary">+ Create New</button>
+                            </div>
+                        </div>
+                        <div class="config-grid">
+                            ${generateConfigCardHTML('Placeholder-123', 'Archive', 'Cancel')}
+                            ${generateConfigCardHTML('Tuff-Config', 'Archive', 'Cancel')}
+                        </div>
+                    `;
+                    break;
+
+                case 'drafts':
+                    html = `
+                        <div class="page-header">
+                            <h1>Draft & Archive</h1>
+                            <input type="text" class="search-bar" placeholder="Search...">
+                        </div>
+                        <div class="config-grid">
+                            ${generateConfigCardHTML('Draft-789', 'Publish', 'Delete')}
+                        </div>
+                    `;
+                    break;
+
+                case 'reviews':
+                    html = `
+                        <div class="page-header">
+                            <h1>Reviews/Comments</h1>
+                            <input type="text" class="search-bar" placeholder="Search...">
+                        </div>
+                        <table class="data-table">
+                            <thead><tr><th>Config ID</th><th>Comment ID</th><th>User</th><th>Comment</th><th>Stars</th><th>Action</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td><td>1</td><td>ShadowUser</td>
+                                    <td>Lorem Ipsum Lorem Ipsum...</td>
+                                    <td style="color:#f1c40f;"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></td>
+                                    <td><button class="btn-danger">Delete</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `;
+                    break;
+
+                case 'contributors':
+                    html = `
+                        <div class="page-header">
+                            <h1>Contributor Directory</h1>
+                            <div style="display:flex; gap:15px;">
+                                <input type="text" class="search-bar" placeholder="Search...">
+                                <button class="btn-primary">+ Create New</button>
+                            </div>
+                        </div>
+                        <div class="config-grid">
+                            <div class="item-card">
+                                <h3 style="display:flex; justify-content:space-between;">Kriz <span style="font-size:0.8rem; color:var(--text-dim);">ID: 1</span></h3>
+                                <div class="data-row"><span class="data-label">Role:</span> <span class="data-val">Owner</span></div>
+                                <div class="data-row"><span class="data-label">Role Icon:</span> <span class="data-val">fas fa-crown</span></div>
+                                <div class="data-row"><span class="data-label">Icon Color:</span> <span class="data-val">#ffffff</span></div>
+                                <div class="data-row"><span class="data-label">Tags:</span> <span class="data-val" style="font-size:0.8rem; text-align:right;">["Owner", "Developer", "Contributor"]</span></div>
+                                <div class="card-actions" style="justify-content:flex-end;">
+                                    <button class="btn-danger">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'db':
+                    html = `
+                        <div class="page-header">
+                            <h1>Database Overview</h1>
+                            <input type="text" class="search-bar" placeholder="Search...">
+                        </div>
+                        <p style="color:var(--text-dim); margin-bottom: 2rem;"><i>Note: The database overview should only show data, and should not allow input of data, deletion of data or editing of existing data.</i></p>
+                        <div class="config-grid">
+                            <div class="item-card">
+                                <h3>Users Table</h3>
+                                <div class="data-row"><span class="data-label">Columns Present:</span> <span class="data-val">8</span></div>
+                                <div class="data-row"><span class="data-label">Rows Present:</span> <span class="data-val">124</span></div>
+                                <div class="data-row"><span class="data-label">Storage used:</span> <span class="data-val">15 kb</span></div>
+                                <div class="card-actions"><button class="btn-secondary" style="width:100%;">View Table</button></div>
+                            </div>
+                            <div class="item-card">
+                                <h3>Configs Table</h3>
+                                <div class="data-row"><span class="data-label">Columns Present:</span> <span class="data-val">12</span></div>
+                                <div class="data-row"><span class="data-label">Rows Present:</span> <span class="data-val">45</span></div>
+                                <div class="data-row"><span class="data-label">Storage used:</span> <span class="data-val">28 kb</span></div>
+                                <div class="card-actions"><button class="btn-secondary" style="width:100%;">View Table</button></div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'settings':
+                    html = `
+                        <div class="page-header">
+                            <h1>Website Settings</h1>
+                        </div>
+                        <div class="item-card" style="max-width: 600px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <h3 style="border:none; padding:0; margin-bottom:5px;">Maintenance Mode</h3>
+                                    <p style="font-size:0.85rem; color:var(--text-dim);">Change the website globally to a static "Getting back" content state. To be used when pushing out an update.</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            container.innerHTML = html;
+        }
+
+        // Helper template for Config Cards based on PDF
+        function generateConfigCardHTML(title, actionBtn1, actionBtn2) {
+            const btn1Class = actionBtn1 === 'Delete' ? 'btn-danger' : 'btn-secondary';
+            return `
+                <div class="item-card">
+                    <h3>${title}</h3>
+                    <div class="card-section">
+                        <h4>Prediction</h4>
+                        <div class="data-row"><span class="data-label">Sim timer:</span> <span class="data-val">123</span></div>
+                        <div class="data-row"><span class="data-label">Ping pred:</span> <span class="data-val">123</span></div>
+                    </div>
+                    <div class="card-section">
+                        <h4>Multiplier</h4>
+                        <div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">123</span></div>
+                        <div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">123</span></div>
+                    </div>
+                    <div class="card-section">
+                        <h4>Offset</h4>
+                        <div class="data-row"><span class="data-label">X/Y/Z:</span> <span class="data-val">1/2/3</span></div>
+                    </div>
+                    <div class="card-section">
+                        <h4>Info</h4>
+                        <div class="data-row"><span class="data-label">Creator:</span> <span class="data-val">shadow</span></div>
+                        <div class="data-row"><span class="data-label">Support Range:</span> <span class="data-val">60-70</span></div>
+                        <div class="data-row"><span class="data-label">Hit Rate:</span> <span class="data-val">67</span></div>
+                    </div>
+                    <div class="card-actions" style="justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.8rem; color:var(--text-dim); font-weight:700;">ID: 67</span>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-danger">${actionBtn1 === 'Archive' ? 'Delete' : actionBtn2}</button>
+                            <button class="${btn1Class}">${actionBtn1}</button>
                         </div>
                     </div>
-                `;
-            } else {
-                container.innerHTML = `<h1>${btnElement.innerText}</h1><p>Module coming soon.</p>`;
-            }
+                </div>
+            `;
         }
 
         function toggleDropdown(e) { e.stopPropagation(); document.getElementById('profileDropdown').classList.toggle('active'); }
