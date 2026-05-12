@@ -96,7 +96,7 @@
         .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
         
-        /* Custom UI Dialog System (Replaces alert/confirm) */
+        /* Custom UI Dialog System */
         .custom-dialog-box { background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
         .modal-overlay.show .custom-dialog-box { transform: translateY(0); }
         .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; }
@@ -172,7 +172,7 @@
         <header class="header">
             <div class="profile-container">
                 <div class="profile-trigger" onclick="toggleDropdown(event)">
-                    <img src="https://via.placeholder.com/34" id="adminPfp" class="profile-pfp" alt="">
+                    <img src="" id="adminPfp" class="profile-pfp" alt="">
                     <span class="username-reveal" id="adminName">Admin</span>
                 </div>
                 <div class="dropdown" id="profileDropdown">
@@ -243,11 +243,6 @@
             });
         }
 
-        // Bypassing strict lock to allow local testing
-        currentUser = { username: "Admin Tester", avatar_url: "https://via.placeholder.com/34" };
-        document.getElementById('security-guard').style.display = 'none';
-        setTimeout(() => loadModule('home', document.querySelector('.nav-btn.active')), 100);
-
         function toggleDropdown(e) { e.stopPropagation(); document.getElementById('profileDropdown').classList.toggle('active'); }
         window.onclick = () => document.getElementById('profileDropdown').classList.remove('active');
         
@@ -257,6 +252,71 @@
                 window.location.href = 'login.html'; 
             }
         }
+
+        // --- MASTER BOOT SEQUENCE (Security, Routing, Fetching) ---
+        async function bootSequence() {
+            try {
+                // 1. Fetch User Session (Requires real login now)
+                const { data: { session } } = await _supabase.auth.getSession();
+
+                if (!session) {
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                const user = session.user;
+                const meta = user.user_metadata;
+                const discordId = meta.provider_id || user.id;
+
+                // 2. Fetch specific Profile Data securely
+                const { data: profile } = await _supabase.from('users').select('rank, isBlacklisted').eq('id', user.id).single();
+                
+                // 3. Security Check: Blacklist overrides everything
+                if (profile?.isBlacklisted === 'true') {
+                    await _supabase.auth.signOut();
+                    window.location.href = 'Maintenance.html'; 
+                    return;
+                }
+
+                // 4. Security Check: Admin Access
+                if (profile?.rank !== 'admin') {
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                // 5. Passed all checks -> Establish local state
+                currentUser = {
+                    id: user.id,
+                    discord_id: discordId,
+                    username: meta.full_name || meta.name || 'User',
+                    avatar_url: meta.avatar_url,
+                    rank: profile?.rank || 'user'
+                };
+
+                // Update UI Header
+                document.getElementById('adminName').innerText = currentUser.username;
+                document.getElementById('adminPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
+                
+                // Hide Guard Screen
+                document.getElementById('security-guard').style.display = 'none';
+
+                // Load initial module
+                loadModule('home', document.querySelector('.nav-btn.active'));
+
+            } catch (error) {
+                console.error("Boot Sequence Error:", error);
+                await customAlert("Security validation failed. Redirecting.", "Security Alert");
+                window.location.href = 'dashboard.html';
+            }
+        }
+
+        // Fire sequence on load
+        bootSequence();
+
+        _supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') { window.location.href = 'login.html'; }
+        });
+
 
         // --- View Router & Renderer ---
         async function loadModule(module, btnElement) {
@@ -434,6 +494,11 @@
                                 <h4>Prediction</h4>
                                 <div class="data-row"><span class="data-label">Sim Timer:</span> <span class="data-val">${c.sim_timer || '-'}</span></div>
                                 <div class="data-row"><span class="data-label">Pred Int:</span> <span class="data-val">${c.pred_interval || '-'}</span></div>
+                            </div>
+                            <div class="card-section">
+                                <h4>Multiplier</h4>
+                                <div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">${c.vertical || '-'}</span></div>
+                                <div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">${c.horizontal || '-'}</span></div>
                             </div>
                             <div class="card-actions" style="justify-content:flex-end;">
                                 <button class="btn-secondary" onclick="openConfigModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
