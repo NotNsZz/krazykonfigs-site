@@ -85,11 +85,10 @@
 
         .status-select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; outline: none; font-weight: 600; }
 
-        /* Dashboard specific */
         .stat-banner { background: linear-gradient(135deg, var(--card-bg), rgba(88, 101, 242, 0.1)); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 2rem; }
         .stat-banner h2 { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; }
         
-        /* Modals */
+        /* Modals / Custom Dialogs */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.show { display: flex; opacity: 1; }
         .modal-content { background: var(--card-bg); width: 95%; max-width: 650px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; max-height: 90vh; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
@@ -97,7 +96,13 @@
         .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
         
-        /* Form Grids */
+        /* Custom UI Dialog System (Replaces alert/confirm) */
+        .custom-dialog-box { background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .modal-overlay.show .custom-dialog-box { transform: translateY(0); }
+        .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; }
+        .custom-dialog-box p { color: var(--text-dim); margin-bottom: 2rem; font-size: 1rem; }
+        .dialog-actions { display: flex; gap: 10px; justify-content: center; }
+
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
         .form-group.full { grid-column: span 2; }
@@ -113,6 +118,27 @@
     <div id="security-guard">
         <div class="guard-spinner"></div>
         <p style="font-weight: 800; letter-spacing: 2px; font-size: 0.8rem;">AUTHENTICATING ACCESS</p>
+    </div>
+
+    <div id="customDialogOverlay" class="modal-overlay">
+        <div class="custom-dialog-box">
+            <h3 id="dialogTitle">Notice</h3>
+            <p id="dialogMessage">Message</p>
+            <div class="dialog-actions">
+                <button id="dialogBtnCancel" class="btn-secondary" style="display:none;">Cancel</button>
+                <button id="dialogBtnConfirm" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle" style="font-weight: 900; margin: 0; font-size: 1.2rem;">Title</h3>
+                <button onclick="closeModal()" style="background:none; border:none; color:var(--text); font-size:1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
     </div>
 
     <aside class="sidebar">
@@ -151,22 +177,12 @@
                 </div>
                 <div class="dropdown" id="profileDropdown">
                     <a href="dashboard.html" class="drop-link"><i class="fas fa-tachometer-alt"></i> Back to Dashboard</a>
-                    <a href="#" class="drop-link" style="color:#ff4757" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+                    <a href="#" class="drop-link" style="color:#ff4757" onclick="handleLogoutClick()"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                 </div>
             </div>
         </header>
 
         <main id="dynamic-container"></main>
-    </div>
-
-    <div id="adminModal" class="modal-overlay" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h3 id="modalTitle" style="font-weight: 900; margin: 0; font-size: 1.2rem;">Title</h3>
-                <button onclick="closeModal()" style="background:none; border:none; color:var(--text); font-size:1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body" id="modalBody"></div>
-        </div>
     </div>
 
     <script>
@@ -175,23 +191,77 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null;
-        let activeDataStore = []; // Holds currently fetched data for active view
+        let activeDataStore = []; 
 
-        // Bypassing strict lock to allow local testing, but storing mock admin user
+        // Custom Modal UI Logic
+        function customAlert(msg, title = "Notice") {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('customDialogOverlay');
+                document.getElementById('dialogTitle').innerText = title;
+                document.getElementById('dialogMessage').innerText = msg;
+                document.getElementById('dialogBtnCancel').style.display = 'none';
+                
+                const confirmBtn = document.getElementById('dialogBtnConfirm');
+                confirmBtn.innerText = 'OK';
+                confirmBtn.className = 'btn-primary';
+
+                const handleConfirm = () => {
+                    overlay.classList.remove('show');
+                    confirmBtn.removeEventListener('click', handleConfirm);
+                    resolve(true);
+                };
+                confirmBtn.addEventListener('click', handleConfirm);
+                overlay.classList.add('show');
+            });
+        }
+
+        function customConfirm(msg, title = "Confirm Action", confirmText = "Confirm", isDanger = false) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('customDialogOverlay');
+                document.getElementById('dialogTitle').innerText = title;
+                document.getElementById('dialogMessage').innerText = msg;
+                
+                const cancelBtn = document.getElementById('dialogBtnCancel');
+                const confirmBtn = document.getElementById('dialogBtnConfirm');
+                
+                cancelBtn.style.display = 'block';
+                confirmBtn.innerText = confirmText;
+                confirmBtn.className = isDanger ? 'btn-danger' : 'btn-primary';
+
+                const cleanup = () => {
+                    overlay.classList.remove('show');
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    confirmBtn.removeEventListener('click', handleConfirm);
+                };
+
+                const handleCancel = () => { cleanup(); resolve(false); };
+                const handleConfirm = () => { cleanup(); resolve(true); };
+
+                cancelBtn.addEventListener('click', handleCancel);
+                confirmBtn.addEventListener('click', handleConfirm);
+                overlay.classList.add('show');
+            });
+        }
+
+        // Bypassing strict lock to allow local testing
         currentUser = { username: "Admin Tester", avatar_url: "https://via.placeholder.com/34" };
         document.getElementById('security-guard').style.display = 'none';
-        
-        // Initialize First View
         setTimeout(() => loadModule('home', document.querySelector('.nav-btn.active')), 100);
 
         function toggleDropdown(e) { e.stopPropagation(); document.getElementById('profileDropdown').classList.toggle('active'); }
         window.onclick = () => document.getElementById('profileDropdown').classList.remove('active');
-        async function handleLogout() { await _supabase.auth.signOut(); window.location.href = 'login.html'; }
+        
+        async function handleLogoutClick() { 
+            if(await customConfirm("Are you sure you want to log out?", "Logout", "Log Out", true)) {
+                await _supabase.auth.signOut(); 
+                window.location.href = 'login.html'; 
+            }
+        }
 
         // --- View Router & Renderer ---
         async function loadModule(module, btnElement) {
             const container = document.getElementById('dynamic-container');
-            container.innerHTML = '<div class="guard-spinner" style="margin: 3rem auto;"></div>'; // Loading state
+            container.innerHTML = '<div class="guard-spinner" style="margin: 3rem auto;"></div>'; 
             
             if(btnElement) {
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -199,7 +269,6 @@
             }
 
             let html = '';
-
             try {
                 switch(module) {
                     case 'home': html = await renderHome(); break;
@@ -211,17 +280,14 @@
                     case 'reviews': html = await renderReviews(); break;
                     case 'contributors': html = await renderContributors(); break;
                     case 'db': html = await renderDB(); break;
-                    case 'settings': html = renderSettings(); break;
+                    case 'settings': html = await renderSettings(); break;
                 }
             } catch (err) {
                 console.error("Module Load Error:", err);
-                html = `<p style="color:var(--danger)">Error loading module. Check console.</p>`;
+                html = `<p style="color:var(--danger)">Error loading module: ${err.message}</p>`;
             }
-
             container.innerHTML = html;
         }
-
-        // --- Render Functions ---
 
         async function renderHome() {
             const hour = new Date().getHours();
@@ -259,16 +325,26 @@
         }
 
         async function renderUsers() {
-            const { data } = await _supabase.from('users').select('*').order('last_login', {ascending: false}).limit(50);
+            const { data, error } = await _supabase.from('users').select('*').order('last_login', {ascending: false}).limit(50);
+            
+            if (error) {
+                console.error("Failed to fetch users:", error.message);
+                return `<div class="page-header"><h1>Users Overview</h1></div>
+                        <p style="color:var(--danger)">Unable to fetch users. Ensure you have an active session to pass RLS policies.</p>`;
+            }
+
+            if (!data || data.length === 0) {
+                return `<div class="page-header"><h1>Users Overview</h1></div>
+                        <p style="color:var(--text-dim)">No user data available or RLS blocked the read request due to missing auth session.</p>`;
+            }
+
             return `
-                <div class="page-header">
-                    <h1>Users Overview</h1>
-                </div>
+                <div class="page-header"><h1>Users Overview</h1></div>
                 <div class="table-viewer-wrap">
                     <table class="data-table">
                         <thead><tr><th>Username</th><th>Discord ID</th><th>Rank</th><th>Blacklisted</th><th>Last Login</th></tr></thead>
                         <tbody>
-                            ${(data||[]).map(u => `
+                            ${data.map(u => `
                                 <tr>
                                     <td style="font-weight:700;">${u.username || 'Unknown'}</td>
                                     <td style="font-size:0.8rem; color:var(--text-dim);">${u.discord_id || '-'}</td>
@@ -284,7 +360,9 @@
         }
 
         async function renderRank() {
-            const { data } = await _supabase.from('users').select('*').order('username', {ascending: true});
+            const { data, error } = await _supabase.from('users').select('*').order('username', {ascending: true});
+            if (error) return `<p style="color:var(--danger)">Failed to fetch user ranks.</p>`;
+            
             return `
                 <div class="page-header"><h1>Rank Management</h1></div>
                 <div class="table-viewer-wrap">
@@ -338,7 +416,6 @@
         async function renderConfigs(isArchivedStr) {
             const { data } = await _supabase.from('configs').select('*').eq('is_archived', isArchivedStr).order('created_at', {ascending: false});
             activeDataStore = data || [];
-            
             const title = isArchivedStr === 'true' ? 'Draft & Archive' : 'Config Editor';
             
             return `
@@ -357,11 +434,6 @@
                                 <h4>Prediction</h4>
                                 <div class="data-row"><span class="data-label">Sim Timer:</span> <span class="data-val">${c.sim_timer || '-'}</span></div>
                                 <div class="data-row"><span class="data-label">Pred Int:</span> <span class="data-val">${c.pred_interval || '-'}</span></div>
-                            </div>
-                            <div class="card-section">
-                                <h4>Multiplier</h4>
-                                <div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">${c.vertical || '-'}</span></div>
-                                <div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">${c.horizontal || '-'}</span></div>
                             </div>
                             <div class="card-actions" style="justify-content:flex-end;">
                                 <button class="btn-secondary" onclick="openConfigModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
@@ -429,7 +501,6 @@
             let html = `<div class="page-header"><h1>Database Overview</h1></div>
                         <p style="color:var(--text-dim); margin-bottom:2rem;"><i>View real-time database snapshots. Read-only view.</i></p>
                         <div class="config-grid">`;
-            
             for(let t of tables) {
                 const { count } = await _supabase.from(t).select('*', { count: 'exact', head: true });
                 html += `
@@ -443,7 +514,11 @@
             return html + `</div>`;
         }
 
-        function renderSettings() {
+        async function renderSettings() {
+            // Fetch current state from DB
+            const { data, error } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
+            const isMaintenance = data ? data.maintenance_mode : false;
+
             return `
                 <div class="page-header"><h1>Website Settings</h1></div>
                 <div class="item-card" style="max-width: 600px;">
@@ -453,7 +528,7 @@
                             <p style="font-size:0.85rem; color:var(--text-dim);">Globally redirects users to a static "Getting back" page.</p>
                         </div>
                         <label class="toggle-switch">
-                            <input type="checkbox" onchange="alert('Maintenance toggle clicked. Backend wiring required.')">
+                            <input type="checkbox" id="maintenanceToggle" ${isMaintenance ? 'checked' : ''} onchange="toggleMaintenanceMode(this.checked)">
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -468,7 +543,7 @@
                 const { error } = await _supabase.from(table).update({ [column]: value }).eq('id', id);
                 if (error) throw error;
                 if(reload) refreshCurrentView();
-            } catch (err) { alert("Error updating data: " + err.message); }
+            } catch (err) { await customAlert("Error updating data: " + err.message, "Error"); }
         }
 
         async function updateBlacklist(id, isChecked) {
@@ -478,10 +553,30 @@
         }
 
         async function deleteRecord(table, id) {
-            if(!confirm(`Are you sure you want to permanently delete this record from ${table}?`)) return;
+            const isConfirmed = await customConfirm(`Are you sure you want to permanently delete this record from ${table}?`, "Delete Record", "Delete", true);
+            if(!isConfirmed) return;
+
             const { error } = await _supabase.from(table).delete().eq('id', id);
             if(!error) refreshCurrentView();
-            else alert("Error: " + error.message);
+            else await customAlert("Error: " + error.message, "Delete Failed");
+        }
+
+        async function toggleMaintenanceMode(isChecked) {
+            const isConfirmed = await customConfirm(`Are you sure you want to turn ${isChecked ? 'ON' : 'OFF'} maintenance mode?`, "Confirm Maintenance Change");
+            
+            if(!isConfirmed) {
+                // Revert visual toggle if cancelled
+                document.getElementById('maintenanceToggle').checked = !isChecked;
+                return;
+            }
+
+            const { error } = await _supabase.from('settings').update({ maintenance_mode: isChecked }).eq('id', 1);
+            if(error) {
+                await customAlert("Failed to update database. Ensure a 'settings' table exists with a boolean 'maintenance_mode' column at id=1.", "Configuration Error");
+                document.getElementById('maintenanceToggle').checked = !isChecked;
+            } else {
+                await customAlert(`Maintenance mode is now ${isChecked ? 'ACTIVE' : 'DISABLED'}. Users will be redirected accordingly.`, "Success");
+            }
         }
 
         function refreshCurrentView() {
@@ -489,8 +584,7 @@
             if(activeBtn) activeBtn.click();
         }
 
-        // --- Modals & Forms ---
-
+        // --- Standard Modals & Forms ---
         function openModal(title, contentHTML) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalBody').innerHTML = contentHTML;
@@ -504,7 +598,7 @@
 
         async function viewTableData(tableName) {
             const { data, error } = await _supabase.from(tableName).select('*').limit(20);
-            if(error || !data || data.length === 0) return alert("No data to show.");
+            if(error || !data || data.length === 0) return customAlert("No data to show or access denied.", "Notice");
             
             const keys = Object.keys(data[0]);
             const html = `
@@ -582,15 +676,13 @@
             const formData = new FormData(e.target);
             const payload = Object.fromEntries(formData.entries());
 
-            // Type handling
             if(payload.tags) payload.tags = payload.tags.split(',').map(t => t.trim());
             if(id) payload.id = id;
 
             const { error } = await _supabase.from(table).upsert(payload);
-            if(error) { alert("Save Error: " + error.message); }
+            if(error) { await customAlert("Save Error: " + error.message, "Error"); }
             else { closeModal(); refreshCurrentView(); }
         }
-
     </script>
 </body>
 </html>
