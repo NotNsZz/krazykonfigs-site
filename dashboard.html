@@ -36,21 +36,12 @@
         .nav-link:hover { color: var(--text-muted); }
         
         .user-profile { display: flex; align-items: center; }
-        .username-container {
-            max-width: 0; overflow: hidden; white-space: nowrap; 
-            transition: max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s, margin-right 0.3s;
-            opacity: 0; display: flex; align-items: center; font-weight: 700; font-size: 0.85rem;
-        }
+        .username-container { max-width: 0; overflow: hidden; white-space: nowrap; transition: max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s, margin-right 0.3s; opacity: 0; display: flex; align-items: center; font-weight: 700; font-size: 0.85rem; }
         .user-profile:hover .username-container { max-width: 150px; opacity: 1; margin-right: 12px; }
         
         .pfp-container { position: relative; cursor: pointer; display: flex; align-items: center; }
         .header-pfp { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); object-fit: cover; }
-        .dropdown-menu {
-            position: absolute; top: 130%; right: 0; background: var(--bg-card);
-            border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: none; min-width: 140px;
-            flex-direction: column; z-index: 1000;
-        }
+        .dropdown-menu { position: absolute; top: 130%; right: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem; box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: none; min-width: 140px; flex-direction: column; z-index: 1000; }
         .dropdown-menu.show { display: flex; }
         .dropdown-item { padding: 10px 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 4px; transition: var(--transition); text-decoration: none; color: var(--text-main); }
         .dropdown-item:hover { background: var(--tag-bg); color: #ed4245; }
@@ -91,11 +82,7 @@
         .member-card { background: var(--card-inner); border: 1px solid var(--border); padding: 1.5rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; transition: var(--transition); }
         .member-header { display: flex; align-items: center; gap: 12px; }
         
-        .badge-tag { 
-            font-size: 0.65rem; padding: 4px 10px; border-radius: 20px; font-weight: 800; text-transform: uppercase; 
-            background: transparent; border: 1px solid currentColor;
-            letter-spacing: 0.5px;
-        }
+        .badge-tag { font-size: 0.65rem; padding: 4px 10px; border-radius: 20px; font-weight: 800; text-transform: uppercase; background: transparent; border: 1px solid currentColor; letter-spacing: 0.5px; }
         body:not(.dark-mode) .badge-tag { filter: saturate(1.5) brightness(0.8); }
 
         .request-container { max-width: 450px; margin: 0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 8px; background: var(--card-inner); }
@@ -121,9 +108,7 @@
         .input-star { color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
         .input-star.active { color: #f1c40f; }
         
-        @media (max-width: 768px) {
-            .nav-links { display: none; }
-        }
+        @media (max-width: 768px) { .nav-links { display: none; } }
     </style>
 </head>
 <body id="body">
@@ -253,7 +238,6 @@
             const meta = user.user_metadata;
             const discordId = meta.provider_id || user.id;
 
-            // Fetch profile
             const { data: profile } = await _supabase.from('users').select('rank').eq('id', user.id).single();
 
             currentUser = {
@@ -266,10 +250,8 @@
 
             try {
                 await _supabase.from('users').upsert({
-                    id: currentUser.id, 
-                    discord_id: currentUser.discord_id,
-                    username: currentUser.username,
-                    avatar_url: currentUser.avatar_url,
+                    id: currentUser.id, discord_id: currentUser.discord_id,
+                    username: currentUser.username, avatar_url: currentUser.avatar_url,
                     last_login: new Date().toISOString()
                 });
             } catch (err) { console.error("DB Sync Error:", err); }
@@ -277,8 +259,7 @@
             document.getElementById('navName').innerText = currentUser.username;
             document.getElementById('navPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
             
-            // Initialization flow called after session is successfully established
-            document.body.style.display = 'block'; // Ensure body is visible
+            document.body.style.display = 'block';
             init();
         }
 
@@ -292,7 +273,7 @@
         }
 
         async function fetchConfigs() {
-            const { data } = await _supabase.from('configs').select('*').order('created_at', {ascending: false});
+            const { data } = await _supabase.from('configs').select('*').eq('is_archived', 'false').order('created_at', {ascending: false});
             allConfigs = data || [];
             renderConfigs(allConfigs);
         }
@@ -302,18 +283,13 @@
             container.innerHTML = configs.map(c => `
                 <div class="config-card">
                     <div>
-                        <div class="card-head">
-                            <i class="fas fa-snowflake" style="color: var(--text-muted);"></i>
-                            ${c.title} | ${c.ping_tier || 'N/A'} PING
-                        </div>
+                        <div class="card-head"><i class="fas fa-snowflake" style="color: var(--text-muted);"></i> ${c.title} | ${c.ping_tier || 'N/A'} PING</div>
                         <div class="card-divider"></div>
-                        
                         <div style="margin-bottom: 1.2rem;">
                             <div class="section-label">🎯 PREDICTION</div>
                             <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${c.sim_timer ?? '-'}</span></div>
                             <div class="data-row"><span style="color:var(--text-muted)">Prediction Interval</span> <span class="data-val">${c.pred_interval || '-'}</span></div>
                         </div>
-
                         <div style="margin-bottom: 1.2rem;">
                             <div class="section-label"><i class="fas fa-cog" style="color:#a6aeb9;"></i> TOGGLES</div>
                             <div class="data-row"><span style="color:var(--text-muted)">Prioritize Ping</span> <span class="data-val">ON</span></div>
@@ -321,23 +297,20 @@
                             <div class="data-row"><span style="color:var(--text-muted)">Predict Lag</span> <span class="data-val">ON</span></div>
                             <div class="data-row"><span style="color:var(--text-muted)">Ping Predict</span> <span class="data-val">ON</span></div>
                         </div>
-
                         <div style="margin-bottom: 1.2rem;">
                             <div class="section-label"><i class="fas fa-sliders-h" style="color:#5865F2;"></i> MULTIPLIERS</div>
                             <div class="data-row"><span style="color:var(--text-muted)">Vertical</span> <span class="data-val">${c.vertical ?? '155'}</span></div>
                             <div class="data-row"><span style="color:var(--text-muted)">Horizontal</span> <span class="data-val">${c.horizontal ?? '165'}</span></div>
                         </div>
-
                         <div style="margin-bottom: 1.2rem;">
                             <div class="section-label">📍 OFFSETS</div>
                             <div class="data-row"><span style="color:var(--text-muted)">X / Y / Z</span> <span class="data-val">${c.offsets || '0 / -5 / 0'}</span></div>
                         </div>
                     </div>
-
                     <div>
                         <div class="card-footer-box">
                             <div>
-                                <div class="revert-badge">REVERT | ${c.hit_rate || 85}% HIT RATE</div>
+                                <div class="revert-badge">REVERT | ${c.hit_rate || '85%'} HIT RATE</div>
                                 <div style="font-size:0.75rem; font-weight: 700; color:var(--text-muted); margin-top: 8px;">Supports: ${c.support_range || '150ms - 200ms'}</div>
                             </div>
                             <div style="text-align: right;">
@@ -367,7 +340,11 @@
         }
 
         async function fetchContributors() {
-            const { data } = await _supabase.from('contributors').select('*').order('created_at', {ascending: true});
+            // Updated to sort by the new Priority field first, then created_at
+            const { data } = await _supabase.from('contributors').select('*')
+                .order('priority', { ascending: true })
+                .order('created_at', { ascending: true });
+            
             const container = document.getElementById('contributor-container');
             container.innerHTML = (data || []).map(m => {
                 let tagsArray = Array.isArray(m.tags) ? m.tags : (m.tags?.split(',').map(t => t.trim()) || []);
@@ -396,7 +373,6 @@
 
             container.innerHTML = data.map(r => {
                 const stars = Array(5).fill(0).map((_,i) => i < r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('');
-                
                 const isOwner = currentUser && String(r.poster_id) === String(currentUser.discord_id);
                 const deleteAction = isOwner ? `<button class="delete-btn" onclick="deleteReview(${r.id})">Delete</button>` : '';
 
@@ -406,10 +382,7 @@
                     <div class="review-content">
                         <div class="review-user-row">
                             <span style="font-weight: 800; font-size:0.9rem;">${r.poster_username}</span>
-                            <div>
-                                <span class="review-stars">${stars}</span>
-                                ${deleteAction}
-                            </div>
+                            <div><span class="review-stars">${stars}</span>${deleteAction}</div>
                         </div>
                         <p style="font-size:0.9rem; color:var(--text-muted);">${r.comment}</p>
                     </div>
