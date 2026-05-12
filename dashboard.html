@@ -14,7 +14,6 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --glow-color: rgba(0, 0, 0, 0.15);
             --card-inner: #f9f9f9;
-            /* Modals utilize dark mode tokens for visual safety in Custom Dialog */
             --modal-bg: #ffffff; --modal-border: #eeeeee;
         }
         body.dark-mode {
@@ -26,7 +25,9 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
-        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: background-color 0.3s; display: none; overflow-x: hidden; }
+        /* Body hidden by default to prevent UI flashing during security checks */
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: background-color 0.3s; opacity: 0; overflow-x: hidden; }
+        body.ready { opacity: 1; transition: opacity 0.5s ease; }
         
         #cursor-follower { width: 35px; height: 35px; background: var(--text-main); opacity: 0.15; filter: blur(6px); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); }
 
@@ -91,7 +92,6 @@
         .form-input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 4px; font-family: inherit; font-weight: 600; outline: none; transition: border-color 0.3s; }
         .form-input:focus { border-color: var(--text-main); }
 
-        /* General Modal Container */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.show { display: flex; opacity: 1; }
         .modal-content { background: var(--bg-card); width: 95%; max-width: 500px; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
@@ -111,7 +111,7 @@
         .input-star { color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
         .input-star.active { color: #f1c40f; }
         
-        /* Custom UI Dialog System (Replaces alert/confirm) */
+        /* Custom UI Dialog System */
         .custom-dialog-box { background: var(--modal-bg); padding: 2rem; border-radius: 8px; border: 1px solid var(--modal-border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
         .modal-overlay.show .custom-dialog-box { transform: translateY(0); }
         .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; color: var(--text-main); }
@@ -300,64 +300,91 @@
             document.getElementById('userDropdown').classList.remove('show');
         });
 
-        // Maintenance System Injection
-        async function checkMaintenanceState() {
+        // --- MASTER BOOT SEQUENCE (Security, Routing, Fetching) ---
+        async function bootSequence() {
             try {
-                // Fails securely if table doesn't exist yet, avoiding frontend crash
-                const { data } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
-                if (data && data.maintenance_mode === true) {
-                    window.location.href = 'Maintenance.html';
+                // 1. Check Global Maintenance State
+                const { data: settings } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
+                const isMaintenance = settings?.maintenance_mode === true;
+
+                // 2. Fetch User Session
+                const { data: { session } } = await _supabase.auth.getSession();
+
+                if (!session) {
+                    // Not logged in -> If maintenance is ON, kick to maintenance page. Otherwise load public dashboard.
+                    if (isMaintenance) { window.location.href = 'Maintenance.html'; return; }
+                    document.body.classList.add('ready');
+                    initDashboard();
+                    return;
                 }
-            } catch (err) {
-                console.warn("Maintenance check failed/bypassed.");
-            }
-        }
 
-        _supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-                if (session) handleSession(session);
-                else if (event === 'INITIAL_SESSION') window.location.href = 'login.html';
-            }
-        });
+                const user = session.user;
+                const meta = user.user_metadata;
+                const discordId = meta.provider_id || user.id;
 
-        async function handleSession(session) {
-            const user = session.user;
-            const meta = user.user_metadata;
-            const discordId = meta.provider_id || user.id;
+                // 3. Fetch specific Profile Data securely
+                const { data: profile } = await _supabase.from('users').select('rank, isBlacklisted').eq('id', user.id).single();
+                
+                // 4. Security Check: Blacklist overrides everything
+                if (profile?.isBlacklisted === 'true') {
+                    await _supabase.auth.signOut();
+                    window.location.href = 'Maintenance.html'; // Or 'banned.html'
+                    return;
+                }
 
-            const { data: profile } = await _supabase.from('users').select('rank').eq('id', user.id).single();
+                // 5. Security Check: Maintenance Mode
+                // If maintenance is ON, only users with 'admin' rank are allowed to see the site.
+                if (isMaintenance && profile?.rank !== 'admin') {
+                    window.location.href = 'Maintenance.html';
+                    return;
+                }
 
-            currentUser = {
-                id: user.id,
-                discord_id: discordId,
-                username: meta.full_name || meta.name || 'User',
-                avatar_url: meta.avatar_url,
-                rank: profile?.rank || 'user'
-            };
+                // 6. Passed all checks -> Establish local state
+                currentUser = {
+                    id: user.id,
+                    discord_id: discordId,
+                    username: meta.full_name || meta.name || 'User',
+                    avatar_url: meta.avatar_url,
+                    rank: profile?.rank || 'user'
+                };
 
-            try {
+                // Sync latest login date
                 await _supabase.from('users').upsert({
-                    id: currentUser.id, discord_id: currentUser.discord_id,
-                    username: currentUser.username, avatar_url: currentUser.avatar_url,
+                    id: currentUser.id, 
+                    discord_id: currentUser.discord_id,
+                    username: currentUser.username, 
+                    avatar_url: currentUser.avatar_url,
                     last_login: new Date().toISOString()
                 });
-            } catch (err) { console.error("DB Sync Error:", err); }
 
-            document.getElementById('navName').innerText = currentUser.username;
-            document.getElementById('navPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
-            
-            if (profile && profile.rank && profile.rank.toLowerCase() === "admin") {
-                const adminButton = document.getElementById('adminPanelOption');
-                if (adminButton) adminButton.setAttribute('style', 'display: flex !important;');
+                // Update UI Header
+                document.getElementById('navName').innerText = currentUser.username;
+                document.getElementById('navPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
+                
+                if (currentUser.rank.toLowerCase() === "admin") {
+                    document.getElementById('adminPanelOption').style.display = 'flex';
+                }
+
+                // Render page
+                document.body.classList.add('ready');
+                initDashboard();
+
+            } catch (error) {
+                console.error("Boot Sequence Error:", error);
+                document.body.classList.add('ready');
+                initDashboard(); // Fail safely to public view if possible
             }
-            
-            document.body.style.display = 'block';
-            init();
         }
 
-        async function init() {
-            await checkMaintenanceState(); // Enforce Maintenance redirect check 
-            
+        // Fire sequence on load
+        bootSequence();
+
+        // Ensure persistent sync on auth changes
+        _supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') { window.location.href = 'login.html'; }
+        });
+
+        async function initDashboard() {
             if (localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeBtn').innerHTML = '<i class="fas fa-sun"></i>';
@@ -434,10 +461,7 @@
         }
 
         async function fetchContributors() {
-            const { data } = await _supabase.from('contributors').select('*')
-                .order('priority', { ascending: true })
-                .order('created_at', { ascending: true });
-            
+            const { data } = await _supabase.from('contributors').select('*').order('priority', { ascending: true }).order('created_at', { ascending: true });
             const container = document.getElementById('contributor-container');
             container.innerHTML = (data || []).map(m => {
                 let tagsArray = Array.isArray(m.tags) ? m.tags : (m.tags?.split(',').map(t => t.trim()) || []);
@@ -513,7 +537,9 @@
         async function submitReview() {
             const input = document.getElementById('reviewTextInput');
             const comment = input.value.trim();
-            if(!comment || !activeConfigId || !currentUser) return;
+            
+            if(!currentUser) return await customAlert("You must be logged in to leave a review.", "Notice");
+            if(!comment || !activeConfigId) return;
 
             input.disabled = true;
             const { error } = await _supabase.from('reviews').insert({
@@ -546,7 +572,6 @@
         async function handleLogoutClick() { 
             if(await customConfirm("Are you sure you want to log out?", "Logout", "Log Out", true)) {
                 await _supabase.auth.signOut(); 
-                window.location.href = 'login.html'; 
             }
         }
     </script>
