@@ -19,8 +19,6 @@
         body.ready { opacity: 1; }
 
         .container { max-width: 1200px; animation: fadeIn 1s ease-out; }
-        
-        .brand-logo { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; margin-bottom: 2rem; }
 
         h1 {
             font-size: clamp(4rem, 10vw, 8rem); font-weight: 900;
@@ -28,11 +26,11 @@
             line-height: 1.1; margin-bottom: 1.5rem;
         }
 
-        /* Blinking Caret Animation */
+        /* Thinner, cleaner Blinking Caret Animation */
         .caret {
-            display: inline-block; width: 0.6em; height: 1em;
+            display: inline-block; width: 4px; height: 0.9em;
             background-color: #ffffff; vertical-align: baseline;
-            animation: blink 1s step-end infinite; margin-left: 8px;
+            animation: blink 1s step-end infinite; margin-left: 4px;
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
@@ -54,8 +52,6 @@
 <body>
 
     <div class="container">
-        <img src="https://via.placeholder.com/64" alt="Logo" class="brand-logo">
-        
         <h1>Getting<br>Back Soon<span class="caret"></span></h1>
         <div class="divider"></div>
         <p>System Maintenance in Progress</p>
