@@ -12,20 +12,17 @@
             --bg-body: #ffffff; --bg-nav: rgba(255, 255, 255, 0.95); --bg-card: #ffffff;
             --text-main: #000000; --text-muted: #666666; --border: #eeeeee; --tag-bg: #f0f0f0;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --glow-color: rgba(0, 0, 0, 0.15);
-            --card-inner: #f9f9f9;
+            --glow-color: rgba(0, 0, 0, 0.15); --card-inner: #f9f9f9;
             --modal-bg: #ffffff; --modal-border: #eeeeee;
         }
         body.dark-mode {
             --bg-body: #0a0a0a; --bg-nav: rgba(10, 10, 10, 0.95); --bg-card: #121212;
             --text-main: #ffffff; --text-muted: #aaaaaa; --border: #1f1f1f; --tag-bg: #1a1a1a;
-            --glow-color: rgba(255, 255, 255, 0.15);
-            --card-inner: #151515;
+            --glow-color: rgba(255, 255, 255, 0.15); --card-inner: #151515;
             --modal-bg: #161616; --modal-border: #1f1f1f;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
-        /* Body hidden by default to prevent UI flashing during security checks */
         body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: background-color 0.3s; opacity: 0; overflow-x: hidden; }
         body.ready { opacity: 1; transition: opacity 0.5s ease; }
         
@@ -33,7 +30,7 @@
 
         nav { position: fixed; top: 0; width: 100%; padding: 1rem 5%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .brand-container { display: flex; align-items: center; gap: 0.8rem; }
-        .logo-k { font-size: 1.4rem; font-weight: 900; color: var(--text-main); border: 2px solid var(--text-main); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; letter-spacing: -1px; padding-right: 1px; }
+        .brand-logo { width: 32px; height: 32px; border-radius: 4px; object-fit: cover; }
         
         .nav-links { display: flex; gap: 1.5rem; align-items: center; }
         .nav-link { cursor: pointer; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; text-decoration: none; color: var(--text-main); transition: var(--transition); }
@@ -111,7 +108,6 @@
         .input-star { color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
         .input-star.active { color: #f1c40f; }
         
-        /* Custom UI Dialog System */
         .custom-dialog-box { background: var(--modal-bg); padding: 2rem; border-radius: 8px; border: 1px solid var(--modal-border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
         .modal-overlay.show .custom-dialog-box { transform: translateY(0); }
         .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; color: var(--text-main); }
@@ -140,7 +136,7 @@
 
     <nav>
         <div class="brand-container">
-            <div class="logo-k">K</div>
+            <img src="https://via.placeholder.com/32" alt="Logo" class="brand-logo">
             <span style="font-weight:900; font-size: 1.2rem; letter-spacing: 0.5px; text-transform: uppercase;">Krazy Konfigs</span>
         </div>
         
@@ -236,7 +232,7 @@
         let activeConfigId = null;
         let currentRatingInput = 5;
 
-        // --- Custom Dialog System ---
+        // Custom Dialog System
         function customAlert(msg, title = "Notice") {
             return new Promise((resolve) => {
                 const overlay = document.getElementById('customDialogOverlay');
@@ -300,19 +296,15 @@
             document.getElementById('userDropdown').classList.remove('show');
         });
 
-        // --- MASTER BOOT SEQUENCE (Security, Routing, Fetching) ---
+        // --- MASTER BOOT SEQUENCE & CONTINUOUS SECURITY ---
         async function bootSequence() {
             try {
-                // 1. Check Global Maintenance State
                 const { data: settings } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
                 const isMaintenance = settings?.maintenance_mode === true;
-
-                // 2. Fetch User Session
                 const { data: { session } } = await _supabase.auth.getSession();
 
                 if (!session) {
-                    // Not logged in -> If maintenance is ON, kick to maintenance page. Otherwise load public dashboard.
-                    if (isMaintenance) { window.location.href = 'Maintenance.html'; return; }
+                    if (isMaintenance) { window.location.href = 'maintenance.html'; return; }
                     document.body.classList.add('ready');
                     initDashboard();
                     return;
@@ -322,24 +314,19 @@
                 const meta = user.user_metadata;
                 const discordId = meta.provider_id || user.id;
 
-                // 3. Fetch specific Profile Data securely
                 const { data: profile } = await _supabase.from('users').select('rank, isBlacklisted').eq('id', user.id).single();
                 
-                // 4. Security Check: Blacklist overrides everything
                 if (profile?.isBlacklisted === 'true') {
                     await _supabase.auth.signOut();
-                    window.location.href = 'Maintenance.html'; // Or 'banned.html'
+                    window.location.href = 'maintenance.html'; 
                     return;
                 }
 
-                // 5. Security Check: Maintenance Mode
-                // If maintenance is ON, only users with 'admin' rank are allowed to see the site.
                 if (isMaintenance && profile?.rank !== 'admin') {
-                    window.location.href = 'Maintenance.html';
+                    window.location.href = 'maintenance.html';
                     return;
                 }
 
-                // 6. Passed all checks -> Establish local state
                 currentUser = {
                     id: user.id,
                     discord_id: discordId,
@@ -348,16 +335,12 @@
                     rank: profile?.rank || 'user'
                 };
 
-                // Sync latest login date
                 await _supabase.from('users').upsert({
-                    id: currentUser.id, 
-                    discord_id: currentUser.discord_id,
-                    username: currentUser.username, 
-                    avatar_url: currentUser.avatar_url,
+                    id: currentUser.id, discord_id: currentUser.discord_id,
+                    username: currentUser.username, avatar_url: currentUser.avatar_url,
                     last_login: new Date().toISOString()
                 });
 
-                // Update UI Header
                 document.getElementById('navName').innerText = currentUser.username;
                 document.getElementById('navPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
                 
@@ -365,21 +348,31 @@
                     document.getElementById('adminPanelOption').style.display = 'flex';
                 }
 
-                // Render page
                 document.body.classList.add('ready');
                 initDashboard();
 
             } catch (error) {
                 console.error("Boot Sequence Error:", error);
                 document.body.classList.add('ready');
-                initDashboard(); // Fail safely to public view if possible
+                initDashboard(); 
             }
         }
 
-        // Fire sequence on load
         bootSequence();
 
-        // Ensure persistent sync on auth changes
+        // Background Periodic Security Check (Every 30 seconds)
+        setInterval(async () => {
+            if (!currentUser) return;
+            try {
+                const { data: settings } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
+                const { data: profile } = await _supabase.from('users').select('isBlacklisted, rank').eq('id', currentUser.id).single();
+
+                if (profile?.isBlacklisted === 'true' || (settings?.maintenance_mode === true && profile?.rank !== 'admin')) {
+                    window.location.href = 'maintenance.html';
+                }
+            } catch (e) { /* Ignore transient network failures in background */ }
+        }, 30000);
+
         _supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT') { window.location.href = 'login.html'; }
         });
@@ -461,7 +454,10 @@
         }
 
         async function fetchContributors() {
-            const { data } = await _supabase.from('contributors').select('*').order('priority', { ascending: true }).order('created_at', { ascending: true });
+            const { data } = await _supabase.from('contributors').select('*')
+                .order('priority', { ascending: true })
+                .order('created_at', { ascending: true });
+            
             const container = document.getElementById('contributor-container');
             container.innerHTML = (data || []).map(m => {
                 let tagsArray = Array.isArray(m.tags) ? m.tags : (m.tags?.split(',').map(t => t.trim()) || []);
@@ -469,7 +465,7 @@
                 return `
                 <div class="member-card">
                     <div class="member-header">
-                        <i class="${m.role_icon || 'fas fa-crown'}" style="color: ${m.icon_color || '#f1c40f'}; font-size: 1.2rem;"></i>
+                        <i class="${m.role_icon || 'fas fa-user'}" style="color: ${m.icon_color || '#ffffff'}; font-size: 1.2rem;"></i>
                         <span style="font-weight: 900; font-size: 1.2rem;">${m.name || 'Unknown'}</span>
                     </div>
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">${tagsHtml}</div>
