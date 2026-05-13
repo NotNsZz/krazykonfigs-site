@@ -5,79 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KrazyKonfigs | Maintenance</title>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background-color: #0a0a0a; /* Deep black matching admin panel */
-            color: #ffffff;
+            background-color: #0a0a0a; color: #ffffff;
             font-family: 'Source Sans Pro', sans-serif;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            text-align: center;
-            padding: 2rem;
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            overflow: hidden; text-align: center; padding: 2rem;
+            opacity: 0; transition: opacity 0.5s ease; /* Hide until auth check clears */
         }
+        body.ready { opacity: 1; }
 
-        .container {
-            max-width: 1200px;
-            animation: fadeIn 1s ease-out;
-        }
+        .container { max-width: 1200px; animation: fadeIn 1s ease-out; }
+        
+        .brand-logo { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; margin-bottom: 2rem; }
 
         h1 {
-            font-size: clamp(4rem, 10vw, 8rem);
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -2px;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
+            font-size: clamp(4rem, 10vw, 8rem); font-weight: 900;
+            text-transform: uppercase; letter-spacing: -2px;
+            line-height: 1.1; margin-bottom: 1.5rem;
         }
 
-        .divider {
-            height: 4px;
-            width: 80px;
-            background-color: #ffffff;
-            margin: 0 auto 2rem auto;
+        /* Blinking Caret Animation */
+        .caret {
+            display: inline-block; width: 0.6em; height: 1em;
+            background-color: #ffffff; vertical-align: baseline;
+            animation: blink 1s step-end infinite; margin-left: 8px;
         }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        p {
-            font-size: clamp(1rem, 2.5vw, 1.5rem);
-            font-weight: 400;
-            color: #888888;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
+        .divider { height: 4px; width: 80px; background-color: #ffffff; margin: 0 auto 2rem auto; }
+        p { font-size: clamp(1rem, 2.5vw, 1.5rem); font-weight: 400; color: #888888; letter-spacing: 2px; text-transform: uppercase; }
 
-        /* Subtle animated grain overlay for texture */
         body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.04"/%3E%3C/svg%3E');
-            pointer-events: none;
-            z-index: 10;
+            pointer-events: none; z-index: 10;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .admin-bypass { margin-top: 3rem; padding: 10px 20px; background: transparent; border: 1px solid #5865F2; color: #5865F2; text-decoration: none; font-weight: 700; border-radius: 4px; display: none; transition: 0.3s; }
+        .admin-bypass:hover { background: #5865F2; color: #fff; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Getting<br>Back Soon.</h1>
+        <img src="https://via.placeholder.com/64" alt="Logo" class="brand-logo">
+        
+        <h1>Getting<br>Back Soon<span class="caret"></span></h1>
         <div class="divider"></div>
         <p>System Maintenance in Progress</p>
+        
+        <a href="admin.html" id="adminBtn" class="admin-bypass">Return to Admin Panel</a>
     </div>
 
+    <script>
+        const _supabase = supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE');
+
+        async function verifyMaintenanceAccess() {
+            try {
+                const { data: settings } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
+                const isMaintenance = settings?.maintenance_mode === true;
+                
+                const { data: { session } } = await _supabase.auth.getSession();
+                let isAdmin = false;
+
+                if (session) {
+                    const { data: profile } = await _supabase.from('users').select('rank, isBlacklisted').eq('id', session.user.id).single();
+                    isAdmin = profile?.rank === 'admin';
+                    
+                    // Blacklisted users stay trapped here or get logged out
+                    if (profile?.isBlacklisted === 'true') {
+                        document.body.classList.add('ready');
+                        return;
+                    }
+                }
+
+                // If Maintenance is OFF, normal users shouldn't be here. Bounce them back.
+                if (!isMaintenance && !isAdmin) {
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                // If Admin, show bypass button
+                if (isAdmin) {
+                    document.getElementById('adminBtn').style.display = 'inline-block';
+                }
+
+                document.body.classList.add('ready');
+            } catch (err) {
+                console.error("State verification failed.", err);
+                document.body.classList.add('ready'); // Fail safely to show maintenance screen
+            }
+        }
+
+        verifyMaintenanceAccess();
+    </script>
 </body>
 </html>
