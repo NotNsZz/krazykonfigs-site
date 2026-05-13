@@ -1,8 +1,8 @@
 [
-  { "id": "gta-v", "title": "GTA V Theme", "category": "GTA", "src": "/assets/music/gta/GTA_V.m4a", "cover": "/assets/images/covers/gtav.webp" }
+  { "id": "gta-v", "title": "GTA V Theme", "category": "GTA", "src": "/assets/music/gta/GTA_V.m4a", "cover": "/assets/images/covers/gtav.webp" },
   { "id": "gta-iv", "title": "GTA IV Theme", "category": "GTA", "src": "/assets/music/gta/GTA_IV.m4a", "cover": "/assets/images/covers/gtaiv.webp" },
   { "id": "gta-sa", "title": "GTA SA Theme", "category": "GTA", "src": "/assets/music/gta/GTA_SA.m4a", "cover": "/assets/images/covers/gtasa.webp" },
   { "id": "gta-vc", "title": "GTA VC Theme", "category": "GTA", "src": "/assets/music/gta/GTA_VC.m4a", "cover": "/assets/images/covers/gtavc.webp" },
-  { "id": "gta-sa", "title": "GTA LCS Theme", "category": "GTA", "src": "/assets/music/gta/GTA_LCS.m4a", "cover": "/assets/images/covers/gtalcs.webp" },
-  { "id": "gta-iii", "title": "GTA III Theme", "category": "GTA", "src": "/assets/music/gta/GTA_III.m4a", "cover": "/assets/images/covers/gtaiii.webp" },
+  { "id": "gta-lcs", "title": "GTA LCS Theme", "category": "GTA", "src": "/assets/music/gta/GTA_LCS.m4a", "cover": "/assets/images/covers/gtalcs.webp" },
+  { "id": "gta-iii", "title": "GTA III Theme", "category": "GTA", "src": "/assets/music/gta/GTA_III.m4a", "cover": "/assets/images/covers/gtaiii.webp" }
 ]
