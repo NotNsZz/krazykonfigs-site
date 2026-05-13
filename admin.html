@@ -24,7 +24,7 @@
 
         .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
         .sidebar-brand { padding: 2rem 1.5rem; display: flex; align-items: center; gap: 12px; }
-        .logo-box { width: 35px; height: 35px; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; border-radius: 8px; }
+        .brand-logo { width: 35px; height: 35px; border-radius: 8px; object-fit: cover; }
         
         .nav-group { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin: 1.5rem 1.5rem 0.5rem; font-weight: 800; }
         .nav-btn { padding: 12px 1.5rem; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition); font-weight: 600; border-left: 3px solid transparent; font-size: 0.95rem; }
@@ -88,7 +88,7 @@
         .stat-banner { background: linear-gradient(135deg, var(--card-bg), rgba(88, 101, 242, 0.1)); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 2rem; }
         .stat-banner h2 { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; }
         
-        /* Modals / Custom Dialogs */
+        /* Modals */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.show { display: flex; opacity: 1; }
         .modal-content { background: var(--card-bg); width: 95%; max-width: 650px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; max-height: 90vh; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
@@ -143,7 +143,7 @@
 
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <div class="logo-box">K</div>
+            <img src="https://via.placeholder.com/35" alt="Logo" class="brand-logo">
             <span style="font-weight: 900; font-size: 1.3rem;">ADMIN PANEL</span>
         </div>
 
@@ -192,6 +192,15 @@
 
         let currentUser = null;
         let activeDataStore = []; 
+
+        // --- CONSTANT PRE-FLIGHT VALIDATOR ---
+        // Runs immediately before any database write (Create, Edit, Delete) to ensure auth hasn't changed.
+        async function verifyAdminAuth() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) return false;
+            const { data: profile } = await _supabase.from('users').select('rank').eq('id', session.user.id).single();
+            return profile?.rank === 'admin';
+        }
 
         // Custom Modal UI Logic
         function customAlert(msg, title = "Notice") {
@@ -256,7 +265,6 @@
         // --- MASTER BOOT SEQUENCE (Security, Routing, Fetching) ---
         async function bootSequence() {
             try {
-                // 1. Fetch User Session (Requires real login now)
                 const { data: { session } } = await _supabase.auth.getSession();
 
                 if (!session) {
@@ -268,23 +276,19 @@
                 const meta = user.user_metadata;
                 const discordId = meta.provider_id || user.id;
 
-                // 2. Fetch specific Profile Data securely
                 const { data: profile } = await _supabase.from('users').select('rank, isBlacklisted').eq('id', user.id).single();
                 
-                // 3. Security Check: Blacklist overrides everything
                 if (profile?.isBlacklisted === 'true') {
                     await _supabase.auth.signOut();
-                    window.location.href = 'Maintenance.html'; 
+                    window.location.href = 'maintenance.html'; 
                     return;
                 }
 
-                // 4. Security Check: Admin Access
                 if (profile?.rank !== 'admin') {
                     window.location.href = 'dashboard.html';
                     return;
                 }
 
-                // 5. Passed all checks -> Establish local state
                 currentUser = {
                     id: user.id,
                     discord_id: discordId,
@@ -293,14 +297,10 @@
                     rank: profile?.rank || 'user'
                 };
 
-                // Update UI Header
                 document.getElementById('adminName').innerText = currentUser.username;
                 document.getElementById('adminPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
-                
-                // Hide Guard Screen
                 document.getElementById('security-guard').style.display = 'none';
 
-                // Load initial module
                 loadModule('home', document.querySelector('.nav-btn.active'));
 
             } catch (error) {
@@ -310,13 +310,22 @@
             }
         }
 
-        // Fire sequence on load
         bootSequence();
+
+        // Background Periodic Security Check (Every 30 seconds)
+        setInterval(async () => {
+            if (!currentUser) return;
+            try {
+                const { data: profile } = await _supabase.from('users').select('isBlacklisted, rank').eq('id', currentUser.id).single();
+                if (profile?.isBlacklisted === 'true' || profile?.rank !== 'admin') {
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (e) {}
+        }, 30000);
 
         _supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT') { window.location.href = 'login.html'; }
         });
-
 
         // --- View Router & Renderer ---
         async function loadModule(module, btnElement) {
@@ -580,8 +589,7 @@
         }
 
         async function renderSettings() {
-            // Fetch current state from DB
-            const { data, error } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
+            const { data } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
             const isMaintenance = data ? data.maintenance_mode : false;
 
             return `
@@ -601,9 +609,10 @@
             `;
         }
 
-        // --- Database Action Functions ---
-
+        // --- Secured Database Action Functions ---
         async function updateDB(table, id, column, value, reload = false) {
+            if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
+            
             try {
                 const { error } = await _supabase.from(table).update({ [column]: value }).eq('id', id);
                 if (error) throw error;
@@ -612,12 +621,18 @@
         }
 
         async function updateBlacklist(id, isChecked) {
+            if (!(await verifyAdminAuth())) {
+                document.getElementById(`bl-status-${id}`).innerHTML = !isChecked ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active';
+                return await customAlert("Security Error: Admin rights required.", "Access Denied");
+            }
             const val = isChecked ? 'true' : 'false';
             document.getElementById(`bl-status-${id}`).innerHTML = isChecked ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active';
-            await updateDB('users', id, 'isBlacklisted', val);
+            await _supabase.from('users').update({ isBlacklisted: val }).eq('id', id);
         }
 
         async function deleteRecord(table, id) {
+            if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
+            
             const isConfirmed = await customConfirm(`Are you sure you want to permanently delete this record from ${table}?`, "Delete Record", "Delete", true);
             if(!isConfirmed) return;
 
@@ -627,20 +642,24 @@
         }
 
         async function toggleMaintenanceMode(isChecked) {
+            if (!(await verifyAdminAuth())) {
+                document.getElementById('maintenanceToggle').checked = !isChecked;
+                return await customAlert("Security Error: Admin rights required.", "Access Denied");
+            }
+
             const isConfirmed = await customConfirm(`Are you sure you want to turn ${isChecked ? 'ON' : 'OFF'} maintenance mode?`, "Confirm Maintenance Change");
             
             if(!isConfirmed) {
-                // Revert visual toggle if cancelled
                 document.getElementById('maintenanceToggle').checked = !isChecked;
                 return;
             }
 
             const { error } = await _supabase.from('settings').update({ maintenance_mode: isChecked }).eq('id', 1);
             if(error) {
-                await customAlert("Failed to update database. Ensure a 'settings' table exists with a boolean 'maintenance_mode' column at id=1.", "Configuration Error");
+                await customAlert("Failed to update database.", "Configuration Error");
                 document.getElementById('maintenanceToggle').checked = !isChecked;
             } else {
-                await customAlert(`Maintenance mode is now ${isChecked ? 'ACTIVE' : 'DISABLED'}. Users will be redirected accordingly.`, "Success");
+                await customAlert(`Maintenance mode is now ${isChecked ? 'ACTIVE' : 'DISABLED'}.`, "Success");
             }
         }
 
@@ -738,6 +757,8 @@
 
         async function saveForm(e, table, id) {
             e.preventDefault();
+            if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
+
             const formData = new FormData(e.target);
             const payload = Object.fromEntries(formData.entries());
 
