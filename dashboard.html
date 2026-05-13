@@ -3,205 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KrazyKonfigs | Secure Admin Panel</title>
+    <title>Krazy Konfigs | Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --sidebar-bg: #0a0a0a; --main-bg: #0f0f0f; --card-bg: #161616;
-            --accent: #5865F2; --danger: #ed4245; --success: #2ecc71;
-            --text: #ffffff; --text-dim: #888888; --border: #1f1f1f; --input-bg: #111111;
+            --bg-body: #ffffff; --bg-nav: rgba(255, 255, 255, 0.95); --bg-card: #ffffff;
+            --text-main: #000000; --text-muted: #666666; --border: #eeeeee; --tag-bg: #f0f0f0;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --glow-color: rgba(0, 0, 0, 0.15); --card-inner: #f9f9f9;
+            --modal-bg: #ffffff; --modal-border: #eeeeee;
+        }
+        body.dark-mode {
+            --bg-body: #0a0a0a; --bg-nav: rgba(10, 10, 10, 0.95); --bg-card: #121212;
+            --text-main: #ffffff; --text-muted: #aaaaaa; --border: #1f1f1f; --tag-bg: #1a1a1a;
+            --glow-color: rgba(255, 255, 255, 0.15); --card-inner: #151515;
+            --modal-bg: #161616; --modal-border: #1f1f1f;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Source Sans Pro', sans-serif; }
-        body { background: var(--main-bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
-
-        #security-guard { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
-        .guard-spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--accent); border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 1.5rem; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
-        .sidebar-brand { padding: 2rem 1.5rem; display: flex; align-items: center; gap: 12px; }
-        .brand-logo { width: 35px; height: 35px; border-radius: 8px; object-fit: cover; }
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: background-color 0.3s; opacity: 0; overflow-x: hidden; }
+        body.ready { opacity: 1; transition: opacity 0.5s ease; }
         
-        .nav-group { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin: 1.5rem 1.5rem 0.5rem; font-weight: 800; }
-        .nav-btn { padding: 12px 1.5rem; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition); font-weight: 600; border-left: 3px solid transparent; font-size: 0.95rem; }
-        .nav-btn:hover { background: rgba(255,255,255,0.03); color: #fff; }
-        .nav-btn.active { background: rgba(88, 101, 242, 0.05); color: #fff; border-left-color: var(--accent); }
-        .nav-btn i { width: 20px; text-align: center; }
+        #cursor-follower { width: 35px; height: 35px; background: var(--text-main); opacity: 0.15; filter: blur(6px); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); }
 
-        .wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .header { height: 70px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 2.5rem; background: var(--main-bg); }
-
-        .profile-container { position: relative; }
-        .profile-trigger { display: flex; align-items: center; gap: 0; cursor: pointer; padding: 4px; border-radius: 40px; background: var(--card-bg); border: 1px solid var(--border); transition: var(--transition); }
-        .profile-trigger:hover { gap: 12px; padding: 4px 18px 4px 4px; border-color: var(--accent); }
-        .username-reveal { max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; font-weight: 700; transition: var(--transition); font-size: 0.9rem; }
-        .profile-trigger:hover .username-reveal { max-width: 150px; opacity: 1; }
-        .profile-pfp { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); }
+        nav { position: fixed; top: 0; width: 100%; padding: 1rem 5%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .brand-container { display: flex; align-items: center; gap: 0.8rem; }
+        .brand-logo { width: 32px; height: 32px; border-radius: 4px; object-fit: contain; image-rendering: auto; transform: translateZ(0); }
         
-        .dropdown { position: absolute; top: calc(100% + 10px); right: 0; width: 180px; background: var(--sidebar-bg); border: 1px solid var(--border); border-radius: 12px; display: none; flex-direction: column; padding: 8px; z-index: 100; }
-        .dropdown.active { display: flex; }
-        .drop-link { padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-dim); text-decoration: none; display: flex; align-items: center; gap: 10px; }
-        .drop-link:hover { background: var(--card-bg); color: #fff; }
-
-        #dynamic-container { flex: 1; padding: 2.5rem; overflow-y: auto; }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .nav-link { cursor: pointer; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; text-decoration: none; color: var(--text-main); transition: var(--transition); }
+        .nav-link:hover { color: var(--text-muted); }
         
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .page-header h1 { font-size: 2rem; font-weight: 900; letter-spacing: -0.5px; }
-        .search-bar { background: var(--input-bg); border: 1px solid var(--border); padding: 10px 16px; border-radius: 8px; color: var(--text); width: 250px; outline: none; font-family: inherit; font-size: 0.9rem; }
-        .search-bar:focus { border-color: var(--accent); }
-
-        .btn-primary { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: var(--transition); }
-        .btn-primary:hover { filter: brightness(1.1); }
-        .btn-danger { background: rgba(237, 66, 69, 0.1); color: var(--danger); border: 1px solid rgba(237, 66, 69, 0.2); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: var(--transition); }
-        .btn-danger:hover { background: var(--danger); color: #fff; }
-        .btn-secondary { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: var(--transition); }
-        .btn-secondary:hover { background: var(--border); }
-
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
-        .item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; }
-        .item-card h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
-        .card-section { margin-bottom: 1rem; }
-        .card-section h4 { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; font-weight: 800; }
-        .data-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px; }
-        .data-label { color: var(--text-dim); font-weight: 600; }
-        .data-val { font-weight: 700; }
-        .card-actions { display: flex; gap: 10px; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border); }
-
-        .data-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
-        .data-table th, .data-table td { padding: 14px 20px; text-align: left; font-size: 0.95rem; border-bottom: 1px solid var(--border); }
-        .data-table th { background: rgba(255,255,255,0.02); color: var(--text-dim); font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
-        .data-table tbody tr:hover { background: rgba(255,255,255,0.01); }
-
-        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: var(--text-dim); transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(20px); background-color: #fff; }
-
-        .status-select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; outline: none; font-weight: 600; }
-
-        .stat-banner { background: linear-gradient(135deg, var(--card-bg), rgba(88, 101, 242, 0.1)); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 2rem; }
-        .stat-banner h2 { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .user-profile { display: flex; align-items: center; }
+        .username-container { max-width: 0; overflow: hidden; white-space: nowrap; transition: max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s, margin-right 0.3s; opacity: 0; display: flex; align-items: center; font-weight: 700; font-size: 0.85rem; }
+        .user-profile:hover .username-container { max-width: 150px; opacity: 1; margin-right: 12px; }
         
-        /* Modals / Custom Dialogs */
-        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
+        .pfp-container { position: relative; cursor: pointer; display: flex; align-items: center; }
+        .header-pfp { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); object-fit: cover; }
+        .dropdown-menu { position: absolute; top: 130%; right: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem; box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: none; min-width: 140px; flex-direction: column; z-index: 1000; }
+        .dropdown-menu.show { display: flex; }
+        .dropdown-item { padding: 10px 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 4px; transition: var(--transition); text-decoration: none; color: var(--text-main); }
+        .dropdown-item:hover { background: var(--tag-bg); color: #ed4245; }
+        .dropdown-item.admin-btn:hover { color: #5865F2; }
+
+        .theme-toggle { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); padding: 0; display: flex; align-items: center; transition: var(--transition); }
+        
+        .hero { height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 5%; margin-top: 60px; }
+        .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; margin-bottom: 1rem; letter-spacing: -1.5px; text-transform: uppercase; }
+        .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin-bottom: 2.5rem; }
+        .hero-btn { padding: 16px 40px; border-radius: 4px; background: var(--text-main); color: var(--bg-body); font-size: 1rem; font-weight: 800; cursor: pointer; text-decoration: none; transition: var(--transition); border: 2px solid var(--text-main); text-transform: uppercase; }
+        .hero-btn:hover { background: transparent; color: var(--text-main); }
+
+        .section-padding { padding: 4rem 10%; }
+        
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; }
+        .config-card { background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; padding: 2rem; transition: var(--transition); display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+        
+        .card-head { margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card-divider { height: 2px; width: 100%; background: var(--border); margin-bottom: 1.5rem; }
+        
+        .section-label { font-size: 0.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .data-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.9rem; font-weight: 600; }
+        .data-val { font-weight: 800; color: var(--text-main); }
+        
+        .card-footer-box { margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: flex-end; }
+        .revert-badge { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 6px 12px; font-weight: 900; font-size: 0.75rem; border-radius: 4px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        .review-trigger-btn { margin-top: 1.5rem; width: 100%; padding: 12px; border-radius: 4px; background: transparent; border: 1px solid var(--text-main); color: var(--text-main); font-weight: 700; cursor: pointer; transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 8px; font-family: inherit; }
+        .review-trigger-btn:hover { background: var(--text-main); color: var(--bg-body); }
+
+        .filter-btn { padding: 8px 20px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-inner); color: var(--text-main); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: var(--transition); text-transform: uppercase; }
+        .filter-btn.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
+
+        .delete-btn { color: #ed4245; cursor: pointer; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; border: none; background: none; margin-left: 10px; transition: var(--transition); }
+        .delete-btn:hover { text-decoration: underline; opacity: 0.8; }
+
+        .member-card { background: var(--card-inner); border: 1px solid var(--border); padding: 1.5rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; transition: var(--transition); }
+        .member-header { display: flex; align-items: center; gap: 12px; }
+        .badge-tag { font-size: 0.65rem; padding: 4px 10px; border-radius: 20px; font-weight: 800; text-transform: uppercase; background: transparent; border: 1px solid currentColor; letter-spacing: 0.5px; }
+        body:not(.dark-mode) .badge-tag { filter: saturate(1.5) brightness(0.8); }
+
+        .request-container { max-width: 450px; margin: 0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 8px; background: var(--card-inner); }
+        .form-input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 4px; font-family: inherit; font-weight: 600; outline: none; transition: border-color 0.3s; }
+        .form-input:focus { border-color: var(--text-main); }
+
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.show { display: flex; opacity: 1; }
-        .modal-content { background: var(--card-bg); width: 95%; max-width: 650px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; max-height: 90vh; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .modal-content { background: var(--bg-card); width: 95%; max-width: 500px; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
         .modal-overlay.show .modal-content { transform: translateY(0); }
-        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
         
-        /* Custom UI Dialog System */
-        .custom-dialog-box { background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1.5rem; }
+        
+        .review-item { display: flex; gap: 12px; }
+        .review-avatar { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); }
+        .review-content { flex: 1; }
+        .review-user-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .review-stars { color: #f1c40f; font-size: 0.8rem; }
+        
+        .review-input-area { padding: 1.5rem; border-top: 1px solid var(--border); background: var(--card-inner); }
+        .input-stars { margin-bottom: 10px; font-size: 1.2rem; display: flex; gap: 5px; }
+        .input-star { color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+        .input-star.active { color: #f1c40f; }
+        
+        .custom-dialog-box { background: var(--modal-bg); padding: 2rem; border-radius: 8px; border: 1px solid var(--modal-border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
         .modal-overlay.show .custom-dialog-box { transform: translateY(0); }
-        .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; }
-        .custom-dialog-box p { color: var(--text-dim); margin-bottom: 2rem; font-size: 1rem; }
+        .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; color: var(--text-main); }
+        .custom-dialog-box p { color: var(--text-muted); margin-bottom: 2rem; font-size: 1rem; }
         .dialog-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-modal-primary { background: var(--text-main); color: var(--bg-body); border: none; padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; }
+        .btn-modal-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; }
+        .btn-modal-danger { background: #ed4245; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
-        .form-group.full { grid-column: span 2; }
-        .form-group label { font-size: 0.8rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; }
-        .form-control { background: var(--input-bg); border: 1px solid var(--border); padding: 10px; border-radius: 6px; color: var(--text); font-family: inherit; font-size: 0.95rem; outline: none; transition: border 0.3s; }
-        .form-control:focus { border-color: var(--accent); }
+        /* =========================================
+           MUSIC PLAYER & LIBRARY STYLES
+           ========================================= */
+        .music-ecosystem {
+            position: fixed; bottom: 2rem; right: 2rem; z-index: 1500;
+            display: flex; align-items: flex-end; gap: 1rem;
+        }
 
-        .table-viewer-wrap { width: 100%; overflow-x: auto; }
+        /* The Player Container */
+        .music-player {
+            background: #1a1a1a; color: #fff; border: 1px solid #333;
+            border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden; position: relative;
+        }
+
+        /* Maximized State (Square-ish) */
+        .music-player.maximized { width: 340px; padding: 1.5rem; }
+        
+        /* Minimized State (Wide & Short) */
+        .music-player.minimized {
+            width: 320px; padding: 12px 15px; 
+        }
+
+        /* Record / CD Animation */
+        .cd-container {
+            background: #fff; border-radius: 4px; display: flex; justify-content: center; align-items: center;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        .maximized .cd-container { width: 90px; height: 90px; margin-right: 15px; float: left; }
+        .minimized .cd-container { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 12px; flex-shrink: 0; }
+
+        .vinyl-record {
+            width: 80%; height: 80%; border-radius: 50%;
+            border: 2px solid #000;
+            animation: spin 3s linear infinite; animation-play-state: paused;
+            object-fit: cover;
+            background: #111;
+        }
+        .minimized .vinyl-record { width: 100%; height: 100%; border: none; }
+        .vinyl-record.playing { animation-play-state: running; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Track Info */
+        .track-info { flex: 1; overflow: hidden; }
+        .track-info span { font-size: 0.75rem; color: #aaa; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+        .track-title { font-size: 1.1rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px; }
+        .minimized .track-title { font-size: 0.95rem; margin-bottom: 0; }
+
+        /* Player Controls */
+        .player-controls { display: flex; align-items: center; gap: 15px; margin-top: 10px; clear: left; }
+        .minimized .player-controls { margin-top: 5px; gap: 12px; }
+        .control-btn { background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; transition: 0.2s; }
+        .control-btn:hover { color: #5865F2; transform: scale(1.1); }
+        
+        /* Utility Buttons */
+        .util-controls { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; }
+        /* Position static removed; keep it top-right in both states */
+        .minimized .util-controls { top: 12px; right: 12px; }
+        
+        .util-btn { background: none; border: 1px solid #444; color: #aaa; border-radius: 4px; padding: 4px 8px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+        .util-btn:hover { background: #333; color: #fff; border-color: #5865F2; }
+        .minimized .lib-btn { display: none; } /* Hide open library when minimized */
+
+        /* Progress Bar */
+        .progress-container { width: 100%; height: 4px; background: #333; border-radius: 2px; margin-top: 15px; cursor: pointer; position: relative; }
+        .minimized .progress-container { display: none; }
+        .progress-bar { height: 100%; background: #5865F2; width: 0%; border-radius: 2px; transition: width 0.1s linear; }
+
+        /* --- Sliding Library Panel --- */
+        .music-library {
+            width: 320px; height: 400px; background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; overflow: hidden;
+            /* Slide Animation State */
+            position: absolute; bottom: 0; right: -350px; opacity: 0; pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        /* When active, Library slides in, Player gets pushed left */
+        .ecosystem-active .music-library { right: 0; opacity: 1; pointer-events: auto; }
+        .ecosystem-active .music-player { transform: translateX(-340px); }
+
+        .lib-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--card-inner); }
+        .lib-header h3 { font-size: 1.1rem; font-weight: 900; margin: 0; }
+        .lib-close { background: none; border: none; color: var(--text-main); cursor: pointer; font-size: 1.2rem; }
+        
+        .lib-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+        .lib-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; cursor: pointer; transition: var(--transition); border: 1px solid transparent; }
+        .lib-item:hover { background: var(--tag-bg); }
+        .lib-item.active { border-color: #5865F2; background: rgba(88, 101, 242, 0.05); }
+        .lib-item-icon { width: 30px; height: 30px; background: #222; border-radius: 4px; display: flex; justify-content: center; align-items: center; color: #fff; font-size: 0.8rem; }
+        .lib-item-info h4 { font-size: 0.9rem; font-weight: 800; margin: 0; color: var(--text-main); }
+        .lib-item-info span { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+
+        @media (max-width: 768px) { .nav-links { display: none; } .ecosystem-active .music-player { transform: translateY(-420px) translateX(0); } }
     </style>
 </head>
-<body>
+<body id="body">
+    <div id="cursor-follower"></div>
 
-    <div id="security-guard">
-        <div class="guard-spinner"></div>
-        <p style="font-weight: 800; letter-spacing: 2px; font-size: 0.8rem;">AUTHENTICATING ACCESS</p>
-    </div>
-
-    <div id="customDialogOverlay" class="modal-overlay">
+    <div id="customDialogOverlay" class="modal-overlay" style="z-index: 3000;">
         <div class="custom-dialog-box">
             <h3 id="dialogTitle">Notice</h3>
             <p id="dialogMessage">Message</p>
             <div class="dialog-actions">
-                <button id="dialogBtnCancel" class="btn-secondary" style="display:none;">Cancel</button>
-                <button id="dialogBtnConfirm" class="btn-primary">OK</button>
+                <button id="dialogBtnCancel" class="btn-modal-secondary" style="display:none;">Cancel</button>
+                <button id="dialogBtnConfirm" class="btn-modal-primary">OK</button>
             </div>
         </div>
     </div>
 
-    <div id="adminModal" class="modal-overlay" onclick="closeModal(event)">
+    <nav>
+        <div class="brand-container">
+            <img src="/assets/images/logo.png" alt="Krazy Konfigs Logo" class="brand-logo">
+            <span style="font-weight:900; font-size: 1.2rem; letter-spacing: 0.5px; text-transform: uppercase;">Krazy Konfigs</span>
+        </div>
+        
+        <div style="display:flex; align-items: center; gap: 2rem;">
+            <div class="nav-links">
+                <a href="#about" class="nav-link">About</a>
+                <a href="#configs" class="nav-link">Configs</a>
+                <a href="#contributors" class="nav-link">Contributors</a>
+                <a href="#contact" class="nav-link">Request</a>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme"><i class="fas fa-moon"></i></button>
+            
+            <div class="user-profile">
+                <div class="username-container">
+                    <span id="navName">User</span>
+                </div>
+                <div class="pfp-container" onclick="toggleUserDropdown(event)">
+                    <img src="https://via.placeholder.com/32" id="navPfp" class="header-pfp" alt="PFP">
+                    <div class="dropdown-menu" id="userDropdown">
+                        <a href="admin.html" id="adminPanelOption" class="dropdown-item admin-btn" style="display:none;"><i class="fas fa-shield-alt"></i> Admin Panel</a>
+                        <div class="dropdown-item" onclick="handleLogoutClick()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero" id="about">
+        <h1>Krazy Konfigs</h1>
+        <p>Precision-engineered simulation presets mapped directly to your exact connection type.</p>
+        <a href="#configs" class="hero-btn">View Configs</a>
+    </section>
+
+    <section class="section-padding" id="configs">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="font-weight: 900; font-size: 2rem; letter-spacing: -1px;">CONFIGS</h2>
+            <div style="display:flex; gap: 0.8rem;">
+                <button class="filter-btn active" onclick="filterConfigs('all', this)">All</button>
+                <button class="filter-btn" onclick="filterConfigs('low', this)">Low Ping</button>
+                <button class="filter-btn" onclick="filterConfigs('mid', this)">Mid Ping</button>
+                <button class="filter-btn" onclick="filterConfigs('high', this)">High Ping</button>
+            </div>
+        </div>
+        <div class="config-grid" id="config-container"></div>
+    </section>
+
+    <section class="section-padding" id="contributors" style="background: var(--tag-bg);">
+        <h2 style="font-weight: 900; font-size: 2rem; letter-spacing: -1px; margin-bottom:2.5rem;">CONTRIBUTORS</h2>
+        <div id="contributor-container" class="config-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));"></div>
+    </section>
+
+    <section class="section-padding" id="contact">
+        <div class="request-container">
+            <h3 style="text-align:center; margin-bottom:1.5rem; font-weight:900; font-size: 1.5rem;">SUBMIT REQUEST</h3>
+            <form id="webhookForm" onsubmit="handleRequestSubmit(event)">
+                <input type="text" id="dcUser" placeholder="Discord Username" class="form-input" required>
+                <textarea id="dcDetails" rows="4" placeholder="Details (Suggestions or Requests)..." class="form-input" required></textarea>
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Include File (Max 10MB)</label>
+                <input type="file" id="dcFile" style="width:100%; margin-bottom:1.5rem; color: var(--text-muted); font-size: 0.8rem;">
+                <button type="submit" id="submitBtn" class="hero-btn" style="width:100%;">Submit Request</button>
+            </form>
+        </div>
+    </section>
+
+    <div id="reviewModal" class="modal-overlay" onclick="closeReviews(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h3 id="modalTitle" style="font-weight: 900; margin: 0; font-size: 1.2rem;">Title</h3>
-                <button onclick="closeModal()" style="background:none; border:none; color:var(--text); font-size:1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+                <h3 style="font-weight: 900; margin: 0; font-size: 1.2rem;">Config Reviews</h3>
+                <button onclick="closeReviews()" style="background:none; border:none; color:var(--text-main); font-size:1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
             </div>
-            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-body" id="reviewList"></div>
+            <div class="review-input-area">
+                <div class="input-stars" id="starSelector">
+                    <i class="fas fa-star input-star active" data-val="1"></i>
+                    <i class="fas fa-star input-star active" data-val="2"></i>
+                    <i class="fas fa-star input-star active" data-val="3"></i>
+                    <i class="fas fa-star input-star active" data-val="4"></i>
+                    <i class="fas fa-star input-star active" data-val="5"></i>
+                </div>
+                <div style="display:flex; gap: 10px;">
+                    <input type="text" id="reviewTextInput" class="form-input" style="margin:0;" placeholder="Write a review...">
+                    <button onclick="submitReview()" class="hero-btn" style="padding: 10px 20px; border-radius: 4px;"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <img src="./assets/images/logo.png" alt="Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/35'">
-            <span style="font-weight: 900; font-size: 1.3rem;">ADMIN PANEL</span>
-        </div>
+    <div id="music-ecosystem" class="music-ecosystem">
+        
+        <audio id="global-audio" preload="metadata"></audio>
 
-        <div class="nav-group">Home</div>
-        <div class="nav-btn active" onclick="loadModule('home', this)"><i class="fas fa-home"></i> Main</div>
+        <div id="music-player" class="music-player maximized">
+            <div class="util-controls">
+                <button class="util-btn lib-btn" onclick="toggleLibrary()" title="Open Library"><i class="fas fa-list-ul"></i></button>
+                <button class="util-btn" onclick="togglePlayerSize()" id="resize-btn" title="Minimize"><i class="fas fa-compress-alt"></i></button>
+            </div>
 
-        <div class="nav-group">User Management</div>
-        <div class="nav-btn" onclick="loadModule('users', this)"><i class="fas fa-users"></i> Users</div>
-        <div class="nav-btn" onclick="loadModule('rank', this)"><i class="fas fa-user-shield"></i> Rank Management</div>
-        <div class="nav-btn" onclick="loadModule('blacklist', this)"><i class="fas fa-ban"></i> Account Blacklisting</div>
-
-        <div class="nav-group">Config Management</div>
-        <div class="nav-btn" onclick="loadModule('config-editor', this)"><i class="fas fa-code"></i> Config Editor</div>
-        <div class="nav-btn" onclick="loadModule('drafts', this)"><i class="fas fa-archive"></i> Draft & Archive</div>
-
-        <div class="nav-group">Moderation & Community</div>
-        <div class="nav-btn" onclick="loadModule('reviews', this)"><i class="fas fa-comments"></i> Reviews/Comments</div>
-        <div class="nav-btn" onclick="loadModule('contributors', this)"><i class="fas fa-address-book"></i> Contributor Directory</div>
-
-        <div class="nav-group">System Health</div>
-        <div class="nav-btn" onclick="loadModule('db', this)"><i class="fas fa-database"></i> Database Overview</div>
-        <div class="nav-btn" onclick="loadModule('settings', this)"><i class="fas fa-cog"></i> Website Settings</div>
-    </aside>
-
-    <div class="wrapper">
-        <header class="header">
-            <div class="profile-container">
-                <div class="profile-trigger" onclick="toggleDropdown(event)">
-                    <img src="" id="adminPfp" class="profile-pfp" alt="">
-                    <span class="username-reveal" id="adminName">Admin</span>
+            <div style="display:flex; align-items: center;">
+                <div class="cd-container">
+                    <img id="vinyl-spin" src="" class="vinyl-record" alt="Cover Art" onerror="this.src='./assets/images/logo.png'">
                 </div>
-                <div class="dropdown" id="profileDropdown">
-                    <a href="dashboard.html" class="drop-link"><i class="fas fa-tachometer-alt"></i> Back to Dashboard</a>
-                    <a href="#" class="drop-link" style="color:#ff4757" onclick="handleLogoutClick()"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+                
+                <div class="track-info">
+                    <span id="player-category">Loading...</span>
+                    <div class="track-title" id="player-title">Booting Audio...</div>
+                    
+                    <div class="player-controls">
+                        <button class="control-btn" onclick="prevTrack()"><i class="fas fa-backward"></i></button>
+                        <button class="control-btn" onclick="togglePlay()" id="play-btn"><i class="fas fa-play"></i></button>
+                        <button class="control-btn" onclick="nextTrack()"><i class="fas fa-forward"></i></button>
+                    </div>
                 </div>
             </div>
-        </header>
 
-        <main id="dynamic-container"></main>
+            <div class="progress-container" id="progress-bar-container" onclick="seekAudio(event)">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+
+        <div id="music-library" class="music-library">
+            <div class="lib-header">
+                <h3>Track Library</h3>
+                <button class="lib-close" onclick="toggleLibrary()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="lib-list" id="library-list">
+                </div>
+        </div>
     </div>
 
     <script>
-        const SUPABASE_URL = "https://unjdjduiqtldgoybgmnq.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE";
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+        const _supabase = supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE');
+        
+        let allConfigs = [];
         let currentUser = null;
-        let activeDataStore = []; 
+        let activeConfigId = null;
+        let currentRatingInput = 5;
 
-        // --- CONSTANT PRE-FLIGHT VALIDATOR ---
-        async function verifyAdminAuth() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) return false;
-            const { data: profile } = await _supabase.from('users').select('rank').eq('id', session.user.id).single();
-            return profile?.rank === 'admin';
-        }
-
-        // Custom Modal UI Logic
+        // Custom Dialog System
         function customAlert(msg, title = "Notice") {
             return new Promise((resolve) => {
                 const overlay = document.getElementById('customDialogOverlay');
@@ -211,7 +380,7 @@
                 
                 const confirmBtn = document.getElementById('dialogBtnConfirm');
                 confirmBtn.innerText = 'OK';
-                confirmBtn.className = 'btn-primary';
+                confirmBtn.className = 'btn-modal-primary';
 
                 const handleConfirm = () => {
                     overlay.classList.remove('show');
@@ -234,7 +403,7 @@
                 
                 cancelBtn.style.display = 'block';
                 confirmBtn.innerText = confirmText;
-                confirmBtn.className = isDanger ? 'btn-danger' : 'btn-primary';
+                confirmBtn.className = isDanger ? 'btn-modal-danger' : 'btn-modal-primary';
 
                 const cleanup = () => {
                     overlay.classList.remove('show');
@@ -251,23 +420,31 @@
             });
         }
 
-        function toggleDropdown(e) { e.stopPropagation(); document.getElementById('profileDropdown').classList.toggle('active'); }
-        window.onclick = () => document.getElementById('profileDropdown').classList.remove('active');
-        
-        async function handleLogoutClick() { 
-            if(await customConfirm("Are you sure you want to log out?", "Logout", "Log Out", true)) {
-                await _supabase.auth.signOut(); 
-                window.location.href = 'login.html'; 
-            }
-        }
+        const follower = document.getElementById('cursor-follower');
+        document.addEventListener('mousemove', (e) => {
+            follower.style.left = e.clientX + 'px';
+            follower.style.top = e.clientY + 'px';
+        });
 
-        // --- MASTER BOOT SEQUENCE (Security, Routing, Fetching) ---
+        function toggleUserDropdown(e) {
+            e.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('show');
+        }
+        document.addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.remove('show');
+        });
+
+        // --- MASTER BOOT SEQUENCE & CONTINUOUS SECURITY ---
         async function bootSequence() {
             try {
+                const { data: settings } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
+                const isMaintenance = settings?.maintenance_mode === true;
                 const { data: { session } } = await _supabase.auth.getSession();
 
                 if (!session) {
-                    window.location.href = 'dashboard.html';
+                    if (isMaintenance) { window.location.href = 'maintenance.html'; return; }
+                    document.body.classList.add('ready');
+                    initDashboard();
                     return;
                 }
 
@@ -283,8 +460,8 @@
                     return;
                 }
 
-                if (profile?.rank !== 'admin') {
-                    window.location.href = 'dashboard.html';
+                if (isMaintenance && profile?.rank !== 'admin') {
+                    window.location.href = 'maintenance.html';
                     return;
                 }
 
@@ -296,478 +473,392 @@
                     rank: profile?.rank || 'user'
                 };
 
-                document.getElementById('adminName').innerText = currentUser.username;
-                document.getElementById('adminPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
-                document.getElementById('security-guard').style.display = 'none';
+                await _supabase.from('users').upsert({
+                    id: currentUser.id, discord_id: currentUser.discord_id,
+                    username: currentUser.username, avatar_url: currentUser.avatar_url,
+                    last_login: new Date().toISOString()
+                });
 
-                loadModule('home', document.querySelector('.nav-btn.active'));
+                document.getElementById('navName').innerText = currentUser.username;
+                document.getElementById('navPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
+                
+                if (currentUser.rank.toLowerCase() === "admin") {
+                    document.getElementById('adminPanelOption').style.display = 'flex';
+                }
+
+                document.body.classList.add('ready');
+                initDashboard();
 
             } catch (error) {
                 console.error("Boot Sequence Error:", error);
-                await customAlert("Security validation failed. Redirecting.", "Security Alert");
-                window.location.href = 'dashboard.html';
+                document.body.classList.add('ready');
+                initDashboard(); 
             }
         }
 
         bootSequence();
 
-        // Background Periodic Security Check (Every 30 seconds)
         setInterval(async () => {
             if (!currentUser) return;
             try {
+                const { data: settings } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
                 const { data: profile } = await _supabase.from('users').select('isBlacklisted, rank').eq('id', currentUser.id).single();
-                if (profile?.isBlacklisted === 'true' || profile?.rank !== 'admin') {
-                    window.location.href = 'dashboard.html';
+
+                if (profile?.isBlacklisted === 'true' || (settings?.maintenance_mode === true && profile?.rank !== 'admin')) {
+                    window.location.href = 'maintenance.html';
                 }
-            } catch (e) {}
+            } catch (e) { }
         }, 30000);
 
         _supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT') { window.location.href = 'login.html'; }
         });
 
-        // --- View Router & Renderer ---
-        async function loadModule(module, btnElement) {
-            const container = document.getElementById('dynamic-container');
-            container.innerHTML = '<div class="guard-spinner" style="margin: 3rem auto;"></div>'; 
-            
-            if(btnElement) {
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                btnElement.classList.add('active');
+        async function initDashboard() {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeBtn').innerHTML = '<i class="fas fa-sun"></i>';
             }
+            fetchConfigs();
+            fetchContributors();
+            initMusicPlayer();
+        }
 
-            let html = '';
+        // ==========================================
+        // MUSIC PLAYER LOGIC
+        // ==========================================
+        
+        let playlist = [];
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+        const audioEngine = document.getElementById('global-audio');
+        
+        // Fetch JSON Manifest
+        async function fetchMusicManifest() {
             try {
-                switch(module) {
-                    case 'home': html = await renderHome(); break;
-                    case 'users': html = await renderUsers(); break;
-                    case 'rank': html = await renderRank(); break;
-                    case 'blacklist': html = await renderBlacklist(); break;
-                    case 'config-editor': html = await renderConfigs('false'); break;
-                    case 'drafts': html = await renderConfigs('true'); break;
-                    case 'reviews': html = await renderReviews(); break;
-                    case 'contributors': html = await renderContributors(); break;
-                    case 'db': html = await renderDB(); break;
-                    case 'settings': html = await renderSettings(); break;
+                const response = await fetch('/assets/music/music-manifest.json');
+                playlist = await response.json();
+                
+                if(playlist && playlist.length > 0) {
+                    loadTrack(0);
+                    buildLibraryUI();
+                } else {
+                    document.getElementById('player-title').innerText = "No Tracks Found";
                 }
-            } catch (err) {
-                console.error("Module Load Error:", err);
-                html = `<p style="color:var(--danger)">Error loading module: ${err.message}</p>`;
+            } catch(e) {
+                console.error("Music manifest failed to load.", e);
+                document.getElementById('player-title').innerText = "Load Error";
             }
-            container.innerHTML = html;
         }
 
-        async function renderHome() {
-            const hour = new Date().getHours();
-            const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
-            
-            const [usersRes, configsRes, contRes] = await Promise.all([
-                _supabase.from('users').select('id', { count: 'exact', head: true }),
-                _supabase.from('configs').select('id', { count: 'exact', head: true }),
-                _supabase.from('contributors').select('id', { count: 'exact', head: true })
-            ]);
+        function initMusicPlayer() {
+            fetchMusicManifest();
 
-            return `
-                <div class="stat-banner">
-                    <h2>${greeting}, ${currentUser.username}</h2>
-                    <p style="color:var(--text-dim); font-size:1.1rem;">Welcome to the KrazyKonfigs Administration Dashboard.</p>
-                </div>
-                <div class="config-grid">
-                    <div class="item-card" style="align-items:center; text-align:center;">
-                        <i class="fas fa-users" style="font-size:2rem; color:var(--accent); margin-bottom:10px;"></i>
-                        <h3>Total Users</h3>
-                        <h2 style="font-size:2.5rem; font-weight:900;">${usersRes.count || 0}</h2>
-                    </div>
-                    <div class="item-card" style="align-items:center; text-align:center;">
-                        <i class="fas fa-file-code" style="font-size:2rem; color:var(--success); margin-bottom:10px;"></i>
-                        <h3>Total Configs</h3>
-                        <h2 style="font-size:2.5rem; font-weight:900;">${configsRes.count || 0}</h2>
-                    </div>
-                    <div class="item-card" style="align-items:center; text-align:center;">
-                        <i class="fas fa-address-book" style="font-size:2rem; color:#f1c40f; margin-bottom:10px;"></i>
-                        <h3>Contributors</h3>
-                        <h2 style="font-size:2.5rem; font-weight:900;">${contRes.count || 0}</h2>
-                    </div>
-                </div>
-            `;
+            audioEngine.addEventListener('timeupdate', () => {
+                if(audioEngine.duration) {
+                    const progress = (audioEngine.currentTime / audioEngine.duration) * 100;
+                    document.getElementById('progress-bar').style.width = `${progress}%`;
+                }
+            });
+
+            audioEngine.addEventListener('ended', nextTrack);
         }
 
-        async function renderUsers() {
-            const { data, error } = await _supabase.from('users').select('*').order('last_login', {ascending: false}).limit(50);
+        function loadTrack(index) {
+            currentTrackIndex = index;
+            const track = playlist[index];
             
-            if (error) {
-                console.error("Failed to fetch users:", error.message);
-                return `<div class="page-header"><h1>Users Overview</h1></div>
-                        <p style="color:var(--danger)">Unable to fetch users. Ensure you have an active session to pass RLS policies.</p>`;
+            // Handle local testing vs prod paths safely
+            const audioPath = track.src.startsWith('/') ? '.' + track.src : track.src;
+            const coverPath = track.cover ? (track.cover.startsWith('/') ? '.' + track.cover : track.cover) : './assets/images/logo.png';
+
+            audioEngine.src = audioPath;
+            document.getElementById('player-category').innerText = track.category;
+            document.getElementById('player-title').innerText = track.title;
+            document.getElementById('vinyl-spin').src = coverPath;
+            
+            updateLibraryHighlight();
+        }
+
+        function togglePlay() {
+            const playBtn = document.getElementById('play-btn');
+            const vinyl = document.getElementById('vinyl-spin');
+
+            if (isPlaying) {
+                audioEngine.pause();
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                vinyl.classList.remove('playing');
+            } else {
+                audioEngine.play().catch(e => console.warn("Browser autoplay blocked:", e));
+                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                vinyl.classList.add('playing');
             }
-
-            if (!data || data.length === 0) {
-                return `<div class="page-header"><h1>Users Overview</h1></div>
-                        <p style="color:var(--text-dim)">No user data available or RLS blocked the read request due to missing auth session.</p>`;
-            }
-
-            return `
-                <div class="page-header"><h1>Users Overview</h1></div>
-                <div class="table-viewer-wrap">
-                    <table class="data-table">
-                        <thead><tr><th>Username</th><th>Discord ID</th><th>Rank</th><th>Blacklisted</th><th>Last Login</th></tr></thead>
-                        <tbody>
-                            ${data.map(u => `
-                                <tr>
-                                    <td style="font-weight:700;">${u.username || 'Unknown'}</td>
-                                    <td style="font-size:0.8rem; color:var(--text-dim);">${u.discord_id || '-'}</td>
-                                    <td style="color:${u.rank === 'admin' ? 'var(--accent)' : 'inherit'}; font-weight:${u.rank==='admin'?'900':'normal'}">${u.rank || 'user'}</td>
-                                    <td>${u.isBlacklisted === 'true' ? '<span style="color:var(--danger);font-weight:bold;">True</span>' : 'False'}</td>
-                                    <td>${new Date(u.last_login).toLocaleDateString() || '-'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            isPlaying = !isPlaying;
         }
 
-        async function renderRank() {
-            const { data, error } = await _supabase.from('users').select('*').order('username', {ascending: true});
-            if (error) return `<p style="color:var(--danger)">Failed to fetch user ranks.</p>`;
+        function nextTrack() {
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            loadTrack(currentTrackIndex);
+            if (isPlaying) audioEngine.play();
+        }
+
+        function prevTrack() {
+            currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+            loadTrack(currentTrackIndex);
+            if (isPlaying) audioEngine.play();
+        }
+
+        function seekAudio(e) {
+            const container = document.getElementById('progress-bar-container');
+            const rect = container.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            audioEngine.currentTime = (clickX / width) * audioEngine.duration;
+        }
+
+        function togglePlayerSize() {
+            const player = document.getElementById('music-player');
+            const btn = document.getElementById('resize-btn');
             
-            return `
-                <div class="page-header"><h1>Rank Management</h1></div>
-                <div class="table-viewer-wrap">
-                    <table class="data-table">
-                        <thead><tr><th>Username</th><th>Current Rank</th><th>Action</th></tr></thead>
-                        <tbody>
-                            ${(data||[]).map(u => `
-                                <tr>
-                                    <td>${u.username || 'Unknown'}</td>
-                                    <td><span class="data-val">${u.rank || 'user'}</span></td>
-                                    <td>
-                                        <select class="status-select" onchange="updateDB('users', '${u.id}', 'rank', this.value)">
-                                            <option value="user" ${u.rank!=='admin'?'selected':''}>User</option>
-                                            <option value="admin" ${u.rank==='admin'?'selected':''}>Admin</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            if (player.classList.contains('maximized')) {
+                player.classList.replace('maximized', 'minimized');
+                btn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
+                btn.title = "Maximize";
+                if(document.getElementById('music-ecosystem').classList.contains('ecosystem-active')) {
+                    toggleLibrary();
+                }
+            } else {
+                player.classList.replace('minimized', 'maximized');
+                btn.innerHTML = '<i class="fas fa-compress-alt"></i>';
+                btn.title = "Minimize";
+            }
         }
 
-        async function renderBlacklist() {
-            const { data } = await _supabase.from('users').select('*').order('username', {ascending: true});
-            return `
-                <div class="page-header"><h1>Account Blacklisting</h1></div>
-                <div class="table-viewer-wrap">
-                    <table class="data-table">
-                        <thead><tr><th>Username</th><th>Status</th><th>Toggle Blacklist</th></tr></thead>
-                        <tbody>
-                            ${(data||[]).map(u => `
-                                <tr>
-                                    <td>${u.username || 'Unknown'}</td>
-                                    <td id="bl-status-${u.id}">${u.isBlacklisted === 'true' ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active'}</td>
-                                    <td>
-                                        <label class="toggle-switch">
-                                            <input type="checkbox" ${u.isBlacklisted === 'true' ? 'checked' : ''} onchange="updateBlacklist('${u.id}', this.checked)">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+        function toggleLibrary() {
+            const eco = document.getElementById('music-ecosystem');
+            const player = document.getElementById('music-player');
+            
+            if (!eco.classList.contains('ecosystem-active') && player.classList.contains('minimized')) {
+                togglePlayerSize();
+            }
+            eco.classList.toggle('ecosystem-active');
         }
 
-        async function renderConfigs(isArchivedStr) {
+        function buildLibraryUI() {
+            const list = document.getElementById('library-list');
+            list.innerHTML = playlist.map((track, i) => `
+                <div class="lib-item" id="lib-track-${i}" onclick="playFromLibrary(${i})">
+                    <div class="lib-item-icon"><i class="fas fa-music"></i></div>
+                    <div class="lib-item-info">
+                        <h4>${track.title}</h4>
+                        <span>${track.category}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function playFromLibrary(index) {
+            if (index !== currentTrackIndex) {
+                loadTrack(index);
+                if (!isPlaying) togglePlay();
+                else audioEngine.play();
+            } else {
+                togglePlay();
+            }
+        }
+
+        function updateLibraryHighlight() {
+            document.querySelectorAll('.lib-item').forEach(el => el.classList.remove('active'));
+            const activeItem = document.getElementById(`lib-track-${currentTrackIndex}`);
+            if (activeItem) activeItem.classList.add('active');
+        }
+
+        // ==========================================
+
+        async function fetchConfigs() {
             // Sort configs by ID ascending (1, 2, 3...)
-            const { data } = await _supabase.from('configs').select('*').eq('is_archived', isArchivedStr).order('id', {ascending: true});
-            activeDataStore = data || [];
-            const title = isArchivedStr === 'true' ? 'Draft & Archive' : 'Config Editor';
-            
-            return `
-                <div class="page-header">
-                    <h1>${title}</h1>
-                    <button class="btn-primary" onclick="openConfigModal()"><i class="fas fa-plus"></i> Create New</button>
-                </div>
-                <div class="config-grid">
-                    ${activeDataStore.map(c => {
-                        const actionLabel = c.is_archived === 'true' ? 'Publish' : 'Archive';
-                        const toggleArchive = c.is_archived === 'true' ? 'false' : 'true';
-                        return `
-                        <div class="item-card">
-                            <h3>${c.title} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">ID: ${c.id}</span></h3>
-                            <div class="card-section">
-                                <h4>Prediction</h4>
-                                <div class="data-row"><span class="data-label">Sim Timer:</span> <span class="data-val">${c.sim_timer || '-'}</span></div>
-                                <div class="data-row"><span class="data-label">Pred Int:</span> <span class="data-val">${c.pred_interval || '-'}</span></div>
-                            </div>
-                            <div class="card-section">
-                                <h4>Multiplier</h4>
-                                <div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">${c.vertical || '-'}</span></div>
-                                <div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">${c.horizontal || '-'}</span></div>
-                            </div>
-                            <div class="card-actions" style="justify-content:flex-end;">
-                                <button class="btn-secondary" onclick="openConfigModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
-                                <button class="btn-secondary" onclick="updateDB('configs', ${c.id}, 'is_archived', '${toggleArchive}', true)">${actionLabel}</button>
-                                <button class="btn-danger" onclick="deleteRecord('configs', ${c.id})"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>`;
-                    }).join('')}
-                    ${activeDataStore.length === 0 ? '<p style="color:var(--text-dim);">No configs found in this section.</p>' : ''}
-                </div>
-            `;
+            const { data } = await _supabase.from('configs').select('*').eq('is_archived', 'false').order('id', {ascending: true});
+            allConfigs = data || [];
+            renderConfigs(allConfigs);
         }
 
-        async function renderReviews() {
-            const { data } = await _supabase.from('reviews').select('*').order('created_at', {ascending: false});
-            return `
-                <div class="page-header"><h1>Reviews/Comments</h1></div>
-                <div class="table-viewer-wrap">
-                    <table class="data-table">
-                        <thead><tr><th>ID</th><th>Config ID</th><th>User</th><th>Comment</th><th>Stars</th><th>Action</th></tr></thead>
-                        <tbody>
-                            ${(data||[]).map(r => `
-                                <tr>
-                                    <td style="color:var(--text-dim);">${r.id}</td>
-                                    <td style="font-weight:bold;">${r.config_id}</td>
-                                    <td>${r.poster_username}</td>
-                                    <td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.comment}</td>
-                                    <td style="color:#f1c40f;">${r.rating} <i class="fas fa-star"></i></td>
-                                    <td><button class="btn-danger" onclick="deleteRecord('reviews', ${r.id})">Delete</button></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        async function renderContributors() {
-            const { data } = await _supabase.from('contributors').select('*').order('priority', {ascending: true});
-            activeDataStore = data || [];
-            return `
-                <div class="page-header">
-                    <h1>Contributor Directory</h1>
-                    <button class="btn-primary" onclick="openContributorModal()"><i class="fas fa-plus"></i> Create New</button>
-                </div>
-                <div class="config-grid">
-                    ${activeDataStore.map(c => `
-                        <div class="item-card">
-                            <h3>${c.name} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">ID: ${c.id}</span></h3>
-                            <div class="data-row"><span class="data-label">Role Icon:</span> <span class="data-val"><i class="${c.role_icon}" style="color:${c.icon_color}"></i> ${c.role_icon}</span></div>
-                            <div class="data-row"><span class="data-label">Tags:</span> <span class="data-val" style="font-size:0.8rem;">${(c.tags||[]).join(', ')}</span></div>
-                            <div class="data-row"><span class="data-label">Priority:</span> <span class="data-val" style="color:var(--accent);">${c.priority || 0}</span></div>
-                            <div class="card-actions" style="justify-content:flex-end; margin-top:1.5rem;">
-                                <button class="btn-secondary" onclick="openContributorModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
-                                <button class="btn-danger" onclick="deleteRecord('contributors', ${c.id})"><i class="fas fa-trash"></i></button>
+        function renderConfigs(configs) {
+            const container = document.getElementById('config-container');
+            container.innerHTML = configs.map(c => `
+                <div class="config-card">
+                    <div>
+                        <div class="card-head"><i class="fas fa-snowflake" style="color: var(--text-muted);"></i> ${c.title} | ${c.ping_tier || 'N/A'} PING</div>
+                        <div class="card-divider"></div>
+                        <div style="margin-bottom: 1.2rem;">
+                            <div class="section-label">🎯 PREDICTION</div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${c.sim_timer ?? '-'}</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Prediction Interval</span> <span class="data-val">${c.pred_interval || '-'}</span></div>
+                        </div>
+                        <div style="margin-bottom: 1.2rem;">
+                            <div class="section-label"><i class="fas fa-cog" style="color:#a6aeb9;"></i> TOGGLES</div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Prioritize Ping</span> <span class="data-val">ON</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Predict Jump</span> <span class="data-val">ON</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Predict Lag</span> <span class="data-val">ON</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Ping Predict</span> <span class="data-val">ON</span></div>
+                        </div>
+                        <div style="margin-bottom: 1.2rem;">
+                            <div class="section-label"><i class="fas fa-sliders-h" style="color:#5865F2;"></i> MULTIPLIERS</div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Vertical</span> <span class="data-val">${c.vertical ?? '155'}</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Horizontal</span> <span class="data-val">${c.horizontal ?? '165'}</span></div>
+                        </div>
+                        <div style="margin-bottom: 1.2rem;">
+                            <div class="section-label">📍 OFFSETS</div>
+                            <div class="data-row"><span style="color:var(--text-muted)">X / Y / Z</span> <span class="data-val">${c.offsets || '0 / -5 / 0'}</span></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="card-footer-box">
+                            <div>
+                                <div class="revert-badge">REVERT | ${c.hit_rate || '85%'} HIT RATE</div>
+                                <div style="font-size:0.75rem; font-weight: 700; color:var(--text-muted); margin-top: 8px;">Supports: ${c.support_range || '150ms - 200ms'}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size:0.8rem; font-style:italic; font-weight: 600; color:var(--text-muted); display: block;">by ${c.creator || 'Kriz'}</span>
+                                <span style="font-size:0.65rem; color:var(--text-muted); font-weight: 600;">ID: ${c.id}</span>
                             </div>
                         </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-        async function renderDB() {
-            const tables = ['users', 'configs', 'contributors', 'reviews'];
-            let html = `<div class="page-header"><h1>Database Overview</h1></div>
-                        <p style="color:var(--text-dim); margin-bottom:2rem;"><i>View real-time database snapshots. Read-only view.</i></p>
-                        <div class="config-grid">`;
-            for(let t of tables) {
-                const { count } = await _supabase.from(t).select('*', { count: 'exact', head: true });
-                html += `
-                    <div class="item-card">
-                        <h3 style="text-transform:capitalize;">${t} Table</h3>
-                        <div class="data-row"><span class="data-label">Rows Present:</span> <span class="data-val">${count || 0}</span></div>
-                        <div class="card-actions"><button class="btn-secondary" style="width:100%;" onclick="viewTableData('${t}')"><i class="fas fa-table"></i> View Table Data</button></div>
-                    </div>
-                `;
-            }
-            return html + `</div>`;
-        }
-
-        async function renderSettings() {
-            const { data } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
-            const isMaintenance = data ? data.maintenance_mode : false;
-
-            return `
-                <div class="page-header"><h1>Website Settings</h1></div>
-                <div class="item-card" style="max-width: 600px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <h3 style="border:none; padding:0; margin-bottom:5px;">Maintenance Mode</h3>
-                            <p style="font-size:0.85rem; color:var(--text-dim);">Globally redirects users to a static "Getting back" page.</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="maintenanceToggle" ${isMaintenance ? 'checked' : ''} onchange="toggleMaintenanceMode(this.checked)">
-                            <span class="slider"></span>
-                        </label>
+                        <button class="review-trigger-btn" onclick="openReviews(${c.id})"><i class="fas fa-star"></i> View Reviews</button>
                     </div>
                 </div>
-            `;
+            `).join('');
         }
 
-        // --- Secured Database Action Functions ---
-        async function updateDB(table, id, column, value, reload = false) {
-            if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
+        function filterConfigs(tier, btn) {
+            document.querySelectorAll('#configs .filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filtered = tier === 'all' ? allConfigs : allConfigs.filter(c => c.ping_tier?.toLowerCase().includes(tier.toLowerCase()));
+            renderConfigs(filtered);
+        }
+
+        function getBadgeColor(tag) {
+            const t = tag.toUpperCase();
+            if(t.includes('OWNER') || t.includes('EARLY')) return '#f1c40f';
+            if(t.includes('DEVELOPER') || t.includes('TESTER')) return '#2ecc71';
+            if(t.includes('GUEST')) return '#9b59b6';
+            return 'var(--text-muted)';
+        }
+
+        async function fetchContributors() {
+            const { data } = await _supabase.from('contributors').select('*')
+                .order('priority', { ascending: true })
+                .order('created_at', { ascending: true });
             
-            try {
-                const { error } = await _supabase.from(table).update({ [column]: value }).eq('id', id);
-                if (error) throw error;
-                if(reload) refreshCurrentView();
-            } catch (err) { await customAlert("Error updating data: " + err.message, "Error"); }
+            const container = document.getElementById('contributor-container');
+            container.innerHTML = (data || []).map(m => {
+                let tagsArray = Array.isArray(m.tags) ? m.tags : (m.tags?.split(',').map(t => t.trim()) || []);
+                const tagsHtml = tagsArray.map(tag => `<span class="badge-tag" style="color: ${getBadgeColor(tag)};">${tag}</span>`).join('');
+                return `
+                <div class="member-card">
+                    <div class="member-header">
+                        <i class="${m.role_icon ? m.role_icon.trim() : 'fa-solid fa-user'}" style="color: ${m.icon_color || '#ffffff'}; font-size: 1.2rem;"></i>
+                        <span style="font-weight: 900; font-size: 1.2rem;">${m.name || 'Unknown'}</span>
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">${tagsHtml}</div>
+                </div>`;
+            }).join('');
         }
 
-        async function updateBlacklist(id, isChecked) {
-            if (!(await verifyAdminAuth())) {
-                document.getElementById(`bl-status-${id}`).innerHTML = !isChecked ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active';
-                return await customAlert("Security Error: Admin rights required.", "Access Denied");
-            }
-            const val = isChecked ? 'true' : 'false';
-            document.getElementById(`bl-status-${id}`).innerHTML = isChecked ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active';
-            await _supabase.from('users').update({ isBlacklisted: val }).eq('id', id);
-        }
-
-        async function deleteRecord(table, id) {
-            if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
+        async function openReviews(configId) {
+            activeConfigId = configId;
+            document.getElementById('reviewModal').classList.add('show');
+            const { data } = await _supabase.from('reviews').select('*').eq('config_id', configId).order('created_at', {ascending: false});
+            const container = document.getElementById('reviewList');
             
-            const isConfirmed = await customConfirm(`Are you sure you want to permanently delete this record from ${table}?`, "Delete Record", "Delete", true);
-            if(!isConfirmed) return;
-
-            const { error } = await _supabase.from(table).delete().eq('id', id);
-            if(!error) refreshCurrentView();
-            else await customAlert("Error: " + error.message, "Delete Failed");
-        }
-
-        async function toggleMaintenanceMode(isChecked) {
-            if (!(await verifyAdminAuth())) {
-                document.getElementById('maintenanceToggle').checked = !isChecked;
-                return await customAlert("Security Error: Admin rights required.", "Access Denied");
-            }
-
-            const isConfirmed = await customConfirm(`Are you sure you want to turn ${isChecked ? 'ON' : 'OFF'} maintenance mode?`, "Confirm Maintenance Change");
-            
-            if(!isConfirmed) {
-                document.getElementById('maintenanceToggle').checked = !isChecked;
+            if(!data || data.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:var(--text-muted);">No reviews yet.</p>`;
                 return;
             }
 
-            const { error } = await _supabase.from('settings').update({ maintenance_mode: isChecked }).eq('id', 1);
-            if(error) {
-                await customAlert("Failed to update database.", "Configuration Error");
-                document.getElementById('maintenanceToggle').checked = !isChecked;
-            } else {
-                await customAlert(`Maintenance mode is now ${isChecked ? 'ACTIVE' : 'DISABLED'}.`, "Success");
-            }
-        }
+            container.innerHTML = data.map(r => {
+                const stars = Array(5).fill(0).map((_,i) => i < r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('');
+                const isOwner = currentUser && String(r.poster_id) === String(currentUser.discord_id);
+                const deleteAction = isOwner ? `<button class="delete-btn" onclick="deleteReview(${r.id})">Delete</button>` : '';
 
-        function refreshCurrentView() {
-            const activeBtn = document.querySelector('.nav-btn.active');
-            if(activeBtn) activeBtn.click();
-        }
-
-        // --- Standard Modals & Forms ---
-        function openModal(title, contentHTML) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalBody').innerHTML = contentHTML;
-            document.getElementById('adminModal').classList.add('show');
-        }
-
-        function closeModal(e) {
-            if(e && e.target !== document.getElementById('adminModal')) return;
-            document.getElementById('adminModal').classList.remove('show');
-        }
-
-        async function viewTableData(tableName) {
-            const { data, error } = await _supabase.from(tableName).select('*').limit(20);
-            if(error || !data || data.length === 0) return customAlert("No data to show or access denied.", "Notice");
-            
-            const keys = Object.keys(data[0]);
-            const html = `
-                <div class="table-viewer-wrap" style="max-height: 60vh;">
-                    <table class="data-table" style="min-width: 800px;">
-                        <thead><tr>${keys.map(k => `<th>${k}</th>`).join('')}</tr></thead>
-                        <tbody>
-                            ${data.map(row => `<tr>${keys.map(k => `<td>${row[k] === null ? 'null' : String(row[k]).substring(0,30)}</td>`).join('')}</tr>`).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            openModal(`Viewing ${tableName}`, html);
-            document.querySelector('.modal-content').style.maxWidth = "90%";
-        }
-
-        function openConfigModal(id = null) {
-            document.querySelector('.modal-content').style.maxWidth = "650px";
-            let c = id ? activeDataStore.find(x => x.id === id) : {};
-            
-            const html = `
-                <form id="configForm" onsubmit="saveForm(event, 'configs', ${id})">
-                    <div class="form-grid">
-                        <div class="form-group full"><label>Title</label><input type="text" name="title" class="form-control" value="${c.title||''}" required></div>
-                        <div class="form-group"><label>Ping Tier</label><input type="text" name="ping_tier" class="form-control" value="${c.ping_tier||'Mid'}"></div>
-                        <div class="form-group"><label>Creator</label><input type="text" name="creator" class="form-control" value="${c.creator||'Kriz'}"></div>
-                        <div class="form-group"><label>Sim Timer</label><input type="number" name="sim_timer" class="form-control" value="${c.sim_timer||123}"></div>
-                        <div class="form-group"><label>Pred Interval</label><input type="text" name="pred_interval" class="form-control" value="${c.pred_interval||''}"></div>
-                        <div class="form-group"><label>Vertical Multiplier</label><input type="number" name="vertical" class="form-control" value="${c.vertical||155}"></div>
-                        <div class="form-group"><label>Horizontal Multiplier</label><input type="number" name="horizontal" class="form-control" value="${c.horizontal||165}"></div>
-                        <div class="form-group"><label>Offsets (X/Y/Z)</label><input type="text" name="offsets" class="form-control" value="${c.offsets||'0 / 0 / 0'}"></div>
-                        <div class="form-group"><label>Support Range</label><input type="text" name="support_range" class="form-control" value="${c.support_range||'10-20ms'}"></div>
-                        <div class="form-group"><label>Hit Rate</label><input type="text" name="hit_rate" class="form-control" value="${c.hit_rate||'85%'}"></div>
-                        <div class="form-group full"><label>Is Archived (Draft)</label>
-                            <select name="is_archived" class="form-control">
-                                <option value="false" ${c.is_archived==='false'?'selected':''}>False (Published)</option>
-                                <option value="true" ${c.is_archived==='true'?'selected':''}>True (Archived/Draft)</option>
-                            </select>
+                return `
+                <div class="review-item" id="review-${r.id}">
+                    <img src="${r.poster_avatar || 'https://via.placeholder.com/40'}" class="review-avatar">
+                    <div class="review-content">
+                        <div class="review-user-row">
+                            <span style="font-weight: 800; font-size:0.9rem;">${r.poster_username}</span>
+                            <div><span class="review-stars">${stars}</span>${deleteAction}</div>
                         </div>
+                        <p style="font-size:0.9rem; color:var(--text-muted);">${r.comment}</p>
                     </div>
-                    <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;">
-                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-                        <button type="submit" class="btn-primary" style="margin-left:10px;">Save Config</button>
-                    </div>
-                </form>
-            `;
-            openModal(id ? 'Edit Config' : 'Create New Config', html);
+                </div>`;
+            }).join('');
         }
 
-        function openContributorModal(id = null) {
-            document.querySelector('.modal-content').style.maxWidth = "500px";
-            let c = id ? activeDataStore.find(x => x.id === id) : {};
+        async function deleteReview(reviewId) {
+            const isConfirmed = await customConfirm("Are you sure you want to delete your review?", "Delete Review", "Delete", true);
+            if(!isConfirmed) return;
+
+            const { error } = await _supabase.from('reviews').delete().eq('id', reviewId);
+            if(!error) {
+                const el = document.getElementById(`review-${reviewId}`);
+                if(el) el.remove();
+            } else { await customAlert("Error deleting review.", "Error"); }
+        }
+
+        function closeReviews(e) {
+            if(e && e.target !== document.getElementById('reviewModal')) return;
+            document.getElementById('reviewModal').classList.remove('show');
+            activeConfigId = null;
+        }
+
+        document.querySelectorAll('.input-star').forEach(star => {
+            star.addEventListener('click', (e) => {
+                currentRatingInput = parseInt(e.target.getAttribute('data-val'));
+                document.querySelectorAll('.input-star').forEach(s => {
+                    const val = parseInt(s.getAttribute('data-val'));
+                    s.classList.toggle('active', val <= currentRatingInput);
+                });
+            });
+        });
+
+        async function submitReview() {
+            const input = document.getElementById('reviewTextInput');
+            const comment = input.value.trim();
             
-            const html = `
-                <form id="contributorForm" onsubmit="saveForm(event, 'contributors', ${id})">
-                    <div class="form-group"><label>Name</label><input type="text" name="name" class="form-control" value="${c.name||''}" required></div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Role Icon (FontAwesome)</label><input type="text" name="role_icon" class="form-control" value="${c.role_icon||'fas fa-crown'}"></div>
-                        <div class="form-group"><label>Icon Color (Hex)</label><input type="text" name="icon_color" class="form-control" value="${c.icon_color||'#ffffff'}"></div>
-                    </div>
-                    <div class="form-group"><label>Tags (Comma separated)</label><input type="text" name="tags" class="form-control" value="${(c.tags||[]).join(', ')}"></div>
-                    <div class="form-group"><label>Display Priority (Lower is first)</label><input type="number" name="priority" class="form-control" value="${c.priority||1}" required></div>
-                    
-                    <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;">
-                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-                        <button type="submit" class="btn-primary" style="margin-left:10px;">Save Contributor</button>
-                    </div>
-                </form>
-            `;
-            openModal(id ? 'Edit Contributor' : 'Create Contributor', html);
+            if(!currentUser) return await customAlert("You must be logged in to leave a review.", "Notice");
+            if(!comment || !activeConfigId) return;
+
+            input.disabled = true;
+            const { error } = await _supabase.from('reviews').insert({
+                config_id: activeConfigId,
+                poster_id: currentUser.discord_id,
+                poster_username: currentUser.username,
+                poster_avatar: currentUser.avatar_url,
+                rating: currentRatingInput,
+                comment: comment,
+                created_at: new Date().toISOString()
+            });
+
+            input.disabled = false;
+            if(!error) { input.value = ''; openReviews(activeConfigId); }
+            else { await customAlert("Failed to post review.", "Error"); }
+        }
+        
+        async function handleRequestSubmit(e) {
+            e.preventDefault();
+            await customAlert("Form submission acknowledged. Webhook routing needs to be added.", "Success");
         }
 
-        async function saveForm(e, table, id) {
-            e.preventDefault();
-            if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
 
-            const formData = new FormData(e.target);
-            const payload = Object.fromEntries(formData.entries());
-
-            if(payload.tags) payload.tags = payload.tags.split(',').map(t => t.trim());
-            if(id) payload.id = id;
-
-            const { error } = await _supabase.from(table).upsert(payload);
-            if(error) { await customAlert("Save Error: " + error.message, "Error"); }
-            else { closeModal(); refreshCurrentView(); }
+        async function handleLogoutClick() { 
+            if(await customConfirm("Are you sure you want to log out?", "Logout", "Log Out", true)) {
+                await _supabase.auth.signOut(); 
+            }
         }
     </script>
 </body>
