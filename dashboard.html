@@ -23,7 +23,14 @@
             --modal-bg: #161616; --modal-border: #1f1f1f;
         }
 
-        /* --- Ambient Background (Softened) --- */
+        /* --- Ambient Background & Dotted Texture --- */
+        body { 
+            background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; 
+            transition: background-color 0.3s; opacity: 0; overflow-x: hidden; 
+            background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 24px 24px;
+        }
+        body.ready { opacity: 1; transition: opacity 0.5s ease; }
+
         .bg-fx {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             pointer-events: none; z-index: -1; overflow: hidden; transition: opacity 0.5s ease;
@@ -55,9 +62,6 @@
         body:not(.dark-mode) ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
         body:not(.dark-mode) ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.5); }
         body:not(.dark-mode) * { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
-
-        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; transition: background-color 0.3s; opacity: 0; overflow-x: hidden; }
-        body.ready { opacity: 1; transition: opacity 0.5s ease; }
         
         nav { position: fixed; top: 0; width: 100%; padding: 1rem 5%; background: var(--bg-nav); backdrop-filter: blur(10px); z-index: 1000; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .brand-container { display: flex; align-items: center; gap: 0.8rem; }
@@ -76,9 +80,11 @@
         .dropdown-menu { position: absolute; top: 130%; right: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem; box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: none; min-width: 160px; flex-direction: column; z-index: 1000; }
         .dropdown-menu.show { display: flex; }
         .dropdown-item { padding: 10px 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 4px; transition: var(--transition); text-decoration: none; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-        .dropdown-item:hover { background: var(--tag-bg); color: #ed4245; }
+        .dropdown-item:hover { background: var(--tag-bg); }
         .dropdown-item.admin-btn:hover { color: #5865F2; }
         .dropdown-item.ambient-btn:hover { color: #f1c40f; }
+        .dropdown-item.logout-btn { color: var(--danger); }
+        .dropdown-item.logout-btn:hover { background: rgba(237, 66, 69, 0.1); color: var(--danger); }
 
         .theme-toggle { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); padding: 0; display: flex; align-items: center; transition: var(--transition); }
         
@@ -158,10 +164,12 @@
            MUSIC PLAYER & LIBRARY STYLES
            ========================================= */
         .music-ecosystem { position: fixed; bottom: 2rem; right: 2rem; z-index: 1500; display: flex; align-items: flex-end; gap: 1rem; }
+        
         .music-player { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; position: relative; }
         body.dark-mode .music-player { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .music-player.maximized { width: 340px; padding: 1.5rem; }
         .music-player.minimized { width: 320px; padding: 12px 15px; }
+        
         .cd-container { background: transparent; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
         .maximized .cd-container { width: 90px; height: 90px; margin-right: 15px; float: left; }
         .minimized .cd-container { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 12px; flex-shrink: 0; }
@@ -249,8 +257,8 @@
                     <img src="https://via.placeholder.com/32" id="navPfp" class="header-pfp" alt="PFP">
                     <div class="dropdown-menu" id="userDropdown">
                         <a href="admin.html" id="adminPanelOption" class="dropdown-item admin-btn" style="display:none;"><i class="fas fa-shield-alt"></i> Admin Panel</a>
+                        <div class="dropdown-item logout-btn" onclick="handleLogoutClick()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
                         <div class="dropdown-item ambient-btn" onclick="toggleAmbient()"><i class="fas fa-sparkles"></i> Ambient: <span id="ambientStateText">ON</span></div>
-                        <div class="dropdown-item" onclick="handleLogoutClick()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
                     </div>
                 </div>
             </div>
@@ -361,21 +369,62 @@
         let currentRatingInput = 5;
         let replyingToId = null;
 
-        // Custom Cursor Logic
+        // Custom Cursor Logic & Drag System variables
         const cursor = document.getElementById('smooth-cursor');
         let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
         let tgX = curX, tgY = curY;
-        window.addEventListener('mousemove', (e) => { tgX = e.clientX; tgY = e.clientY; });
+        
+        const dragEco = document.getElementById('music-ecosystem');
+        const musicPlayer = document.getElementById('music-player');
+        let isDraggingEco = false;
+        let ecoX = 0, ecoY = 0, tgEcoX = 0, tgEcoY = 0;
+        let ecoStartX = 0, ecoStartY = 0, mouseStartX = 0, mouseStartY = 0;
+
+        window.addEventListener('mousemove', (e) => { 
+            tgX = e.clientX; tgY = e.clientY; 
+            if (isDraggingEco) {
+                tgEcoX = ecoStartX + (e.clientX - mouseStartX);
+                tgEcoY = ecoStartY + (e.clientY - mouseStartY);
+            }
+        });
+
+        if (musicPlayer) {
+            musicPlayer.style.cursor = 'grab';
+            musicPlayer.addEventListener('mousedown', (e) => {
+                if(e.target.closest('button') || e.target.closest('.progress-container') || e.target.tagName.toLowerCase() === 'img') return;
+                isDraggingEco = true;
+                mouseStartX = e.clientX; mouseStartY = e.clientY;
+                ecoStartX = tgEcoX; ecoStartY = tgEcoY;
+                musicPlayer.style.cursor = 'grabbing';
+                document.body.style.userSelect = 'none';
+            });
+        }
+
+        window.addEventListener('mouseup', () => {
+            if (isDraggingEco) {
+                isDraggingEco = false;
+                if (musicPlayer) musicPlayer.style.cursor = 'grab';
+                document.body.style.userSelect = '';
+            }
+        });
+
         function animateCursor() {
             curX += (tgX - curX) * 0.15;
             curY += (tgY - curY) * 0.15;
             cursor.style.left = curX + 'px';
             cursor.style.top = curY + 'px';
+            
+            // Drag Ecosystem interpolation
+            ecoX += (tgEcoX - ecoX) * 0.15;
+            ecoY += (tgEcoY - ecoY) * 0.15;
+            if (dragEco) dragEco.style.transform = `translate(${ecoX}px, ${ecoY}px)`;
+
             requestAnimationFrame(animateCursor);
         }
         animateCursor();
+
         function initCursorHovers() {
-            document.querySelectorAll('a, button, .lib-item, .item-card, .profile-trigger, .nav-btn, .config-card, .review-trigger-btn, .input-star, .lib-close, .control-btn, .util-btn').forEach(el => {
+            document.querySelectorAll('a, button, .lib-item, .item-card, .profile-trigger, .nav-btn, .config-card, .review-trigger-btn, .input-star, .lib-close, .control-btn, .util-btn, .dropdown-item').forEach(el => {
                 el.addEventListener('mouseenter', () => cursor.style.transform = 'translate(-50%, -50%) scale(1.5)');
                 el.addEventListener('mouseleave', () => cursor.style.transform = 'translate(-50%, -50%) scale(1)');
             });
@@ -599,7 +648,7 @@
             document.getElementById('config-container').innerHTML = configs.map(c => `
                 <div class="config-card">
                     <div>
-                        <div class="card-head"><i class="fas fa-snowflake" style="color: var(--text-muted);"></i> ${c.title} | ${c.ping_tier || 'N/A'} PING</div>
+                        <div class="card-head">${c.title} | ${c.ping_tier || 'N/A'} PING</div>
                         <div class="card-divider"></div>
                         <div style="margin-bottom: 1.2rem;">
                             <div class="section-label">🎯 PREDICTION</div>
