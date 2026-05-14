@@ -8,30 +8,29 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --accent: #5865F2; --danger: #ed4245; }
         body {
             background-color: #0a0a0a; color: #ffffff;
             font-family: 'Source Sans Pro', sans-serif;
             height: 100vh; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             overflow: hidden; text-align: center; padding: 2rem;
-            opacity: 0; transition: opacity 0.5s ease; /* Hide until auth check clears */
+            opacity: 0; transition: opacity 0.5s ease;
         }
         body.ready { opacity: 1; }
 
-        .container { max-width: 1200px; animation: fadeIn 1s ease-out; }
+        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
+        .bg-fx::before, .bg-fx::after { content: ''; position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.12; animation: floatBg 25s infinite alternate ease-in-out; }
+        .bg-fx::before { width: 50vw; height: 50vw; background: var(--accent); top: -20vh; left: -10vw; }
+        .bg-fx::after { width: 40vw; height: 40vw; background: var(--danger); bottom: -10vh; right: -5vw; animation-delay: -12s; }
+        @keyframes floatBg { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(8vw, 8vh) scale(1.15); } }
 
-        h1 {
-            font-size: clamp(4rem, 10vw, 8rem); font-weight: 900;
-            text-transform: uppercase; letter-spacing: -2px;
-            line-height: 1.1; margin-bottom: 1.5rem;
-        }
+        #smooth-cursor { position: fixed; width: 20px; height: 20px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s, background 0.2s; }
 
-        /* Thinner, cleaner Blinking Caret Animation */
-        .caret {
-            display: inline-block; width: 4px; height: 0.9em;
-            background-color: #ffffff; vertical-align: baseline;
-            animation: blink 1s step-end infinite; margin-left: 4px;
-        }
+        .container { max-width: 1200px; animation: fadeIn 1s ease-out; position: relative; z-index: 10; }
+
+        h1 { font-size: clamp(4rem, 10vw, 8rem); font-weight: 900; text-transform: uppercase; letter-spacing: -2px; line-height: 1.1; margin-bottom: 1.5rem; }
+        .caret { display: inline-block; width: 4px; height: 0.9em; background-color: #ffffff; vertical-align: baseline; animation: blink 1s step-end infinite; margin-left: 4px; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
         .divider { height: 4px; width: 80px; background-color: #ffffff; margin: 0 auto 2rem auto; }
@@ -40,27 +39,35 @@
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.04"/%3E%3C/svg%3E');
-            pointer-events: none; z-index: 10;
+            pointer-events: none; z-index: 1;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
         .admin-bypass { margin-top: 3rem; padding: 10px 20px; background: transparent; border: 1px solid #5865F2; color: #5865F2; text-decoration: none; font-weight: 700; border-radius: 4px; display: none; transition: 0.3s; }
         .admin-bypass:hover { background: #5865F2; color: #fff; }
     </style>
 </head>
 <body>
+    <div class="bg-fx"></div>
+    <div id="smooth-cursor"></div>
 
     <div class="container">
         <h1>Getting<br>Back Soon<span class="caret"></span></h1>
         <div class="divider"></div>
         <p>System Maintenance in Progress</p>
-        
         <a href="admin.html" id="adminBtn" class="admin-bypass">Return to Admin Panel</a>
     </div>
 
     <script>
         const _supabase = supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE');
+
+        const cursor = document.getElementById('smooth-cursor');
+        let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
+        let tgX = curX, tgY = curY;
+        window.addEventListener('mousemove', (e) => { tgX = e.clientX; tgY = e.clientY; });
+        function animateCursor() { curX += (tgX - curX) * 0.15; curY += (tgY - curY) * 0.15; cursor.style.left = curX + 'px'; cursor.style.top = curY + 'px'; requestAnimationFrame(animateCursor); }
+        animateCursor();
+        document.querySelectorAll('a, button').forEach(el => { el.addEventListener('mouseenter', () => cursor.style.transform = 'translate(-50%, -50%) scale(1.5)'); el.addEventListener('mouseleave', () => cursor.style.transform = 'translate(-50%, -50%) scale(1)'); });
 
         async function verifyMaintenanceAccess() {
             try {
@@ -73,32 +80,14 @@
                 if (session) {
                     const { data: profile } = await _supabase.from('users').select('rank, isBlacklisted').eq('id', session.user.id).single();
                     isAdmin = profile?.rank === 'admin';
-                    
-                    // Blacklisted users stay trapped here or get logged out
-                    if (profile?.isBlacklisted === 'true') {
-                        document.body.classList.add('ready');
-                        return;
-                    }
+                    if (profile?.isBlacklisted === 'true') { document.body.classList.add('ready'); return; }
                 }
 
-                // If Maintenance is OFF, normal users shouldn't be here. Bounce them back.
-                if (!isMaintenance && !isAdmin) {
-                    window.location.href = 'dashboard.html';
-                    return;
-                }
-
-                // If Admin, show bypass button
-                if (isAdmin) {
-                    document.getElementById('adminBtn').style.display = 'inline-block';
-                }
-
+                if (!isMaintenance && !isAdmin) { window.location.href = 'dashboard.html'; return; }
+                if (isAdmin) { document.getElementById('adminBtn').style.display = 'inline-block'; }
                 document.body.classList.add('ready');
-            } catch (err) {
-                console.error("State verification failed.", err);
-                document.body.classList.add('ready'); // Fail safely to show maintenance screen
-            }
+            } catch (err) { document.body.classList.add('ready'); }
         }
-
         verifyMaintenanceAccess();
     </script>
 </body>
