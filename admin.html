@@ -139,9 +139,13 @@
         
         .custom-dialog-box { background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); white-space: pre-wrap;}
         .modal-overlay.show .custom-dialog-box { transform: translateY(0); }
-        .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; }
+        .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; color: var(--text); }
         .custom-dialog-box p { color: var(--text-dim); margin-bottom: 2rem; font-size: 1rem; line-height: 1.5; }
         .dialog-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-modal-primary { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-modal-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-modal-danger { background: var(--danger); color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-modal-primary:hover, .btn-modal-secondary:hover, .btn-modal-danger:hover { transform: scale(1.05); }
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
@@ -154,15 +158,30 @@
         /* =========================================
            MUSIC PLAYER & LIBRARY STYLES (ADMIN)
            ========================================= */
-        .music-ecosystem { position: fixed; bottom: 2rem; right: 2rem; z-index: 1500; display: flex; align-items: flex-end; gap: 1rem; }
-        .music-player { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; position: relative; }
+        .music-ecosystem { 
+            position: fixed; bottom: 2rem; right: 2rem; z-index: 1500; 
+            display: flex; align-items: flex-end; gap: 1rem; 
+            transform-origin: bottom right; 
+        }
+        
+        .music-player { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), padding 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; position: relative; }
         .music-player.maximized { width: 340px; padding: 1.5rem; }
         .music-player.minimized { width: 320px; padding: 12px 15px; }
+
+        .eco-resizer {
+            position: absolute; top: 0; left: 0; width: 30px; height: 30px;
+            cursor: nwse-resize; z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            color: var(--text-dim); border-bottom-right-radius: 8px;
+            opacity: 0; transition: opacity 0.2s, background 0.2s, color 0.2s;
+        }
+        .music-player:hover .eco-resizer { opacity: 0.4; }
+        .eco-resizer:hover { opacity: 1 !important; color: var(--accent); background: rgba(128, 128, 128, 0.1); }
+
         .cd-container { background: transparent; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
         .maximized .cd-container { width: 90px; height: 90px; margin-right: 15px; float: left; }
         .minimized .cd-container { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 12px; flex-shrink: 0; }
         
-        /* Render Fix */
         .vinyl-record { width: 80%; height: 80%; border-radius: 50%; border: 2px solid var(--text); animation: spin 3s linear infinite; animation-play-state: paused; object-fit: cover; background: var(--bg-body); }
         .minimized .vinyl-record { width: 100%; height: 100%; border: none; }
         .vinyl-record.playing { animation-play-state: running; }
@@ -287,6 +306,7 @@
     <div id="music-ecosystem" class="music-ecosystem">
         <audio id="global-audio" preload="metadata"></audio>
         <div id="music-player" class="music-player minimized">
+            <div id="eco-resizer" class="eco-resizer"><i class="fas fa-arrows-alt-v" style="transform: rotate(-45deg);"></i></div>
             <div class="util-controls">
                 <button class="util-btn lib-btn" onclick="toggleLibrary()" title="Open Library"><i class="fas fa-list-ul"></i></button>
                 <button class="util-btn" onclick="togglePlayerSize()" id="resize-btn" title="Maximize"><i class="fas fa-expand-arrows-alt"></i></button>
@@ -330,6 +350,18 @@
         let currentUser = null;
         let activeDataStore = []; 
 
+        // --- XSS SANITIZER ---
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.toString().replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag));
+        }
+
         // Custom Cursor Logic & Drag System variables
         const cursor = document.getElementById('smooth-cursor');
         let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
@@ -337,22 +369,30 @@
         
         const dragEco = document.getElementById('music-ecosystem');
         const musicPlayer = document.getElementById('music-player');
+        const ecoResizer = document.getElementById('eco-resizer');
+        
         let isDraggingEco = false;
+        let isResizingEco = false;
         let ecoX = 0, ecoY = 0, tgEcoX = 0, tgEcoY = 0;
+        let ecoScale = 1, tgEcoScale = 1, startScale = 1;
         let ecoStartX = 0, ecoStartY = 0, mouseStartX = 0, mouseStartY = 0;
 
-        window.addEventListener('mousemove', (e) => { 
-            tgX = e.clientX; tgY = e.clientY; 
-            if (isDraggingEco) {
-                tgEcoX = ecoStartX + (e.clientX - mouseStartX);
-                tgEcoY = ecoStartY + (e.clientY - mouseStartY);
-            }
-        });
+        if (ecoResizer) {
+            ecoResizer.addEventListener('mousedown', (e) => {
+                e.stopPropagation(); 
+                isResizingEco = true;
+                mouseStartX = e.clientX;
+                mouseStartY = e.clientY;
+                startScale = tgEcoScale;
+                document.body.style.cursor = 'nwse-resize';
+                document.body.style.userSelect = 'none';
+            });
+        }
 
         if (musicPlayer) {
             musicPlayer.style.cursor = 'grab';
             musicPlayer.addEventListener('mousedown', (e) => {
-                if(e.target.closest('button') || e.target.closest('.progress-container') || e.target.tagName.toLowerCase() === 'img') return;
+                if(e.target.closest('button') || e.target.closest('.progress-container') || e.target.tagName.toLowerCase() === 'img' || e.target.closest('.eco-resizer')) return;
                 isDraggingEco = true;
                 mouseStartX = e.clientX; mouseStartY = e.clientY;
                 ecoStartX = tgEcoX; ecoStartY = tgEcoY;
@@ -361,10 +401,29 @@
             });
         }
 
+        window.addEventListener('mousemove', (e) => { 
+            tgX = e.clientX; tgY = e.clientY; 
+            if (isDraggingEco) {
+                tgEcoX = ecoStartX + (e.clientX - mouseStartX);
+                tgEcoY = ecoStartY + (e.clientY - mouseStartY);
+            }
+            if (isResizingEco) {
+                const dx = mouseStartX - e.clientX;
+                const dy = mouseStartY - e.clientY;
+                const delta = dx + dy;
+                tgEcoScale = Math.max(0.5, Math.min(2.5, startScale + (delta * 0.003)));
+            }
+        });
+
         window.addEventListener('mouseup', () => {
             if (isDraggingEco) {
                 isDraggingEco = false;
                 if (musicPlayer) musicPlayer.style.cursor = 'grab';
+                document.body.style.userSelect = '';
+            }
+            if (isResizingEco) {
+                isResizingEco = false;
+                document.body.style.cursor = '';
                 document.body.style.userSelect = '';
             }
         });
@@ -378,7 +437,8 @@
             // Drag Ecosystem interpolation
             ecoX += (tgEcoX - ecoX) * 0.15;
             ecoY += (tgEcoY - ecoY) * 0.15;
-            if (dragEco) dragEco.style.transform = `translate(${ecoX}px, ${ecoY}px)`;
+            ecoScale += (tgEcoScale - ecoScale) * 0.15;
+            if (dragEco) dragEco.style.transform = `translate(${ecoX}px, ${ecoY}px) scale(${ecoScale})`;
 
             requestAnimationFrame(animateCursor);
         }
@@ -477,8 +537,8 @@
                 if (profile?.rank !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
                 currentUser = { id: user.id, discord_id: discordId, username: meta.full_name || meta.name || 'User', avatar_url: meta.avatar_url, rank: profile?.rank || 'user' };
-                document.getElementById('adminName').innerText = currentUser.username;
-                document.getElementById('adminPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
+                document.getElementById('adminName').innerText = escapeHTML(currentUser.username);
+                document.getElementById('adminPfp').src = escapeHTML(currentUser.avatar_url) || 'https://via.placeholder.com/32';
                 document.getElementById('security-guard').style.display = 'none';
 
                 if (localStorage.getItem('ambient') === 'off') {
@@ -525,7 +585,7 @@
                     case 'db': html = await renderDB(); break;
                     case 'settings': html = await renderSettings(); break;
                 }
-            } catch (err) { html = `<p style="color:var(--danger)">Error loading module: ${err.message}</p>`; }
+            } catch (err) { html = `<p style="color:var(--danger)">Error loading module: ${escapeHTML(err.message)}</p>`; }
             container.innerHTML = html;
         }
 
@@ -538,7 +598,7 @@
                 _supabase.from('contributors').select('id', { count: 'exact', head: true })
             ]);
             return `
-                <div class="stat-banner"><h2>${greeting}, ${currentUser.username}</h2><p style="color:var(--text-dim); font-size:1.1rem;">Welcome to the KrazyKonfigs Administration Dashboard.</p></div>
+                <div class="stat-banner"><h2>${greeting}, ${escapeHTML(currentUser.username)}</h2><p style="color:var(--text-dim); font-size:1.1rem;">Welcome to the KrazyKonfigs Administration Dashboard.</p></div>
                 <div class="config-grid">
                     <div class="item-card" style="align-items:center; text-align:center;"><i class="fas fa-users" style="font-size:2rem; color:var(--accent); margin-bottom:10px;"></i><h3>Total Users</h3><h2 style="font-size:2.5rem; font-weight:900;">${usersRes.count || 0}</h2></div>
                     <div class="item-card" style="align-items:center; text-align:center;"><i class="fas fa-file-code" style="font-size:2rem; color:var(--success); margin-bottom:10px;"></i><h3>Total Configs</h3><h2 style="font-size:2.5rem; font-weight:900;">${configsRes.count || 0}</h2></div>
@@ -553,7 +613,7 @@
                 <div class="page-header"><h1>Users Overview</h1></div>
                 <div class="table-viewer-wrap"><table class="data-table">
                     <thead><tr><th>Username</th><th>Discord ID</th><th>Rank</th><th>Blacklisted</th><th>Last Login</th></tr></thead>
-                    <tbody>${data.map(u => `<tr><td style="font-weight:700;">${u.username || 'Unknown'}</td><td style="font-size:0.8rem; color:var(--text-dim);">${u.discord_id || '-'}</td><td style="color:${u.rank === 'admin' ? 'var(--accent)' : 'inherit'}; font-weight:${u.rank==='admin'?'900':'normal'}">${u.rank || 'user'}</td><td>${u.isBlacklisted === 'true' ? '<span style="color:var(--danger);font-weight:bold;">True</span>' : 'False'}</td><td>${new Date(u.last_login).toLocaleDateString() || '-'}</td></tr>`).join('')}</tbody>
+                    <tbody>${data.map(u => `<tr><td style="font-weight:700;">${escapeHTML(u.username) || 'Unknown'}</td><td style="font-size:0.8rem; color:var(--text-dim);">${escapeHTML(u.discord_id) || '-'}</td><td style="color:${u.rank === 'admin' ? 'var(--accent)' : 'inherit'}; font-weight:${u.rank==='admin'?'900':'normal'}">${escapeHTML(u.rank) || 'user'}</td><td>${u.isBlacklisted === 'true' ? '<span style="color:var(--danger);font-weight:bold;">True</span>' : 'False'}</td><td>${escapeHTML(new Date(u.last_login).toLocaleDateString()) || '-'}</td></tr>`).join('')}</tbody>
                 </table></div>`;
         }
 
@@ -564,7 +624,7 @@
                 <div class="page-header"><h1>Rank Management</h1></div>
                 <div class="table-viewer-wrap"><table class="data-table">
                     <thead><tr><th>Username</th><th>Current Rank</th><th>Action</th></tr></thead>
-                    <tbody>${(data||[]).map(u => `<tr><td>${u.username || 'Unknown'}</td><td><span class="data-val">${u.rank || 'user'}</span></td><td><select class="status-select" onchange="updateDB('users', '${u.id}', 'rank', this.value)"><option value=\"user\" ${u.rank!=='admin'?'selected':''}>User</option><option value=\"admin\" ${u.rank==='admin'?'selected':''}>Admin</option></select></td></tr>`).join('')}</tbody>
+                    <tbody>${(data||[]).map(u => `<tr><td>${escapeHTML(u.username) || 'Unknown'}</td><td><span class="data-val">${escapeHTML(u.rank) || 'user'}</span></td><td><select class="status-select" onchange="updateDB('users', '${u.id}', 'rank', this.value)"><option value=\"user\" ${u.rank!=='admin'?'selected':''}>User</option><option value=\"admin\" ${u.rank==='admin'?'selected':''}>Admin</option></select></td></tr>`).join('')}</tbody>
                 </table></div>`;
         }
 
@@ -574,12 +634,11 @@
                 <div class="page-header"><h1>Account Blacklisting</h1></div>
                 <div class="table-viewer-wrap"><table class="data-table">
                     <thead><tr><th>Username</th><th>Status</th><th>Toggle Blacklist</th></tr></thead>
-                    <tbody>${(data||[]).map(u => `<tr><td>${u.username || 'Unknown'}</td><td id="bl-status-${u.id}">${u.isBlacklisted === 'true' ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active'}</td><td><label class="toggle-switch"><input type="checkbox" ${u.isBlacklisted === 'true' ? 'checked' : ''} onchange="updateBlacklist('${u.id}', this.checked)"><span class="slider"></span></label></td></tr>`).join('')}</tbody>
+                    <tbody>${(data||[]).map(u => `<tr><td>${escapeHTML(u.username) || 'Unknown'}</td><td id="bl-status-${u.id}">${u.isBlacklisted === 'true' ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active'}</td><td><label class="toggle-switch"><input type="checkbox" ${u.isBlacklisted === 'true' ? 'checked' : ''} onchange="updateBlacklist('${u.id}', this.checked)"><span class="slider"></span></label></td></tr>`).join('')}</tbody>
                 </table></div>`;
         }
 
         async function renderConfigs(isArchivedStr) {
-            // UPDATED: Now sorts by priority ascending
             const { data } = await _supabase.from('configs').select('*').eq('is_archived', isArchivedStr).order('priority', {ascending: true});
             activeDataStore = data || []; const title = isArchivedStr === 'true' ? 'Draft & Archive' : 'Config Editor';
             return `
@@ -589,9 +648,9 @@
                         const actionLabel = c.is_archived === 'true' ? 'Publish' : 'Archive'; const toggleArchive = c.is_archived === 'true' ? 'false' : 'true';
                         return `
                         <div class="item-card">
-                            <h3>${c.title} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">ID: ${c.id} | Pri: ${c.priority || 1}</span></h3>
-                            <div class="card-section"><h4>Prediction</h4><div class="data-row"><span class="data-label">Sim Timer:</span> <span class="data-val">${c.sim_timer || '-'}</span></div><div class="data-row"><span class="data-label">Pred Int:</span> <span class="data-val">${c.pred_interval || '-'}</span></div></div>
-                            <div class="card-section"><h4>Multiplier</h4><div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">${c.vertical || '-'}</span></div><div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">${c.horizontal || '-'}</span></div></div>
+                            <h3>${escapeHTML(c.title)} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">Pri: ${escapeHTML(c.priority) || 1}</span></h3>
+                            <div class="card-section"><h4>Prediction</h4><div class="data-row"><span class="data-label">Sim Timer:</span> <span class="data-val">${escapeHTML(c.sim_timer) || '-'}</span></div><div class="data-row"><span class="data-label">Pred Int:</span> <span class="data-val">${escapeHTML(c.pred_interval) || '-'}</span></div></div>
+                            <div class="card-section"><h4>Multiplier</h4><div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">${escapeHTML(c.vertical) || '-'}</span></div><div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">${escapeHTML(c.horizontal) || '-'}</span></div></div>
                             <div class="card-actions" style="justify-content:flex-end;">
                                 <button class="btn-secondary" onclick="openConfigModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
                                 <button class="btn-secondary" onclick="verifyAndExecute('archive', 'configs', ${c.id}, '${toggleArchive}')">${actionLabel}</button>
@@ -609,7 +668,7 @@
                 <div class="page-header"><h1>Global Reviews DB</h1></div>
                 <div class="table-viewer-wrap"><table class="data-table">
                     <thead><tr><th>ID</th><th>Reply To</th><th>Config ID</th><th>User</th><th>Comment</th><th>Stars</th><th>Action</th></tr></thead>
-                    <tbody>${(data||[]).map(r => `<tr><td style="color:var(--text-dim);">${r.id}</td><td style="color:var(--accent); font-weight:bold;">${r.replying_to_id ? `#${r.replying_to_id}` : '-'}</td><td style="font-weight:bold;">${r.config_id}</td><td>${r.poster_username}</td><td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.comment}</td><td style="color:#f1c40f;">${r.rating||'-'} <i class="fas fa-star"></i></td><td><button class="delete-btn" onclick="verifyAndExecute('delete', 'reviews', ${r.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody>
+                    <tbody>${(data||[]).map(r => `<tr><td style="color:var(--text-dim);">${r.id}</td><td style="color:var(--accent); font-weight:bold;">${r.replying_to_id ? `#${r.replying_to_id}` : '-'}</td><td style="font-weight:bold;">${r.config_id}</td><td>${escapeHTML(r.poster_username)}</td><td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(r.comment)}</td><td style="color:#f1c40f;">${r.rating||'-'} <i class="fas fa-star"></i></td><td><button class="delete-btn" onclick="verifyAndExecute('delete', 'reviews', ${r.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody>
                 </table></div>`;
         }
 
@@ -629,10 +688,10 @@
                 <div class="config-grid">
                     ${activeDataStore.map(c => `
                         <div class="item-card">
-                            <h3>${c.name} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">ID: ${c.id}</span></h3>
-                            <div class="data-row"><span class="data-label">Role Icon:</span> <span class="data-val"><i class="${c.role_icon}" style="color:${c.icon_color}"></i> ${c.role_icon}</span></div>
-                            <div class="data-row"><span class="data-label">Tags:</span> <span class="data-val" style="font-size:0.8rem;">${(c.tags||[]).join(', ')}</span></div>
-                            <div class="data-row"><span class="data-label">Priority:</span> <span class="data-val" style="color:var(--accent);">${c.priority || 0}</span></div>
+                            <h3>${escapeHTML(c.name)}</h3>
+                            <div class="data-row"><span class="data-label">Role Icon:</span> <span class="data-val"><i class="${escapeHTML(c.role_icon)}" style="color:${escapeHTML(c.icon_color)}"></i> ${escapeHTML(c.role_icon)}</span></div>
+                            <div class="data-row"><span class="data-label">Tags:</span> <span class="data-val" style="font-size:0.8rem;">${escapeHTML((c.tags||[]).join(', '))}</span></div>
+                            <div class="data-row"><span class="data-label">Priority:</span> <span class="data-val" style="color:var(--accent);">${escapeHTML(c.priority) || 0}</span></div>
                             <div class="card-actions" style="justify-content:flex-end; margin-top:1.5rem;">
                                 <button class="btn-secondary" onclick="openContributorModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
                                 <button class="btn-danger" title="Delete" onclick="verifyAndExecute('delete', 'contributors', ${c.id})"><i class="fas fa-trash"></i></button>
@@ -666,7 +725,7 @@
         // --- Secured Database Action Functions ---
         async function updateDB(table, id, column, value, reload = false) {
             try { const { error } = await _supabase.from(table).update({ [column]: value }).eq('id', id); if (error) throw error; if(reload) refreshCurrentView(); } 
-            catch (err) { await customAlert("Error updating data: " + err.message, "Error"); }
+            catch (err) { await customAlert("Error updating data: " + escapeHTML(err.message), "Error"); }
         }
 
         async function updateBlacklist(id, isChecked) {
@@ -677,10 +736,10 @@
         }
 
         async function deleteRecord(table, id) {
-            const isConfirmed = await customConfirm(`Are you sure you want to permanently delete this record from ${table}?`, "Delete Record", "Delete", true);
+            const isConfirmed = await customConfirm(`Are you sure you want to permanently delete this record from ${escapeHTML(table)}?`, "Delete Record", "Delete", true);
             if(!isConfirmed) return;
             const { error } = await _supabase.from(table).delete().eq('id', id);
-            if(!error) refreshCurrentView(); else await customAlert("Error: " + error.message, "Delete Failed");
+            if(!error) refreshCurrentView(); else await customAlert("Error: " + escapeHTML(error.message), "Delete Failed");
         }
 
         async function toggleMaintenanceMode(isChecked) {
@@ -701,7 +760,7 @@
             const { data, error } = await _supabase.from(tableName).select('*').limit(20);
             if(error || !data || data.length === 0) return customAlert("No data to show or access denied.", "Notice");
             const keys = Object.keys(data[0]);
-            openModal(`Viewing ${tableName}`, `<div class="table-viewer-wrap" style="max-height: 60vh;"><table class="data-table" style="min-width: 800px;"><thead><tr>${keys.map(k => `<th>${k}</th>`).join('')}</tr></thead><tbody>${data.map(row => `<tr>${keys.map(k => `<td>${row[k] === null ? 'null' : String(row[k]).substring(0,30)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);
+            openModal(`Viewing ${escapeHTML(tableName)}`, `<div class="table-viewer-wrap" style="max-height: 60vh;"><table class="data-table" style="min-width: 800px;"><thead><tr>${keys.map(k => `<th>${escapeHTML(k)}</th>`).join('')}</tr></thead><tbody>${data.map(row => `<tr>${keys.map(k => `<td>${row[k] === null ? 'null' : escapeHTML(String(row[k]).substring(0,30))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);
             document.querySelector('.modal-content').style.maxWidth = "90%";
         }
 
@@ -711,17 +770,17 @@
             openModal(id ? 'Edit Config' : 'Create New Config', `
                 <form id="configForm" onsubmit="saveForm(event, 'configs', ${id})">
                     <div class="form-grid">
-                        <div class="form-group full"><label>Title</label><input type="text" name="title" class="form-control" value="${c.title||''}" required></div>
-                        <div class="form-group"><label>Ping Tier</label><input type="text" name="ping_tier" class="form-control" value="${c.ping_tier||'Mid'}"></div>
-                        <div class="form-group"><label>Creator</label><input type="text" name="creator" class="form-control" value="${c.creator||'Kriz'}"></div>
-                        <div class="form-group"><label>Sim Timer</label><input type="number" name="sim_timer" class="form-control" value="${c.sim_timer||123}"></div>
-                        <div class="form-group"><label>Pred Interval</label><input type="text" name="pred_interval" class="form-control" value="${c.pred_interval||''}"></div>
-                        <div class="form-group"><label>Vertical Multiplier</label><input type="number" name="vertical" class="form-control" value="${c.vertical||155}"></div>
-                        <div class="form-group"><label>Horizontal Multiplier</label><input type="number" name="horizontal" class="form-control" value="${c.horizontal||165}"></div>
-                        <div class="form-group"><label>Offsets (X/Y/Z)</label><input type="text" name="offsets" class="form-control" value="${c.offsets||'0 / 0 / 0'}"></div>
-                        <div class="form-group"><label>Support Range</label><input type="text" name="support_range" class="form-control" value="${c.support_range||'10-20ms'}"></div>
-                        <div class="form-group"><label>Hit Rate</label><input type="text" name="hit_rate" class="form-control" value="${c.hit_rate||'85%'}"></div>
-                        <div class="form-group full"><label>Priority (Lower = Higher)</label><input type="number" name="priority" class="form-control" value="${c.priority||1}" required></div>
+                        <div class="form-group full"><label>Title</label><input type="text" name="title" class="form-control" value="${escapeHTML(c.title||'')}" required></div>
+                        <div class="form-group"><label>Ping Tier</label><input type="text" name="ping_tier" class="form-control" value="${escapeHTML(c.ping_tier||'Mid')}"></div>
+                        <div class="form-group"><label>Creator</label><input type="text" name="creator" class="form-control" value="${escapeHTML(c.creator||'Kriz')}"></div>
+                        <div class="form-group"><label>Sim Timer</label><input type="number" name="sim_timer" class="form-control" value="${escapeHTML(c.sim_timer||123)}"></div>
+                        <div class="form-group"><label>Pred Interval</label><input type="text" name="pred_interval" class="form-control" value="${escapeHTML(c.pred_interval||'')}"></div>
+                        <div class="form-group"><label>Vertical Multiplier</label><input type="number" name="vertical" class="form-control" value="${escapeHTML(c.vertical||155)}"></div>
+                        <div class="form-group"><label>Horizontal Multiplier</label><input type="number" name="horizontal" class="form-control" value="${escapeHTML(c.horizontal||165)}"></div>
+                        <div class="form-group"><label>Offsets (X/Y/Z)</label><input type="text" name="offsets" class="form-control" value="${escapeHTML(c.offsets||'0 / 0 / 0')}"></div>
+                        <div class="form-group"><label>Support Range</label><input type="text" name="support_range" class="form-control" value="${escapeHTML(c.support_range||'10-20ms')}"></div>
+                        <div class="form-group"><label>Hit Rate</label><input type="text" name="hit_rate" class="form-control" value="${escapeHTML(c.hit_rate||'85%')}"></div>
+                        <div class="form-group full"><label>Priority (Lower = Higher)</label><input type="number" name="priority" class="form-control" value="${escapeHTML(c.priority||1)}" required></div>
                         <div class="form-group full"><label>Is Archived (Draft)</label><select name="is_archived" class="form-control"><option value="false" ${c.is_archived==='false'?'selected':''}>False (Published)</option><option value="true" ${c.is_archived==='true'?'selected':''}>True (Archived/Draft)</option></select></div>
                     </div>
                     <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;"><button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button><button type="submit" class="btn-primary" style="margin-left:10px;">Save Config</button></div>
@@ -733,10 +792,10 @@
             let c = id ? activeDataStore.find(x => x.id === id) : {};
             openModal(id ? 'Edit Contributor' : 'Create Contributor', `
                 <form id="contributorForm" onsubmit="saveForm(event, 'contributors', ${id})">
-                    <div class="form-group"><label>Name</label><input type="text" name="name" class="form-control" value="${c.name||''}" required></div>
-                    <div class="form-grid"><div class="form-group"><label>Role Icon (FontAwesome)</label><input type="text" name="role_icon" class="form-control" value="${c.role_icon||'fas fa-crown'}"></div><div class="form-group"><label>Icon Color (Hex)</label><input type="text" name="icon_color" class="form-control" value="${c.icon_color||'#ffffff'}"></div></div>
-                    <div class="form-group"><label>Tags (Comma separated)</label><input type="text" name="tags" class="form-control" value="${(c.tags||[]).join(', ')}"></div>
-                    <div class="form-group"><label>Display Priority (Lower is first)</label><input type="number" name="priority" class="form-control" value="${c.priority||1}" required></div>
+                    <div class="form-group"><label>Name</label><input type="text" name="name" class="form-control" value="${escapeHTML(c.name||'')}" required></div>
+                    <div class="form-grid"><div class="form-group"><label>Role Icon (FontAwesome)</label><input type="text" name="role_icon" class="form-control" value="${escapeHTML(c.role_icon||'fas fa-crown')}"></div><div class="form-group"><label>Icon Color (Hex)</label><input type="text" name="icon_color" class="form-control" value="${escapeHTML(c.icon_color||'#ffffff')}"></div></div>
+                    <div class="form-group"><label>Tags (Comma separated)</label><input type="text" name="tags" class="form-control" value="${escapeHTML((c.tags||[]).join(', '))}"></div>
+                    <div class="form-group"><label>Display Priority (Lower is first)</label><input type="number" name="priority" class="form-control" value="${escapeHTML(c.priority||1)}" required></div>
                     <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;"><button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button><button type="submit" class="btn-primary" style="margin-left:10px;">Save Contributor</button></div>
                 </form>`);
         }
@@ -748,7 +807,7 @@
             if(payload.tags) payload.tags = payload.tags.split(',').map(t => t.trim());
             if(id) payload.id = id;
             const { error } = await _supabase.from(table).upsert(payload);
-            if(error) { await customAlert("Save Error: " + error.message, "Error"); } else { closeModal(); refreshCurrentView(); }
+            if(error) { await customAlert("Save Error: " + escapeHTML(error.message), "Error"); } else { closeModal(); refreshCurrentView(); }
         }
 
         // ==========================================
@@ -787,10 +846,10 @@
             currentTrackIndex = index; const track = playlist[index];
             const audioPath = track.src.startsWith('/') ? '.' + track.src : track.src;
             const coverPath = track.cover ? (track.cover.startsWith('/') ? '.' + track.cover : track.cover) : '/assets/images/logo.png';
-            audioEngine.src = audioPath;
-            document.getElementById('player-category').innerText = track.category;
-            document.getElementById('player-title').innerText = track.title;
-            document.getElementById('vinyl-spin').src = coverPath;
+            audioEngine.src = escapeHTML(audioPath);
+            document.getElementById('player-category').innerText = escapeHTML(track.category);
+            document.getElementById('player-title').innerText = escapeHTML(track.title);
+            document.getElementById('vinyl-spin').src = escapeHTML(coverPath);
             updateLibraryHighlight();
         }
         function togglePlay() {
@@ -815,7 +874,7 @@
         function buildLibraryUI() {
             document.getElementById('library-list').innerHTML = playlist.map((track, i) => {
                 const coverPath = track.cover ? (track.cover.startsWith('/') ? '.' + track.cover : track.cover) : '/assets/images/logo.png';
-                return `<div class="lib-item" id="lib-track-${i}" onclick="playFromLibrary(${i})"><img src="${coverPath}" class="lib-item-cover" alt="Cover" onerror="this.src='/assets/images/logo.png'\"><div class="lib-item-info"><h4>${track.title}</h4><span>${track.category}</span></div></div>`;
+                return `<div class="lib-item" id="lib-track-${i}" onclick="playFromLibrary(${i})"><img src="${escapeHTML(coverPath)}" class="lib-item-cover" alt="Cover" onerror="this.src='/assets/images/logo.png'"><div class="lib-item-info"><h4>${escapeHTML(track.title)}</h4><span>${escapeHTML(track.category)}</span></div></div>`;
             }).join('');
         }
         function playFromLibrary(index) { if (index !== currentTrackIndex) { loadTrack(index); if (!isPlaying) togglePlay(); else audioEngine.play(); } else { togglePlay(); } }
