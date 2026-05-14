@@ -160,13 +160,27 @@
         /* =========================================
            MUSIC PLAYER & LIBRARY STYLES
            ========================================= */
-        .music-ecosystem { position: fixed; bottom: 2rem; right: 2rem; z-index: 1500; display: flex; align-items: flex-end; gap: 1rem; }
+        .music-ecosystem { 
+            position: fixed; bottom: 2rem; right: 2rem; z-index: 1500; 
+            display: flex; align-items: flex-end; gap: 1rem; 
+            transform-origin: bottom right; 
+        }
         
-        .music-player { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; position: relative; }
+        .music-player { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), padding 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; position: relative; }
         body.dark-mode .music-player { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .music-player.maximized { width: 340px; padding: 1.5rem; }
         .music-player.minimized { width: 320px; padding: 12px 15px; }
         
+        .eco-resizer {
+            position: absolute; top: 0; left: 0; width: 30px; height: 30px;
+            cursor: nwse-resize; z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            color: var(--text-muted); border-bottom-right-radius: 8px;
+            opacity: 0; transition: opacity 0.2s, background 0.2s, color 0.2s;
+        }
+        .music-player:hover .eco-resizer { opacity: 0.4; }
+        .eco-resizer:hover { opacity: 1 !important; color: var(--accent); background: rgba(128, 128, 128, 0.1); }
+
         .cd-container { background: transparent; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
         .maximized .cd-container { width: 90px; height: 90px; margin-right: 15px; float: left; }
         .minimized .cd-container { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 12px; flex-shrink: 0; }
@@ -319,6 +333,9 @@
         <audio id="global-audio" preload="metadata"></audio>
 
         <div id="music-player" class="music-player maximized">
+            
+            <div id="eco-resizer" class="eco-resizer"><i class="fas fa-arrows-alt-v" style="transform: rotate(-45deg);"></i></div>
+            
             <div class="util-controls">
                 <button class="util-btn lib-btn" onclick="toggleLibrary()" title="Open Library"><i class="fas fa-list-ul"></i></button>
                 <button class="util-btn" onclick="togglePlayerSize()" id="resize-btn" title="Minimize"><i class="fas fa-compress-alt"></i></button>
@@ -388,22 +405,30 @@
         
         const dragEco = document.getElementById('music-ecosystem');
         const musicPlayer = document.getElementById('music-player');
+        const ecoResizer = document.getElementById('eco-resizer');
+        
         let isDraggingEco = false;
+        let isResizingEco = false;
         let ecoX = 0, ecoY = 0, tgEcoX = 0, tgEcoY = 0;
+        let ecoScale = 1, tgEcoScale = 1, startScale = 1;
         let ecoStartX = 0, ecoStartY = 0, mouseStartX = 0, mouseStartY = 0;
 
-        window.addEventListener('mousemove', (e) => { 
-            tgX = e.clientX; tgY = e.clientY; 
-            if (isDraggingEco) {
-                tgEcoX = ecoStartX + (e.clientX - mouseStartX);
-                tgEcoY = ecoStartY + (e.clientY - mouseStartY);
-            }
-        });
+        if (ecoResizer) {
+            ecoResizer.addEventListener('mousedown', (e) => {
+                e.stopPropagation(); // Prevent dragEco from activating
+                isResizingEco = true;
+                mouseStartX = e.clientX;
+                mouseStartY = e.clientY;
+                startScale = tgEcoScale;
+                document.body.style.cursor = 'nwse-resize';
+                document.body.style.userSelect = 'none';
+            });
+        }
 
         if (musicPlayer) {
             musicPlayer.style.cursor = 'grab';
             musicPlayer.addEventListener('mousedown', (e) => {
-                if(e.target.closest('button') || e.target.closest('.progress-container') || e.target.tagName.toLowerCase() === 'img') return;
+                if(e.target.closest('button') || e.target.closest('.progress-container') || e.target.tagName.toLowerCase() === 'img' || e.target.closest('.eco-resizer')) return;
                 isDraggingEco = true;
                 mouseStartX = e.clientX; mouseStartY = e.clientY;
                 ecoStartX = tgEcoX; ecoStartY = tgEcoY;
@@ -412,10 +437,29 @@
             });
         }
 
+        window.addEventListener('mousemove', (e) => { 
+            tgX = e.clientX; tgY = e.clientY; 
+            if (isDraggingEco) {
+                tgEcoX = ecoStartX + (e.clientX - mouseStartX);
+                tgEcoY = ecoStartY + (e.clientY - mouseStartY);
+            }
+            if (isResizingEco) {
+                const dx = mouseStartX - e.clientX;
+                const dy = mouseStartY - e.clientY;
+                const delta = dx + dy;
+                tgEcoScale = Math.max(0.5, Math.min(2.5, startScale + (delta * 0.003)));
+            }
+        });
+
         window.addEventListener('mouseup', () => {
             if (isDraggingEco) {
                 isDraggingEco = false;
                 if (musicPlayer) musicPlayer.style.cursor = 'grab';
+                document.body.style.userSelect = '';
+            }
+            if (isResizingEco) {
+                isResizingEco = false;
+                document.body.style.cursor = '';
                 document.body.style.userSelect = '';
             }
         });
@@ -429,7 +473,8 @@
             // Drag Ecosystem interpolation
             ecoX += (tgEcoX - ecoX) * 0.15;
             ecoY += (tgEcoY - ecoY) * 0.15;
-            if (dragEco) dragEco.style.transform = `translate(${ecoX}px, ${ecoY}px)`;
+            ecoScale += (tgEcoScale - ecoScale) * 0.15;
+            if (dragEco) dragEco.style.transform = `translate(${ecoX}px, ${ecoY}px) scale(${ecoScale})`;
 
             requestAnimationFrame(animateCursor);
         }
@@ -952,3 +997,5 @@
     </script>
 </body>
 </html>
+
+}
