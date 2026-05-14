@@ -11,27 +11,25 @@
         :root { --bg-body: #ffffff; --text-main: #000000; --text-muted: #666666; --border: #eeeeee; --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); --accent: #5865F2; --danger: #ed4245; }
         body.dark-mode { --bg-body: #0a0a0a; --text-main: #ffffff; --text-muted: #aaaaaa; --border: #1f1f1f; }
         
-        .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
-        .bg-fx::before, .bg-fx::after { content: ''; position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.12; animation: floatBg 25s infinite alternate ease-in-out; }
-        .bg-fx::before { width: 50vw; height: 50vw; background: var(--accent); top: -20vh; left: -10vw; }
-        .bg-fx::after { width: 40vw; height: 40vw; background: var(--danger); bottom: -10vh; right: -5vw; animation-delay: -12s; }
-        @keyframes floatBg { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(8vw, 8vh) scale(1.15); } }
+        body { 
+            background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; margin: 0; transition: background-color 0.4s ease, color 0.4s ease; overflow-x: hidden; 
+            background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 24px 24px;
+        }
 
         #smooth-cursor { position: fixed; width: 20px; height: 20px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s, background 0.2s; }
-        body:not(.dark-mode) #smooth-cursor { background: rgba(0, 0, 0, 0.2); box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); }
+        body:not(.dark-mode) #smooth-cursor { background: rgba(0, 0, 0, 0.15); box-shadow: 0 0 15px rgba(0, 0, 0, 0.15); }
 
-        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; margin: 0; transition: background-color 0.4s ease, color 0.4s ease; overflow-x: hidden; }
         nav { padding: 1.5rem 8%; display: flex; justify-content: space-between; align-items: center; position: fixed; width: 100%; z-index: 100; background: transparent; }
         .brand-logo { width: 40px; height: 40px; border-radius: 4px; object-fit: contain; image-rendering: auto; transform: translateZ(0); }
         .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 10%; }
         h1 { font-size: clamp(3rem, 10vw, 5.5rem); font-weight: 900; letter-spacing: -4px; margin-bottom: 1rem; text-transform: uppercase; }
         .btn-get-started { padding: 16px 45px; background: var(--text-main); color: var(--bg-body); text-decoration: none; font-weight: 700; border-radius: 4px; border: 2px solid var(--text-main); cursor: pointer; transition: var(--transition); }
-        .btn-get-started:hover { background: transparent; color: var(--text-main); }
+        .btn-get-started:hover { background: transparent; color: var(--text-main); transform: scale(1.05); }
         .theme-toggle { background: none; border: none; color: var(--text-main); cursor: pointer; font-size: 1.2rem; transition: color 0.4s ease; }
+        .theme-toggle:hover { transform: scale(1.2); }
     </style>
 </head>
 <body>
-    <div class="bg-fx"></div>
     <div id="smooth-cursor"></div>
 
     <nav>
