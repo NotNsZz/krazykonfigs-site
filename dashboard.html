@@ -157,6 +157,9 @@
         .form-input { width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 4px; font-family: inherit; font-weight: 600; outline: none; transition: border-color 0.3s; }
         .form-input:focus { border-color: var(--text-main); }
 
+        /* =========================================
+           MUSIC PLAYER & LIBRARY STYLES
+           ========================================= */
         .music-ecosystem { position: fixed; bottom: 2rem; right: 2rem; z-index: 1500; display: flex; align-items: flex-end; gap: 1rem; }
         
         .music-player { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; position: relative; }
@@ -366,6 +369,18 @@
         let currentRatingInput = 5;
         let replyingToId = null;
 
+        // --- XSS SANITIZER ---
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.toString().replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag));
+        }
+
         // Custom Cursor Logic & Drag System variables
         const cursor = document.getElementById('smooth-cursor');
         let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
@@ -510,8 +525,8 @@
                 currentUser = { id: user.id, discord_id: discordId, username: meta.full_name || meta.name || 'User', avatar_url: meta.avatar_url, rank: profile?.rank || 'user' };
                 await _supabase.from('users').upsert({ id: currentUser.id, discord_id: currentUser.discord_id, username: currentUser.username, avatar_url: currentUser.avatar_url, last_login: new Date().toISOString() });
 
-                document.getElementById('navName').innerText = currentUser.username;
-                document.getElementById('navPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
+                document.getElementById('navName').innerText = escapeHTML(currentUser.username);
+                document.getElementById('navPfp').src = escapeHTML(currentUser.avatar_url) || 'https://via.placeholder.com/32';
                 if (currentUser.rank.toLowerCase() === "admin") { document.getElementById('adminPanelOption').style.display = 'flex'; }
 
                 document.body.classList.add('ready');
@@ -585,10 +600,10 @@
             currentTrackIndex = index; const track = playlist[index];
             const audioPath = track.src.startsWith('/') ? '.' + track.src : track.src;
             const coverPath = track.cover ? (track.cover.startsWith('/') ? '.' + track.cover : track.cover) : '/assets/images/logo.png';
-            audioEngine.src = audioPath;
-            document.getElementById('player-category').innerText = track.category;
-            document.getElementById('player-title').innerText = track.title;
-            document.getElementById('vinyl-spin').src = coverPath;
+            audioEngine.src = escapeHTML(audioPath);
+            document.getElementById('player-category').innerText = escapeHTML(track.category);
+            document.getElementById('player-title').innerText = escapeHTML(track.title);
+            document.getElementById('vinyl-spin').src = escapeHTML(coverPath);
             updateLibraryHighlight();
         }
 
@@ -622,8 +637,8 @@
                 const coverPath = track.cover ? (track.cover.startsWith('/') ? '.' + track.cover : track.cover) : '/assets/images/logo.png';
                 return `
                 <div class="lib-item" id="lib-track-${i}" onclick="playFromLibrary(${i})">
-                    <img src="${coverPath}" class="lib-item-cover" alt="Cover" onerror="this.src='/assets/images/logo.png'">
-                    <div class="lib-item-info"><h4>${track.title}</h4><span>${track.category}</span></div>
+                    <img src="${escapeHTML(coverPath)}" class="lib-item-cover" alt="Cover" onerror="this.src='/assets/images/logo.png'">
+                    <div class="lib-item-info"><h4>${escapeHTML(track.title)}</h4><span>${escapeHTML(track.category)}</span></div>
                 </div>`;
             }).join('');
         }
@@ -639,7 +654,6 @@
         // ==========================================
 
         async function fetchConfigs() {
-            // UPDATED: Now sorts by priority ascending
             const { data } = await _supabase.from('configs').select('*').eq('is_archived', 'false').order('priority', {ascending: true});
             allConfigs = data || []; renderConfigs(allConfigs);
         }
@@ -648,12 +662,12 @@
             document.getElementById('config-container').innerHTML = configs.map(c => `
                 <div class="config-card">
                     <div>
-                        <div class="card-head">${c.title} | ${c.ping_tier || 'N/A'} PING</div>
+                        <div class="card-head">${escapeHTML(c.title)} | ${escapeHTML(c.ping_tier) || 'N/A'} PING</div>
                         <div class="card-divider"></div>
                         <div style="margin-bottom: 1.2rem;">
                             <div class="section-label">🎯 PREDICTION</div>
-                            <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${c.sim_timer ?? '-'}</span></div>
-                            <div class="data-row"><span style="color:var(--text-muted)">Prediction Interval</span> <span class="data-val">${c.pred_interval || '-'}</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${escapeHTML(c.sim_timer) ?? '-'}</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Prediction Interval</span> <span class="data-val">${escapeHTML(c.pred_interval) || '-'}</span></div>
                         </div>
                         <div style="margin-bottom: 1.2rem;">
                             <div class="section-label"><i class="fas fa-cog" style="color:#a6aeb9;"></i> TOGGLES</div>
@@ -664,22 +678,22 @@
                         </div>
                         <div style="margin-bottom: 1.2rem;">
                             <div class="section-label"><i class="fas fa-sliders-h" style="color:var(--accent);"></i> MULTIPLIERS</div>
-                            <div class="data-row"><span style="color:var(--text-muted)">Vertical</span> <span class="data-val">${c.vertical ?? '155'}</span></div>
-                            <div class="data-row"><span style="color:var(--text-muted)">Horizontal</span> <span class="data-val">${c.horizontal ?? '165'}</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Vertical</span> <span class="data-val">${escapeHTML(c.vertical) ?? '155'}</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">Horizontal</span> <span class="data-val">${escapeHTML(c.horizontal) ?? '165'}</span></div>
                         </div>
                         <div style="margin-bottom: 1.2rem;">
                             <div class="section-label">📍 OFFSETS</div>
-                            <div class="data-row"><span style="color:var(--text-muted)">X / Y / Z</span> <span class="data-val">${c.offsets || '0 / -5 / 0'}</span></div>
+                            <div class="data-row"><span style="color:var(--text-muted)">X / Y / Z</span> <span class="data-val">${escapeHTML(c.offsets) || '0 / -5 / 0'}</span></div>
                         </div>
                     </div>
                     <div>
                         <div class="card-footer-box">
                             <div>
-                                <div class="revert-badge">REVERT | ${c.hit_rate || '85%'} HIT RATE</div>
-                                <div style="font-size:0.75rem; font-weight: 700; color:var(--text-muted); margin-top: 8px;">Supports: ${c.support_range || '150ms - 200ms'}</div>
+                                <div class="revert-badge">REVERT | ${escapeHTML(c.hit_rate) || '85%'} HIT RATE</div>
+                                <div style="font-size:0.75rem; font-weight: 700; color:var(--text-muted); margin-top: 8px;">Supports: ${escapeHTML(c.support_range) || '150ms - 200ms'}</div>
                             </div>
                             <div style="text-align: right;">
-                                <span style="font-size:0.8rem; font-style:italic; font-weight: 600; color:var(--text-muted); display: block;">by ${c.creator || 'Kriz'}</span>
+                                <span style="font-size:0.8rem; font-style:italic; font-weight: 600; color:var(--text-muted); display: block;">by ${escapeHTML(c.creator) || 'Kriz'}</span>
                             </div>
                         </div>
                         <button class="review-trigger-btn" onclick="openReviews(${c.id})"><i class="fas fa-comments"></i> View Reviews</button>
@@ -705,13 +719,13 @@
         async function fetchContributors() {
             const { data } = await _supabase.from('contributors').select('*').order('priority', { ascending: true }).order('created_at', { ascending: true });
             document.getElementById('contributor-container').innerHTML = (data || []).map(m => {
-                let tagsArray = Array.isArray(m.tags) ? m.tags : (m.tags?.split(',').map(t => t.trim()) || []);
+                let tagsArray = Array.isArray(m.tags) ? m.tags : (m.tags?.split(',').map(t => escapeHTML(t.trim())) || []);
                 const tagsHtml = tagsArray.map(tag => `<span class="badge-tag" style="color: ${getBadgeColor(tag)};">${tag}</span>`).join('');
                 return `
                 <div class="member-card">
                     <div class="member-header">
-                        <i class="${m.role_icon ? m.role_icon.trim() : 'fa-solid fa-user'}" style="color: ${m.icon_color || '#ffffff'}; font-size: 1.2rem;"></i>
-                        <span style="font-weight: 900; font-size: 1.2rem;">${m.name || 'Unknown'}</span>
+                        <i class="${m.role_icon ? escapeHTML(m.role_icon.trim()) : 'fa-solid fa-user'}" style="color: ${escapeHTML(m.icon_color) || '#ffffff'}; font-size: 1.2rem;"></i>
+                        <span style="font-weight: 900; font-size: 1.2rem;">${escapeHTML(m.name) || 'Unknown'}</span>
                     </div>
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">${tagsHtml}</div>
                 </div>`;
@@ -784,18 +798,18 @@
 
             let html = `
             <div class="review-item" id="review-${node.id}" style="margin-left: ${indent}px; border-left: ${depth > 0 ? '2px solid var(--border)' : 'none'}; padding-left: ${depth > 0 ? '12px' : '0'}; margin-bottom: ${depth > 0 ? '10px' : '20px'};">
-                <img src="${node.poster_avatar || 'https://via.placeholder.com/40'}" class="review-avatar">
+                <img src="${escapeHTML(node.poster_avatar) || 'https://via.placeholder.com/40'}" class="review-avatar">
                 <div class="review-content">
                     <div class="review-user-row">
-                        <span style="font-weight: 800; font-size:0.95rem;">${node.poster_username}</span>
+                        <span style="font-weight: 800; font-size:0.95rem;">${escapeHTML(node.poster_username)}</span>
                         <div>
                             ${depth === 0 ? `<span class="review-stars" style="margin-right:8px;">${stars}</span>` : ''}
                             ${deleteAction}
                         </div>
                     </div>
-                    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom: 8px;">${node.comment}</p>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom: 8px;">${escapeHTML(node.comment)}</p>
                     <div style="display:flex; gap: 15px; font-size: 0.8rem; font-weight: 700;">
-                        <span style="color:var(--text-muted); cursor:pointer; transition:0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'" onclick="setReplyTo(${node.id}, '${node.poster_username}')"><i class="fas fa-reply"></i> Reply</span>
+                        <span style="color:var(--text-muted); cursor:pointer; transition:0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'" onclick="setReplyTo(${node.id}, '${escapeHTML(node.poster_username)}')"><i class="fas fa-reply"></i> Reply</span>
                         ${node.children.length > 0 ? `<span style="color:var(--accent); cursor:pointer;" onclick="toggleReplies(${node.id})"><i class="fas fa-chevron-down"></i> View ${node.children.length} Replies</span>` : ''}
                     </div>
                 </div>
@@ -874,6 +888,11 @@
 
             if (comment.length > 112) {
                 return await customAlert(`${comment.length}/112`, "Hold up! Your review is too long");
+            }
+
+            // --- AGGRESSIVE CHARACTER BLOCKER ---
+            if (!/^[a-zA-Z0-9%,\. ]+$/.test(comment)) {
+                return await customAlert("Your review contains unauthorized special characters. Only letters, numbers, spaces, %, commas, and periods are allowed.", "Security Block");
             }
 
             input.disabled = true;
