@@ -13,23 +13,43 @@
             --accent: #5865F2; --danger: #ed4245; --success: #2ecc71;
             --text: #ffffff; --text-dim: #888888; --border: #1f1f1f; --input-bg: #111111;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --modal-bg: #161616; --modal-border: #1f1f1f;
         }
 
-        /* --- Custom Smooth Scrollbar --- */
+        /* --- Ambient Background --- */
+        .bg-fx {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: -1; overflow: hidden;
+        }
+        .bg-fx::before, .bg-fx::after {
+            content: ''; position: absolute; border-radius: 50%;
+            filter: blur(120px); opacity: 0.12; animation: floatBg 25s infinite alternate ease-in-out;
+        }
+        .bg-fx::before { width: 50vw; height: 50vw; background: var(--accent); top: -20vh; left: -10vw; }
+        .bg-fx::after { width: 40vw; height: 40vw; background: var(--danger); bottom: -10vh; right: -5vw; animation-delay: -12s; }
+        @keyframes floatBg { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(8vw, 8vh) scale(1.15); } }
+
+        /* --- Custom Smooth Cursor --- */
+        #smooth-cursor {
+            position: fixed; width: 20px; height: 20px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5); box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            pointer-events: none; z-index: 10000; transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background 0.2s;
+        }
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.8); }
-        * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.3) transparent; }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Source Sans Pro', sans-serif; }
+        * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.3) transparent; margin: 0; padding: 0; box-sizing: border-box; font-family: 'Source Sans Pro', sans-serif; }
+        
         body { background: var(--main-bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
         #security-guard { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
         .guard-spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--accent); border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 1.5rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; z-index: 100; }
         .sidebar-brand { padding: 2rem 1.5rem; display: flex; align-items: center; gap: 12px; }
         .brand-logo { width: 35px; height: 35px; border-radius: 8px; object-fit: contain; image-rendering: auto; transform: translateZ(0); }
         
@@ -39,7 +59,7 @@
         .nav-btn.active { background: rgba(88, 101, 242, 0.05); color: #fff; border-left-color: var(--accent); }
         .nav-btn i { width: 20px; text-align: center; }
 
-        .wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 100; }
         .header { height: 70px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 2.5rem; background: var(--main-bg); }
 
         .profile-container { position: relative; }
@@ -47,7 +67,7 @@
         .profile-trigger:hover { gap: 12px; padding: 4px 18px 4px 4px; border-color: var(--accent); }
         .username-reveal { max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; font-weight: 700; transition: var(--transition); font-size: 0.9rem; }
         .profile-trigger:hover .username-reveal { max-width: 150px; opacity: 1; }
-        .profile-pfp { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); }
+        .profile-pfp { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); object-fit: cover; }
         
         .dropdown { position: absolute; top: calc(100% + 10px); right: 0; width: 180px; background: var(--sidebar-bg); border: 1px solid var(--border); border-radius: 12px; display: none; flex-direction: column; padding: 8px; z-index: 100; }
         .dropdown.active { display: flex; }
@@ -67,6 +87,9 @@
         .btn-danger:hover { background: var(--danger); color: #fff; }
         .btn-secondary { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: var(--transition); }
         .btn-secondary:hover { background: var(--border); }
+        
+        .delete-btn { color: var(--danger); cursor: pointer; font-size: 0.9rem; border: none; background: none; transition: var(--transition); }
+        .delete-btn:hover { transform: scale(1.2); filter: brightness(1.2); }
 
         .config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
         .item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; }
@@ -95,7 +118,6 @@
         .stat-banner { background: linear-gradient(135deg, var(--card-bg), rgba(88, 101, 242, 0.1)); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 2rem; }
         .stat-banner h2 { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; }
         
-        /* Modals / Custom Dialogs */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.show { display: flex; opacity: 1; }
         .modal-content { background: var(--card-bg); width: 95%; max-width: 650px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; max-height: 90vh; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
@@ -103,8 +125,7 @@
         .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
         
-        /* Custom UI Dialog System */
-        .custom-dialog-box { background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .custom-dialog-box { background: var(--modal-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--modal-border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
         .modal-overlay.show .custom-dialog-box { transform: translateY(0); }
         .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; }
         .custom-dialog-box p { color: var(--text-dim); margin-bottom: 2rem; font-size: 1rem; }
@@ -116,11 +137,59 @@
         .form-group label { font-size: 0.8rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; }
         .form-control { background: var(--input-bg); border: 1px solid var(--border); padding: 10px; border-radius: 6px; color: var(--text); font-family: inherit; font-size: 0.95rem; outline: none; transition: border 0.3s; }
         .form-control:focus { border-color: var(--accent); }
-
         .table-viewer-wrap { width: 100%; overflow-x: auto; }
+
+        /* =========================================
+           MUSIC PLAYER & LIBRARY STYLES (ADMIN)
+           ========================================= */
+        .music-ecosystem { position: fixed; bottom: 2rem; right: 2rem; z-index: 1500; display: flex; align-items: flex-end; gap: 1rem; }
+        .music-player { background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; position: relative; }
+        .music-player.maximized { width: 340px; padding: 1.5rem; }
+        .music-player.minimized { width: 320px; padding: 12px 15px; }
+        .cd-container { background: transparent; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+        .maximized .cd-container { width: 90px; height: 90px; margin-right: 15px; float: left; }
+        .minimized .cd-container { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 12px; flex-shrink: 0; }
+        .vinyl-record { width: 80%; height: 80%; border-radius: 50%; border: 2px solid #000; animation: spin 3s linear infinite; animation-play-state: paused; object-fit: cover; background: #111; }
+        .minimized .vinyl-record { width: 100%; height: 100%; border: none; }
+        .vinyl-record.playing { animation-play-state: running; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .track-info { flex: 1; overflow: hidden; }
+        .track-info span { font-size: 0.75rem; color: #aaa; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+        .track-title { font-size: 1.1rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px; }
+        .minimized .track-title { font-size: 0.95rem; margin-bottom: 0; }
+        .player-controls { display: flex; align-items: center; gap: 15px; margin-top: 10px; clear: left; }
+        .minimized .player-controls { margin-top: 5px; gap: 12px; }
+        .control-btn { background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; transition: 0.2s; }
+        .control-btn:hover { color: var(--accent); transform: scale(1.1); }
+        .util-controls { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; }
+        .minimized .util-controls { top: 12px; right: 12px; }
+        .util-btn { background: none; border: 1px solid #444; color: #aaa; border-radius: 4px; padding: 4px 8px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+        .util-btn:hover { background: #333; color: #fff; border-color: var(--accent); }
+        .minimized .lib-btn { display: none; } 
+        .progress-container { width: 100%; height: 4px; background: #333; border-radius: 2px; margin-top: 15px; cursor: pointer; position: relative; }
+        .minimized .progress-container { display: none; }
+        .progress-bar { height: 100%; background: var(--accent); width: 0%; border-radius: 2px; transition: width 0.1s linear; }
+
+        .music-library { width: 320px; height: 400px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden; position: absolute; bottom: 0; right: -350px; opacity: 0; pointer-events: none; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .ecosystem-active .music-library { right: 0; opacity: 1; pointer-events: auto; }
+        .ecosystem-active .music-player { transform: translateX(-340px); }
+        .lib-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); }
+        .lib-header h3 { font-size: 1.1rem; font-weight: 900; margin: 0; }
+        .lib-close { background: none; border: none; color: var(--text); cursor: pointer; font-size: 1.2rem; }
+        .lib-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+        .lib-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; cursor: pointer; transition: var(--transition); border: 1px solid transparent; }
+        .lib-item:hover { background: rgba(255,255,255,0.05); }
+        .lib-item.active { border-color: var(--accent); background: rgba(88, 101, 242, 0.1); }
+        .lib-item-cover { width: 35px; height: 35px; border-radius: 4px; object-fit: cover; background: #222; }
+        .lib-item-info h4 { font-size: 0.9rem; font-weight: 800; margin: 0; color: #fff; }
+        .lib-item-info span { font-size: 0.7rem; font-weight: 700; color: #aaa; text-transform: uppercase; }
+
+        .badge-tag { font-size: 0.65rem; padding: 4px 10px; border-radius: 20px; font-weight: 800; text-transform: uppercase; background: transparent; border: 1px solid currentColor; letter-spacing: 0.5px; filter: saturate(1.2) brightness(1.2); }
     </style>
 </head>
 <body>
+    <div class="bg-fx"></div>
+    <div id="smooth-cursor"></div>
 
     <div id="security-guard">
         <div class="guard-spinner"></div>
@@ -150,7 +219,7 @@
 
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <img src="./assets/images/logo.png" alt="Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/35'">
+            <img src="/assets/images/logo.png" alt="Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/35'">
             <span style="font-weight: 900; font-size: 1.3rem;">ADMIN PANEL</span>
         </div>
 
@@ -188,8 +257,41 @@
                 </div>
             </div>
         </header>
-
         <main id="dynamic-container"></main>
+    </div>
+
+    <div id="music-ecosystem" class="music-ecosystem">
+        <audio id="global-audio" preload="metadata"></audio>
+        <div id="music-player" class="music-player minimized">
+            <div class="util-controls">
+                <button class="util-btn lib-btn" onclick="toggleLibrary()" title="Open Library"><i class="fas fa-list-ul"></i></button>
+                <button class="util-btn" onclick="togglePlayerSize()" id="resize-btn" title="Maximize"><i class="fas fa-expand-arrows-alt"></i></button>
+            </div>
+            <div style="display:flex; align-items: center;">
+                <div class="cd-container">
+                    <img id="vinyl-spin" src="" class="vinyl-record" alt="Cover Art" onerror="this.src='/assets/images/logo.png'">
+                </div>
+                <div class="track-info">
+                    <span id="player-category">Loading...</span>
+                    <div class="track-title" id="player-title">Booting Audio...</div>
+                    <div class="player-controls">
+                        <button class="control-btn" onclick="prevTrack()"><i class="fas fa-backward"></i></button>
+                        <button class="control-btn" onclick="togglePlay()" id="play-btn"><i class="fas fa-play"></i></button>
+                        <button class="control-btn" onclick="nextTrack()"><i class="fas fa-forward"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-container" id="progress-bar-container" onclick="seekAudio(event)">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+        <div id="music-library" class="music-library">
+            <div class="lib-header">
+                <h3>Track Library</h3>
+                <button class="lib-close" onclick="toggleLibrary()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="lib-list" id="library-list"></div>
+        </div>
     </div>
 
     <script>
@@ -200,11 +302,40 @@
         let currentUser = null;
         let activeDataStore = []; 
 
+        // Custom Cursor Logic
+        const cursor = document.getElementById('smooth-cursor');
+        let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
+        let tgX = curX, tgY = curY;
+        window.addEventListener('mousemove', (e) => { tgX = e.clientX; tgY = e.clientY; });
+        function animateCursor() {
+            curX += (tgX - curX) * 0.15;
+            curY += (tgY - curY) * 0.15;
+            cursor.style.left = curX + 'px';
+            cursor.style.top = curY + 'px';
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+        function initCursorHovers() {
+            document.querySelectorAll('a, button, .lib-item, .item-card, .profile-trigger, .nav-btn, .config-card, .review-trigger-btn, .input-star, .lib-close').forEach(el => {
+                el.addEventListener('mouseenter', () => cursor.style.transform = 'translate(-50%, -50%) scale(1.5)');
+                el.addEventListener('mouseleave', () => cursor.style.transform = 'translate(-50%, -50%) scale(1)');
+            });
+        }
+        setInterval(initCursorHovers, 2000); 
+
         async function verifyAdminAuth() {
             const { data: { session } } = await _supabase.auth.getSession();
             if (!session) return false;
             const { data: profile } = await _supabase.from('users').select('rank').eq('id', session.user.id).single();
             return profile?.rank === 'admin';
+        }
+
+        async function verifyAndExecute(actionType, table, id, extra = null) {
+            if (!(await verifyAdminAuth())) {
+                return await customAlert("Session expired or permissions revoked.", "Security Error");
+            }
+            if (actionType === 'delete') deleteRecord(table, id);
+            if (actionType === 'archive') updateDB(table, id, 'is_archived', extra, true);
         }
 
         function customAlert(msg, title = "Notice") {
@@ -218,11 +349,7 @@
                 confirmBtn.innerText = 'OK';
                 confirmBtn.className = 'btn-primary';
 
-                const handleConfirm = () => {
-                    overlay.classList.remove('show');
-                    confirmBtn.removeEventListener('click', handleConfirm);
-                    resolve(true);
-                };
+                const handleConfirm = () => { overlay.classList.remove('show'); confirmBtn.removeEventListener('click', handleConfirm); resolve(true); };
                 confirmBtn.addEventListener('click', handleConfirm);
                 overlay.classList.add('show');
             });
@@ -241,12 +368,7 @@
                 confirmBtn.innerText = confirmText;
                 confirmBtn.className = isDanger ? 'btn-danger' : 'btn-primary';
 
-                const cleanup = () => {
-                    overlay.classList.remove('show');
-                    cancelBtn.removeEventListener('click', handleCancel);
-                    confirmBtn.removeEventListener('click', handleConfirm);
-                };
-
+                const cleanup = () => { overlay.classList.remove('show'); cancelBtn.removeEventListener('click', handleCancel); confirmBtn.removeEventListener('click', handleConfirm); };
                 const handleCancel = () => { cleanup(); resolve(false); };
                 const handleConfirm = () => { cleanup(); resolve(true); };
 
@@ -269,74 +391,44 @@
         async function bootSequence() {
             try {
                 const { data: { session } } = await _supabase.auth.getSession();
-
-                if (!session) {
-                    window.location.href = 'dashboard.html';
-                    return;
-                }
+                if (!session) { window.location.href = 'dashboard.html'; return; }
 
                 const user = session.user;
                 const meta = user.user_metadata;
                 const discordId = meta.provider_id || user.id;
 
                 const { data: profile } = await _supabase.from('users').select('rank, isBlacklisted').eq('id', user.id).single();
-                
-                if (profile?.isBlacklisted === 'true') {
-                    await _supabase.auth.signOut();
-                    window.location.href = 'maintenance.html'; 
-                    return;
-                }
+                if (profile?.isBlacklisted === 'true') { await _supabase.auth.signOut(); window.location.href = 'maintenance.html'; return; }
+                if (profile?.rank !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
-                if (profile?.rank !== 'admin') {
-                    window.location.href = 'dashboard.html';
-                    return;
-                }
-
-                currentUser = {
-                    id: user.id,
-                    discord_id: discordId,
-                    username: meta.full_name || meta.name || 'User',
-                    avatar_url: meta.avatar_url,
-                    rank: profile?.rank || 'user'
-                };
-
+                currentUser = { id: user.id, discord_id: discordId, username: meta.full_name || meta.name || 'User', avatar_url: meta.avatar_url, rank: profile?.rank || 'user' };
                 document.getElementById('adminName').innerText = currentUser.username;
                 document.getElementById('adminPfp').src = currentUser.avatar_url || 'https://via.placeholder.com/32';
                 document.getElementById('security-guard').style.display = 'none';
 
                 loadModule('home', document.querySelector('.nav-btn.active'));
-
+                initMusicPlayer();
             } catch (error) {
-                console.error("Boot Sequence Error:", error);
                 await customAlert("Security validation failed. Redirecting.", "Security Alert");
                 window.location.href = 'dashboard.html';
             }
         }
-
         bootSequence();
 
         setInterval(async () => {
             if (!currentUser) return;
             try {
                 const { data: profile } = await _supabase.from('users').select('isBlacklisted, rank').eq('id', currentUser.id).single();
-                if (profile?.isBlacklisted === 'true' || profile?.rank !== 'admin') {
-                    window.location.href = 'dashboard.html';
-                }
+                if (profile?.isBlacklisted === 'true' || profile?.rank !== 'admin') { window.location.href = 'dashboard.html'; }
             } catch (e) {}
         }, 30000);
 
-        _supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_OUT') { window.location.href = 'login.html'; }
-        });
+        _supabase.auth.onAuthStateChange((event, session) => { if (event === 'SIGNED_OUT') { window.location.href = 'login.html'; } });
 
         async function loadModule(module, btnElement) {
             const container = document.getElementById('dynamic-container');
             container.innerHTML = '<div class="guard-spinner" style="margin: 3rem auto;"></div>'; 
-            
-            if(btnElement) {
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                btnElement.classList.add('active');
-            }
+            if(btnElement) { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); }
 
             let html = '';
             try {
@@ -352,209 +444,106 @@
                     case 'db': html = await renderDB(); break;
                     case 'settings': html = await renderSettings(); break;
                 }
-            } catch (err) {
-                console.error("Module Load Error:", err);
-                html = `<p style="color:var(--danger)">Error loading module: ${err.message}</p>`;
-            }
+            } catch (err) { html = `<p style="color:var(--danger)">Error loading module: ${err.message}</p>`; }
             container.innerHTML = html;
         }
 
         async function renderHome() {
             const hour = new Date().getHours();
             const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
-            
             const [usersRes, configsRes, contRes] = await Promise.all([
                 _supabase.from('users').select('id', { count: 'exact', head: true }),
                 _supabase.from('configs').select('id', { count: 'exact', head: true }),
                 _supabase.from('contributors').select('id', { count: 'exact', head: true })
             ]);
-
             return `
-                <div class="stat-banner">
-                    <h2>${greeting}, ${currentUser.username}</h2>
-                    <p style="color:var(--text-dim); font-size:1.1rem;">Welcome to the KrazyKonfigs Administration Dashboard.</p>
-                </div>
+                <div class="stat-banner"><h2>${greeting}, ${currentUser.username}</h2><p style="color:var(--text-dim); font-size:1.1rem;">Welcome to the KrazyKonfigs Administration Dashboard.</p></div>
                 <div class="config-grid">
-                    <div class="item-card" style="align-items:center; text-align:center;">
-                        <i class="fas fa-users" style="font-size:2rem; color:var(--accent); margin-bottom:10px;"></i>
-                        <h3>Total Users</h3>
-                        <h2 style="font-size:2.5rem; font-weight:900;">${usersRes.count || 0}</h2>
-                    </div>
-                    <div class="item-card" style="align-items:center; text-align:center;">
-                        <i class="fas fa-file-code" style="font-size:2rem; color:var(--success); margin-bottom:10px;"></i>
-                        <h3>Total Configs</h3>
-                        <h2 style="font-size:2.5rem; font-weight:900;">${configsRes.count || 0}</h2>
-                    </div>
-                    <div class="item-card" style="align-items:center; text-align:center;">
-                        <i class="fas fa-address-book" style="font-size:2rem; color:#f1c40f; margin-bottom:10px;"></i>
-                        <h3>Contributors</h3>
-                        <h2 style="font-size:2.5rem; font-weight:900;">${contRes.count || 0}</h2>
-                    </div>
-                </div>
-            `;
+                    <div class="item-card" style="align-items:center; text-align:center;"><i class="fas fa-users" style="font-size:2rem; color:var(--accent); margin-bottom:10px;"></i><h3>Total Users</h3><h2 style="font-size:2.5rem; font-weight:900;">${usersRes.count || 0}</h2></div>
+                    <div class="item-card" style="align-items:center; text-align:center;"><i class="fas fa-file-code" style="font-size:2rem; color:var(--success); margin-bottom:10px;"></i><h3>Total Configs</h3><h2 style="font-size:2.5rem; font-weight:900;">${configsRes.count || 0}</h2></div>
+                    <div class="item-card" style="align-items:center; text-align:center;"><i class="fas fa-address-book" style="font-size:2rem; color:#f1c40f; margin-bottom:10px;"></i><h3>Contributors</h3><h2 style="font-size:2.5rem; font-weight:900;">${contRes.count || 0}</h2></div>
+                </div>`;
         }
 
         async function renderUsers() {
             const { data, error } = await _supabase.from('users').select('*').order('last_login', {ascending: false}).limit(50);
-            
-            if (error) {
-                console.error("Failed to fetch users:", error.message);
-                return `<div class="page-header"><h1>Users Overview</h1></div>
-                        <p style="color:var(--danger)">Unable to fetch users. Ensure you have an active session to pass RLS policies.</p>`;
-            }
-
-            if (!data || data.length === 0) {
-                return `<div class="page-header"><h1>Users Overview</h1></div>
-                        <p style="color:var(--text-dim)">No user data available or RLS blocked the read request due to missing auth session.</p>`;
-            }
-
+            if (error || !data || data.length === 0) return `<div class="page-header"><h1>Users Overview</h1></div><p style="color:var(--text-dim)">No user data available.</p>`;
             return `
                 <div class="page-header"><h1>Users Overview</h1></div>
-                <div class="table-viewer-wrap">
-                    <table class="data-table">
-                        <thead><tr><th>Username</th><th>Discord ID</th><th>Rank</th><th>Blacklisted</th><th>Last Login</th></tr></thead>
-                        <tbody>
-                            ${data.map(u => `
-                                <tr>
-                                    <td style="font-weight:700;">${u.username || 'Unknown'}</td>
-                                    <td style="font-size:0.8rem; color:var(--text-dim);">${u.discord_id || '-'}</td>
-                                    <td style="color:${u.rank === 'admin' ? 'var(--accent)' : 'inherit'}; font-weight:${u.rank==='admin'?'900':'normal'}">${u.rank || 'user'}</td>
-                                    <td>${u.isBlacklisted === 'true' ? '<span style="color:var(--danger);font-weight:bold;">True</span>' : 'False'}</td>
-                                    <td>${new Date(u.last_login).toLocaleDateString() || '-'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+                <div class="table-viewer-wrap"><table class="data-table">
+                    <thead><tr><th>Username</th><th>Discord ID</th><th>Rank</th><th>Blacklisted</th><th>Last Login</th></tr></thead>
+                    <tbody>${data.map(u => `<tr><td style="font-weight:700;">${u.username || 'Unknown'}</td><td style="font-size:0.8rem; color:var(--text-dim);">${u.discord_id || '-'}</td><td style="color:${u.rank === 'admin' ? 'var(--accent)' : 'inherit'}; font-weight:${u.rank==='admin'?'900':'normal'}">${u.rank || 'user'}</td><td>${u.isBlacklisted === 'true' ? '<span style="color:var(--danger);font-weight:bold;">True</span>' : 'False'}</td><td>${new Date(u.last_login).toLocaleDateString() || '-'}</td></tr>`).join('')}</tbody>
+                </table></div>`;
         }
 
         async function renderRank() {
             const { data, error } = await _supabase.from('users').select('*').order('username', {ascending: true});
             if (error) return `<p style="color:var(--danger)">Failed to fetch user ranks.</p>`;
-            
             return `
                 <div class="page-header"><h1>Rank Management</h1></div>
-                <div class="table-viewer-wrap">
-                    <table class="data-table">
-                        <thead><tr><th>Username</th><th>Current Rank</th><th>Action</th></tr></thead>
-                        <tbody>
-                            ${(data||[]).map(u => `
-                                <tr>
-                                    <td>${u.username || 'Unknown'}</td>
-                                    <td><span class="data-val">${u.rank || 'user'}</span></td>
-                                    <td>
-                                        <select class="status-select" onchange="updateDB('users', '${u.id}', 'rank', this.value)">
-                                            <option value="user" ${u.rank!=='admin'?'selected':''}>User</option>
-                                            <option value="admin" ${u.rank==='admin'?'selected':''}>Admin</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+                <div class="table-viewer-wrap"><table class="data-table">
+                    <thead><tr><th>Username</th><th>Current Rank</th><th>Action</th></tr></thead>
+                    <tbody>${(data||[]).map(u => `<tr><td>${u.username || 'Unknown'}</td><td><span class="data-val">${u.rank || 'user'}</span></td><td><select class="status-select" onchange="updateDB('users', '${u.id}', 'rank', this.value)"><option value="user" ${u.rank!=='admin'?'selected':''}>User</option><option value="admin" ${u.rank==='admin'?'selected':''}>Admin</option></select></td></tr>`).join('')}</tbody>
+                </table></div>`;
         }
 
         async function renderBlacklist() {
             const { data } = await _supabase.from('users').select('*').order('username', {ascending: true});
             return `
                 <div class="page-header"><h1>Account Blacklisting</h1></div>
-                <div class="table-viewer-wrap">
-                    <table class="data-table">
-                        <thead><tr><th>Username</th><th>Status</th><th>Toggle Blacklist</th></tr></thead>
-                        <tbody>
-                            ${(data||[]).map(u => `
-                                <tr>
-                                    <td>${u.username || 'Unknown'}</td>
-                                    <td id="bl-status-${u.id}">${u.isBlacklisted === 'true' ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active'}</td>
-                                    <td>
-                                        <label class="toggle-switch">
-                                            <input type="checkbox" ${u.isBlacklisted === 'true' ? 'checked' : ''} onchange="updateBlacklist('${u.id}', this.checked)">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+                <div class="table-viewer-wrap"><table class="data-table">
+                    <thead><tr><th>Username</th><th>Status</th><th>Toggle Blacklist</th></tr></thead>
+                    <tbody>${(data||[]).map(u => `<tr><td>${u.username || 'Unknown'}</td><td id="bl-status-${u.id}">${u.isBlacklisted === 'true' ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active'}</td><td><label class="toggle-switch"><input type="checkbox" ${u.isBlacklisted === 'true' ? 'checked' : ''} onchange="updateBlacklist('${u.id}', this.checked)"><span class="slider"></span></label></td></tr>`).join('')}</tbody>
+                </table></div>`;
         }
 
         async function renderConfigs(isArchivedStr) {
-            // Sort configs by ID ascending (1, 2, 3...)
             const { data } = await _supabase.from('configs').select('*').eq('is_archived', isArchivedStr).order('id', {ascending: true});
-            activeDataStore = data || [];
-            const title = isArchivedStr === 'true' ? 'Draft & Archive' : 'Config Editor';
-            
+            activeDataStore = data || []; const title = isArchivedStr === 'true' ? 'Draft & Archive' : 'Config Editor';
             return `
-                <div class="page-header">
-                    <h1>${title}</h1>
-                    <button class="btn-primary" onclick="openConfigModal()"><i class="fas fa-plus"></i> Create New</button>
-                </div>
+                <div class="page-header"><h1>${title}</h1><button class="btn-primary" onclick="openConfigModal()"><i class="fas fa-plus"></i> Create New</button></div>
                 <div class="config-grid">
                     ${activeDataStore.map(c => {
-                        const actionLabel = c.is_archived === 'true' ? 'Publish' : 'Archive';
-                        const toggleArchive = c.is_archived === 'true' ? 'false' : 'true';
+                        const actionLabel = c.is_archived === 'true' ? 'Publish' : 'Archive'; const toggleArchive = c.is_archived === 'true' ? 'false' : 'true';
                         return `
                         <div class="item-card">
                             <h3>${c.title} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">ID: ${c.id}</span></h3>
-                            <div class="card-section">
-                                <h4>Prediction</h4>
-                                <div class="data-row"><span class="data-label">Sim Timer:</span> <span class="data-val">${c.sim_timer || '-'}</span></div>
-                                <div class="data-row"><span class="data-label">Pred Int:</span> <span class="data-val">${c.pred_interval || '-'}</span></div>
-                            </div>
-                            <div class="card-section">
-                                <h4>Multiplier</h4>
-                                <div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">${c.vertical || '-'}</span></div>
-                                <div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">${c.horizontal || '-'}</span></div>
-                            </div>
+                            <div class="card-section"><h4>Prediction</h4><div class="data-row"><span class="data-label">Sim Timer:</span> <span class="data-val">${c.sim_timer || '-'}</span></div><div class="data-row"><span class="data-label">Pred Int:</span> <span class="data-val">${c.pred_interval || '-'}</span></div></div>
+                            <div class="card-section"><h4>Multiplier</h4><div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">${c.vertical || '-'}</span></div><div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">${c.horizontal || '-'}</span></div></div>
                             <div class="card-actions" style="justify-content:flex-end;">
                                 <button class="btn-secondary" onclick="openConfigModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
-                                <button class="btn-secondary" onclick="updateDB('configs', ${c.id}, 'is_archived', '${toggleArchive}', true)">${actionLabel}</button>
-                                <button class="btn-danger" onclick="deleteRecord('configs', ${c.id})"><i class="fas fa-trash"></i></button>
+                                <button class="btn-secondary" onclick="verifyAndExecute('archive', 'configs', ${c.id}, '${toggleArchive}')">${actionLabel}</button>
+                                <button class="btn-danger" title="Delete" onclick="verifyAndExecute('delete', 'configs', ${c.id})"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>`;
                     }).join('')}
                     ${activeDataStore.length === 0 ? '<p style="color:var(--text-dim);">No configs found in this section.</p>' : ''}
-                </div>
-            `;
+                </div>`;
         }
 
         async function renderReviews() {
             const { data } = await _supabase.from('reviews').select('*').order('created_at', {ascending: false});
             return `
-                <div class="page-header"><h1>Reviews/Comments</h1></div>
-                <div class="table-viewer-wrap">
-                    <table class="data-table">
-                        <thead><tr><th>ID</th><th>Config ID</th><th>User</th><th>Comment</th><th>Stars</th><th>Action</th></tr></thead>
-                        <tbody>
-                            ${(data||[]).map(r => `
-                                <tr>
-                                    <td style="color:var(--text-dim);">${r.id}</td>
-                                    <td style="font-weight:bold;">${r.config_id}</td>
-                                    <td>${r.poster_username}</td>
-                                    <td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.comment}</td>
-                                    <td style="color:#f1c40f;">${r.rating} <i class="fas fa-star"></i></td>
-                                    <td><button class="btn-danger" onclick="deleteRecord('reviews', ${r.id})">Delete</button></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+                <div class="page-header"><h1>Global Reviews DB</h1></div>
+                <div class="table-viewer-wrap"><table class="data-table">
+                    <thead><tr><th>ID</th><th>Reply To</th><th>Config ID</th><th>User</th><th>Comment</th><th>Stars</th><th>Action</th></tr></thead>
+                    <tbody>${(data||[]).map(r => `<tr><td style="color:var(--text-dim);">${r.id}</td><td style="color:var(--accent); font-weight:bold;">${r.replying_to_id ? `#${r.replying_to_id}` : '-'}</td><td style="font-weight:bold;">${r.config_id}</td><td>${r.poster_username}</td><td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.comment}</td><td style="color:#f1c40f;">${r.rating||'-'} <i class="fas fa-star"></i></td><td><button class="delete-btn" onclick="verifyAndExecute('delete', 'reviews', ${r.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody>
+                </table></div>`;
+        }
+
+        function getBadgeColor(tag) {
+            const t = tag.toUpperCase();
+            if(t.includes('OWNER') || t.includes('EARLY')) return '#f1c40f'; // Gold
+            if(t.includes('DEVELOPER') || t.includes('TESTER')) return '#2ecc71'; // Green
+            if(t.includes('GUEST') || t.includes('CONTRIBUTOR')) return '#9b59b6'; // Purple
+            return 'var(--text-muted)';
         }
 
         async function renderContributors() {
             const { data } = await _supabase.from('contributors').select('*').order('priority', {ascending: true});
             activeDataStore = data || [];
             return `
-                <div class="page-header">
-                    <h1>Contributor Directory</h1>
-                    <button class="btn-primary" onclick="openContributorModal()"><i class="fas fa-plus"></i> Create New</button>
-                </div>
+                <div class="page-header"><h1>Contributor Directory</h1><button class="btn-primary" onclick="openContributorModal()"><i class="fas fa-plus"></i> Create New</button></div>
                 <div class="config-grid">
                     ${activeDataStore.map(c => `
                         <div class="item-card">
@@ -564,148 +553,80 @@
                             <div class="data-row"><span class="data-label">Priority:</span> <span class="data-val" style="color:var(--accent);">${c.priority || 0}</span></div>
                             <div class="card-actions" style="justify-content:flex-end; margin-top:1.5rem;">
                                 <button class="btn-secondary" onclick="openContributorModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
-                                <button class="btn-danger" onclick="deleteRecord('contributors', ${c.id})"><i class="fas fa-trash"></i></button>
+                                <button class="btn-danger" title="Delete" onclick="verifyAndExecute('delete', 'contributors', ${c.id})"><i class="fas fa-trash"></i></button>
                             </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
+                        </div>`).join('')}
+                </div>`;
         }
 
         async function renderDB() {
             const tables = ['users', 'configs', 'contributors', 'reviews'];
-            let html = `<div class="page-header"><h1>Database Overview</h1></div>
-                        <p style="color:var(--text-dim); margin-bottom:2rem;"><i>View real-time database snapshots. Read-only view.</i></p>
-                        <div class="config-grid">`;
+            let html = `<div class="page-header"><h1>Database Overview</h1></div><p style="color:var(--text-dim); margin-bottom:2rem;"><i>View real-time database snapshots. Read-only view.</i></p><div class="config-grid">`;
             for(let t of tables) {
                 const { count } = await _supabase.from(t).select('*', { count: 'exact', head: true });
-                html += `
-                    <div class="item-card">
-                        <h3 style="text-transform:capitalize;">${t} Table</h3>
-                        <div class="data-row"><span class="data-label">Rows Present:</span> <span class="data-val">${count || 0}</span></div>
-                        <div class="card-actions"><button class="btn-secondary" style="width:100%;" onclick="viewTableData('${t}')"><i class="fas fa-table"></i> View Table Data</button></div>
-                    </div>
-                `;
+                html += `<div class="item-card"><h3 style="text-transform:capitalize;">${t} Table</h3><div class="data-row"><span class="data-label">Rows Present:</span> <span class="data-val">${count || 0}</span></div><div class="card-actions"><button class="btn-secondary" style="width:100%;" onclick="viewTableData('${t}')"><i class="fas fa-table"></i> View Table Data</button></div></div>`;
             }
             return html + `</div>`;
         }
 
         async function renderSettings() {
             const { data } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
-            const isMaintenance = data ? data.maintenance_mode : false;
-
             return `
                 <div class="page-header"><h1>Website Settings</h1></div>
                 <div class="item-card" style="max-width: 600px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <h3 style="border:none; padding:0; margin-bottom:5px;">Maintenance Mode</h3>
-                            <p style="font-size:0.85rem; color:var(--text-dim);">Globally redirects users to a static "Getting back" page.</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="maintenanceToggle" ${isMaintenance ? 'checked' : ''} onchange="toggleMaintenanceMode(this.checked)">
-                            <span class="slider"></span>
-                        </label>
+                        <div><h3 style="border:none; padding:0; margin-bottom:5px;">Maintenance Mode</h3><p style="font-size:0.85rem; color:var(--text-dim);">Globally redirects users to a static "Getting back" page.</p></div>
+                        <label class="toggle-switch"><input type="checkbox" id="maintenanceToggle" ${data?.maintenance_mode ? 'checked' : ''} onchange="toggleMaintenanceMode(this.checked)"><span class="slider"></span></label>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
         // --- Secured Database Action Functions ---
         async function updateDB(table, id, column, value, reload = false) {
-            if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
-            
-            try {
-                const { error } = await _supabase.from(table).update({ [column]: value }).eq('id', id);
-                if (error) throw error;
-                if(reload) refreshCurrentView();
-            } catch (err) { await customAlert("Error updating data: " + err.message, "Error"); }
+            try { const { error } = await _supabase.from(table).update({ [column]: value }).eq('id', id); if (error) throw error; if(reload) refreshCurrentView(); } 
+            catch (err) { await customAlert("Error updating data: " + err.message, "Error"); }
         }
 
         async function updateBlacklist(id, isChecked) {
-            if (!(await verifyAdminAuth())) {
-                document.getElementById(`bl-status-${id}`).innerHTML = !isChecked ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active';
-                return await customAlert("Security Error: Admin rights required.", "Access Denied");
-            }
+            if (!(await verifyAdminAuth())) { document.getElementById(`bl-status-${id}`).innerHTML = !isChecked ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active'; return await customAlert("Security Error: Admin rights required.", "Access Denied"); }
             const val = isChecked ? 'true' : 'false';
             document.getElementById(`bl-status-${id}`).innerHTML = isChecked ? '<span style="color:var(--danger); font-weight:bold;">Blacklisted</span>' : 'Active';
             await _supabase.from('users').update({ isBlacklisted: val }).eq('id', id);
         }
 
         async function deleteRecord(table, id) {
-            if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
-            
             const isConfirmed = await customConfirm(`Are you sure you want to permanently delete this record from ${table}?`, "Delete Record", "Delete", true);
             if(!isConfirmed) return;
-
             const { error } = await _supabase.from(table).delete().eq('id', id);
-            if(!error) refreshCurrentView();
-            else await customAlert("Error: " + error.message, "Delete Failed");
+            if(!error) refreshCurrentView(); else await customAlert("Error: " + error.message, "Delete Failed");
         }
 
         async function toggleMaintenanceMode(isChecked) {
-            if (!(await verifyAdminAuth())) {
-                document.getElementById('maintenanceToggle').checked = !isChecked;
-                return await customAlert("Security Error: Admin rights required.", "Access Denied");
-            }
-
+            if (!(await verifyAdminAuth())) { document.getElementById('maintenanceToggle').checked = !isChecked; return await customAlert("Security Error: Admin rights required.", "Access Denied"); }
             const isConfirmed = await customConfirm(`Are you sure you want to turn ${isChecked ? 'ON' : 'OFF'} maintenance mode?`, "Confirm Maintenance Change");
-            
-            if(!isConfirmed) {
-                document.getElementById('maintenanceToggle').checked = !isChecked;
-                return;
-            }
-
+            if(!isConfirmed) { document.getElementById('maintenanceToggle').checked = !isChecked; return; }
             const { error } = await _supabase.from('settings').update({ maintenance_mode: isChecked }).eq('id', 1);
-            if(error) {
-                await customAlert("Failed to update database.", "Configuration Error");
-                document.getElementById('maintenanceToggle').checked = !isChecked;
-            } else {
-                await customAlert(`Maintenance mode is now ${isChecked ? 'ACTIVE' : 'DISABLED'}.`, "Success");
-            }
+            if(error) { await customAlert("Failed to update database.", "Configuration Error"); document.getElementById('maintenanceToggle').checked = !isChecked; } 
+            else { await customAlert(`Maintenance mode is now ${isChecked ? 'ACTIVE' : 'DISABLED'}.`, "Success"); }
         }
 
-        function refreshCurrentView() {
-            const activeBtn = document.querySelector('.nav-btn.active');
-            if(activeBtn) activeBtn.click();
-        }
+        function refreshCurrentView() { const activeBtn = document.querySelector('.nav-btn.active'); if(activeBtn) activeBtn.click(); }
 
-        // --- Standard Modals & Forms ---
-        function openModal(title, contentHTML) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalBody').innerHTML = contentHTML;
-            document.getElementById('adminModal').classList.add('show');
-        }
-
-        function closeModal(e) {
-            if(e && e.target !== document.getElementById('adminModal')) return;
-            document.getElementById('adminModal').classList.remove('show');
-        }
+        function openModal(title, contentHTML) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalBody').innerHTML = contentHTML; document.getElementById('adminModal').classList.add('show'); }
+        function closeModal(e) { if(e && e.target !== document.getElementById('adminModal')) return; document.getElementById('adminModal').classList.remove('show'); }
 
         async function viewTableData(tableName) {
             const { data, error } = await _supabase.from(tableName).select('*').limit(20);
             if(error || !data || data.length === 0) return customAlert("No data to show or access denied.", "Notice");
-            
             const keys = Object.keys(data[0]);
-            const html = `
-                <div class="table-viewer-wrap" style="max-height: 60vh;">
-                    <table class="data-table" style="min-width: 800px;">
-                        <thead><tr>${keys.map(k => `<th>${k}</th>`).join('')}</tr></thead>
-                        <tbody>
-                            ${data.map(row => `<tr>${keys.map(k => `<td>${row[k] === null ? 'null' : String(row[k]).substring(0,30)}</td>`).join('')}</tr>`).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            openModal(`Viewing ${tableName}`, html);
+            openModal(`Viewing ${tableName}`, `<div class="table-viewer-wrap" style="max-height: 60vh;"><table class="data-table" style="min-width: 800px;"><thead><tr>${keys.map(k => `<th>${k}</th>`).join('')}</tr></thead><tbody>${data.map(row => `<tr>${keys.map(k => `<td>${row[k] === null ? 'null' : String(row[k]).substring(0,30)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);
             document.querySelector('.modal-content').style.maxWidth = "90%";
         }
 
         function openConfigModal(id = null) {
             document.querySelector('.modal-content').style.maxWidth = "650px";
             let c = id ? activeDataStore.find(x => x.id === id) : {};
-            
-            const html = `
+            openModal(id ? 'Edit Config' : 'Create New Config', `
                 <form id="configForm" onsubmit="saveForm(event, 'configs', ${id})">
                     <div class="form-grid">
                         <div class="form-group full"><label>Title</label><input type="text" name="title" class="form-control" value="${c.title||''}" required></div>
@@ -718,59 +639,89 @@
                         <div class="form-group"><label>Offsets (X/Y/Z)</label><input type="text" name="offsets" class="form-control" value="${c.offsets||'0 / 0 / 0'}"></div>
                         <div class="form-group"><label>Support Range</label><input type="text" name="support_range" class="form-control" value="${c.support_range||'10-20ms'}"></div>
                         <div class="form-group"><label>Hit Rate</label><input type="text" name="hit_rate" class="form-control" value="${c.hit_rate||'85%'}"></div>
-                        <div class="form-group full"><label>Is Archived (Draft)</label>
-                            <select name="is_archived" class="form-control">
-                                <option value="false" ${c.is_archived==='false'?'selected':''}>False (Published)</option>
-                                <option value="true" ${c.is_archived==='true'?'selected':''}>True (Archived/Draft)</option>
-                            </select>
-                        </div>
+                        <div class="form-group full"><label>Is Archived (Draft)</label><select name="is_archived" class="form-control"><option value="false" ${c.is_archived==='false'?'selected':''}>False (Published)</option><option value="true" ${c.is_archived==='true'?'selected':''}>True (Archived/Draft)</option></select></div>
                     </div>
-                    <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;">
-                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-                        <button type="submit" class="btn-primary" style="margin-left:10px;">Save Config</button>
-                    </div>
-                </form>
-            `;
-            openModal(id ? 'Edit Config' : 'Create New Config', html);
+                    <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;"><button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button><button type="submit" class="btn-primary" style="margin-left:10px;">Save Config</button></div>
+                </form>`);
         }
 
         function openContributorModal(id = null) {
             document.querySelector('.modal-content').style.maxWidth = "500px";
             let c = id ? activeDataStore.find(x => x.id === id) : {};
-            
-            const html = `
+            openModal(id ? 'Edit Contributor' : 'Create Contributor', `
                 <form id="contributorForm" onsubmit="saveForm(event, 'contributors', ${id})">
                     <div class="form-group"><label>Name</label><input type="text" name="name" class="form-control" value="${c.name||''}" required></div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Role Icon (FontAwesome)</label><input type="text" name="role_icon" class="form-control" value="${c.role_icon||'fas fa-crown'}"></div>
-                        <div class="form-group"><label>Icon Color (Hex)</label><input type="text" name="icon_color" class="form-control" value="${c.icon_color||'#ffffff'}"></div>
-                    </div>
+                    <div class="form-grid"><div class="form-group"><label>Role Icon (FontAwesome)</label><input type="text" name="role_icon" class="form-control" value="${c.role_icon||'fas fa-crown'}"></div><div class="form-group"><label>Icon Color (Hex)</label><input type="text" name="icon_color" class="form-control" value="${c.icon_color||'#ffffff'}"></div></div>
                     <div class="form-group"><label>Tags (Comma separated)</label><input type="text" name="tags" class="form-control" value="${(c.tags||[]).join(', ')}"></div>
                     <div class="form-group"><label>Display Priority (Lower is first)</label><input type="number" name="priority" class="form-control" value="${c.priority||1}" required></div>
-                    
-                    <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;">
-                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-                        <button type="submit" class="btn-primary" style="margin-left:10px;">Save Contributor</button>
-                    </div>
-                </form>
-            `;
-            openModal(id ? 'Edit Contributor' : 'Create Contributor', html);
+                    <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;"><button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button><button type="submit" class="btn-primary" style="margin-left:10px;">Save Contributor</button></div>
+                </form>`);
         }
 
         async function saveForm(e, table, id) {
             e.preventDefault();
             if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
-
-            const formData = new FormData(e.target);
-            const payload = Object.fromEntries(formData.entries());
-
+            const payload = Object.fromEntries(new FormData(e.target).entries());
             if(payload.tags) payload.tags = payload.tags.split(',').map(t => t.trim());
             if(id) payload.id = id;
-
             const { error } = await _supabase.from(table).upsert(payload);
-            if(error) { await customAlert("Save Error: " + error.message, "Error"); }
-            else { closeModal(); refreshCurrentView(); }
+            if(error) { await customAlert("Save Error: " + error.message, "Error"); } else { closeModal(); refreshCurrentView(); }
         }
+
+        // ==========================================
+        // MUSIC PLAYER LOGIC (ADMIN)
+        // ==========================================
+        let playlist = []; let currentTrackIndex = 0; let isPlaying = false; const audioEngine = document.getElementById('global-audio');
+        async function fetchMusicManifest() {
+            try {
+                const response = await fetch('/assets/music/music-manifest.json');
+                playlist = await response.json();
+                if(playlist && playlist.length > 0) { loadTrack(0); buildLibraryUI(); } 
+                else { document.getElementById('player-title').innerText = "No Tracks Found"; }
+            } catch(e) { document.getElementById('player-title').innerText = "Load Error"; }
+        }
+        function initMusicPlayer() {
+            fetchMusicManifest();
+            audioEngine.addEventListener('timeupdate', () => { if(audioEngine.duration) document.getElementById('progress-bar').style.width = `${(audioEngine.currentTime / audioEngine.duration) * 100}%`; });
+            audioEngine.addEventListener('ended', nextTrack);
+        }
+        function loadTrack(index) {
+            currentTrackIndex = index; const track = playlist[index];
+            const audioPath = track.src.startsWith('/') ? '.' + track.src : track.src;
+            const coverPath = track.cover ? (track.cover.startsWith('/') ? '.' + track.cover : track.cover) : '/assets/images/logo.png';
+            audioEngine.src = audioPath;
+            document.getElementById('player-category').innerText = track.category;
+            document.getElementById('player-title').innerText = track.title;
+            document.getElementById('vinyl-spin').src = coverPath;
+            updateLibraryHighlight();
+        }
+        function togglePlay() {
+            const playBtn = document.getElementById('play-btn'); const vinyl = document.getElementById('vinyl-spin');
+            if (isPlaying) { audioEngine.pause(); playBtn.innerHTML = '<i class="fas fa-play"></i>'; vinyl.classList.remove('playing'); } 
+            else { audioEngine.play().catch(e=>console.warn(e)); playBtn.innerHTML = '<i class="fas fa-pause"></i>'; vinyl.classList.add('playing'); }
+            isPlaying = !isPlaying;
+        }
+        function nextTrack() { currentTrackIndex = (currentTrackIndex + 1) % playlist.length; loadTrack(currentTrackIndex); if (isPlaying) audioEngine.play(); }
+        function prevTrack() { currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length; loadTrack(currentTrackIndex); if (isPlaying) audioEngine.play(); }
+        function seekAudio(e) { const rect = document.getElementById('progress-bar-container').getBoundingClientRect(); audioEngine.currentTime = ((e.clientX - rect.left) / rect.width) * audioEngine.duration; }
+        function togglePlayerSize() {
+            const player = document.getElementById('music-player'); const btn = document.getElementById('resize-btn');
+            if (player.classList.contains('maximized')) { player.classList.replace('maximized', 'minimized'); btn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>'; btn.title = "Maximize"; if(document.getElementById('music-ecosystem').classList.contains('ecosystem-active')) toggleLibrary(); } 
+            else { player.classList.replace('minimized', 'maximized'); btn.innerHTML = '<i class="fas fa-compress-alt"></i>'; btn.title = "Minimize"; }
+        }
+        function toggleLibrary() {
+            const eco = document.getElementById('music-ecosystem'); const player = document.getElementById('music-player');
+            if (!eco.classList.contains('ecosystem-active') && player.classList.contains('minimized')) togglePlayerSize();
+            eco.classList.toggle('ecosystem-active');
+        }
+        function buildLibraryUI() {
+            document.getElementById('library-list').innerHTML = playlist.map((track, i) => {
+                const coverPath = track.cover ? (track.cover.startsWith('/') ? '.' + track.cover : track.cover) : '/assets/images/logo.png';
+                return `<div class="lib-item" id="lib-track-${i}" onclick="playFromLibrary(${i})"><img src="${coverPath}" class="lib-item-cover" alt="Cover" onerror="this.src='/assets/images/logo.png'"><div class="lib-item-info"><h4>${track.title}</h4><span>${track.category}</span></div></div>`;
+            }).join('');
+        }
+        function playFromLibrary(index) { if (index !== currentTrackIndex) { loadTrack(index); if (!isPlaying) togglePlay(); else audioEngine.play(); } else { togglePlay(); } }
+        function updateLibraryHighlight() { document.querySelectorAll('.lib-item').forEach(el => el.classList.remove('active')); const act = document.getElementById(`lib-track-${currentTrackIndex}`); if (act) act.classList.add('active'); }
     </script>
 </body>
 </html>
