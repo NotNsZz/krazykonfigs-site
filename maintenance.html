@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --accent: #5865F2; --danger: #ed4245; }
         body {
             background-color: #0a0a0a; color: #ffffff;
             font-family: 'Source Sans Pro', sans-serif;
@@ -19,11 +18,12 @@
         }
         body.ready { opacity: 1; }
 
+        /* Subtle Ambient matching Dashboard Dark Mode */
         .bg-fx { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
-        .bg-fx::before, .bg-fx::after { content: ''; position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.12; animation: floatBg 25s infinite alternate ease-in-out; }
-        .bg-fx::before { width: 50vw; height: 50vw; background: var(--accent); top: -20vh; left: -10vw; }
-        .bg-fx::after { width: 40vw; height: 40vw; background: var(--danger); bottom: -10vh; right: -5vw; animation-delay: -12s; }
-        @keyframes floatBg { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(8vw, 8vh) scale(1.15); } }
+        .bg-fx::before, .bg-fx::after { content: ''; position: absolute; border-radius: 50%; filter: blur(150px); animation: floatBg 25s infinite alternate ease-in-out; }
+        .bg-fx::before { width: 60vw; height: 60vw; background: #ffffff; opacity: 0.03; top: -20vh; left: -10vw; }
+        .bg-fx::after { width: 50vw; height: 50vw; background: #ffffff; opacity: 0.02; bottom: -10vh; right: -5vw; animation-delay: -12s; }
+        @keyframes floatBg { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(5vw, 5vh) scale(1.1); } }
 
         #smooth-cursor { position: fixed; width: 20px; height: 20px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s, background 0.2s; }
 
@@ -44,7 +44,7 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .admin-bypass { margin-top: 3rem; padding: 10px 20px; background: transparent; border: 1px solid #5865F2; color: #5865F2; text-decoration: none; font-weight: 700; border-radius: 4px; display: none; transition: 0.3s; }
-        .admin-bypass:hover { background: #5865F2; color: #fff; }
+        .admin-bypass:hover { background: #5865F2; color: #fff; transform: scale(1.05); }
     </style>
 </head>
 <body>
