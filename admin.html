@@ -137,10 +137,10 @@
         .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
         
-        .custom-dialog-box { background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .custom-dialog-box { background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); white-space: pre-wrap;}
         .modal-overlay.show .custom-dialog-box { transform: translateY(0); }
         .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; }
-        .custom-dialog-box p { color: var(--text-dim); margin-bottom: 2rem; font-size: 1rem; }
+        .custom-dialog-box p { color: var(--text-dim); margin-bottom: 2rem; font-size: 1rem; line-height: 1.5; }
         .dialog-actions { display: flex; gap: 10px; justify-content: center; }
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -162,6 +162,7 @@
         .maximized .cd-container { width: 90px; height: 90px; margin-right: 15px; float: left; }
         .minimized .cd-container { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 12px; flex-shrink: 0; }
         
+        /* Render Fix */
         .vinyl-record { width: 80%; height: 80%; border-radius: 50%; border: 2px solid var(--text); animation: spin 3s linear infinite; animation-play-state: paused; object-fit: cover; background: var(--bg-body); }
         .minimized .vinyl-record { width: 100%; height: 100%; border: none; }
         .vinyl-record.playing { animation-play-state: running; }
@@ -275,8 +276,8 @@
                 </div>
                 <div class="dropdown" id="profileDropdown">
                     <a href="dashboard.html" class="drop-link"><i class="fas fa-tachometer-alt"></i> Back to Dashboard</a>
-                    <div class="dropdown-item logout-btn" onclick="handleLogoutClick()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
                     <div class="dropdown-item ambient-btn" onclick="toggleAmbient()"><i class="fas fa-sparkles"></i> Ambient: <span id="ambientStateText">ON</span></div>
+                    <div class="dropdown-item logout-btn" onclick="handleLogoutClick()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
                 </div>
             </div>
         </header>
@@ -578,7 +579,8 @@
         }
 
         async function renderConfigs(isArchivedStr) {
-            const { data } = await _supabase.from('configs').select('*').eq('is_archived', isArchivedStr).order('id', {ascending: true});
+            // UPDATED: Now sorts by priority ascending
+            const { data } = await _supabase.from('configs').select('*').eq('is_archived', isArchivedStr).order('priority', {ascending: true});
             activeDataStore = data || []; const title = isArchivedStr === 'true' ? 'Draft & Archive' : 'Config Editor';
             return `
                 <div class="page-header"><h1>${title}</h1><button class="btn-primary" onclick="openConfigModal()"><i class="fas fa-plus"></i> Create New</button></div>
@@ -587,7 +589,7 @@
                         const actionLabel = c.is_archived === 'true' ? 'Publish' : 'Archive'; const toggleArchive = c.is_archived === 'true' ? 'false' : 'true';
                         return `
                         <div class="item-card">
-                            <h3>${c.title} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">ID: ${c.id}</span></h3>
+                            <h3>${c.title} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">ID: ${c.id} | Pri: ${c.priority || 1}</span></h3>
                             <div class="card-section"><h4>Prediction</h4><div class="data-row"><span class="data-label">Sim Timer:</span> <span class="data-val">${c.sim_timer || '-'}</span></div><div class="data-row"><span class="data-label">Pred Int:</span> <span class="data-val">${c.pred_interval || '-'}</span></div></div>
                             <div class="card-section"><h4>Multiplier</h4><div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">${c.vertical || '-'}</span></div><div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">${c.horizontal || '-'}</span></div></div>
                             <div class="card-actions" style="justify-content:flex-end;">
@@ -719,6 +721,7 @@
                         <div class="form-group"><label>Offsets (X/Y/Z)</label><input type="text" name="offsets" class="form-control" value="${c.offsets||'0 / 0 / 0'}"></div>
                         <div class="form-group"><label>Support Range</label><input type="text" name="support_range" class="form-control" value="${c.support_range||'10-20ms'}"></div>
                         <div class="form-group"><label>Hit Rate</label><input type="text" name="hit_rate" class="form-control" value="${c.hit_rate||'85%'}"></div>
+                        <div class="form-group full"><label>Priority (Lower = Higher)</label><input type="number" name="priority" class="form-control" value="${c.priority||1}" required></div>
                         <div class="form-group full"><label>Is Archived (Draft)</label><select name="is_archived" class="form-control"><option value="false" ${c.is_archived==='false'?'selected':''}>False (Published)</option><option value="true" ${c.is_archived==='true'?'selected':''}>True (Archived/Draft)</option></select></div>
                     </div>
                     <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;"><button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button><button type="submit" class="btn-primary" style="margin-left:10px;">Save Config</button></div>
@@ -812,7 +815,7 @@
         function buildLibraryUI() {
             document.getElementById('library-list').innerHTML = playlist.map((track, i) => {
                 const coverPath = track.cover ? (track.cover.startsWith('/') ? '.' + track.cover : track.cover) : '/assets/images/logo.png';
-                return `<div class="lib-item" id="lib-track-${i}" onclick="playFromLibrary(${i})"><img src="${coverPath}" class="lib-item-cover" alt="Cover" onerror="this.src='/assets/images/logo.png'"><div class="lib-item-info"><h4>${track.title}</h4><span>${track.category}</span></div></div>`;
+                return `<div class="lib-item" id="lib-track-${i}" onclick="playFromLibrary(${i})"><img src="${coverPath}" class="lib-item-cover" alt="Cover" onerror="this.src='/assets/images/logo.png'\"><div class="lib-item-info"><h4>${track.title}</h4><span>${track.category}</span></div></div>`;
             }).join('');
         }
         function playFromLibrary(index) { if (index !== currentTrackIndex) { loadTrack(index); if (!isPlaying) togglePlay(); else audioEngine.play(); } else { togglePlay(); } }
