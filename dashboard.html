@@ -23,7 +23,6 @@
             --modal-bg: #161616; --modal-border: #1f1f1f;
         }
 
-        /* --- Ambient Background & Dotted Texture --- */
         body { 
             background-color: var(--bg-body); color: var(--text-main); font-family: 'Source Sans Pro', sans-serif; 
             transition: background-color 0.3s; opacity: 0; overflow-x: hidden; 
@@ -45,7 +44,6 @@
         .bg-fx::after { width: 50vw; height: 50vw; background: var(--text-main); opacity: 0.02; bottom: -10vh; right: -5vw; animation-delay: -12s; }
         @keyframes floatBg { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(5vw, 5vh) scale(1.1); } }
 
-        /* --- Custom Smooth Cursor --- */
         #smooth-cursor {
             position: fixed; width: 20px; height: 20px; border-radius: 50%;
             background: rgba(255, 255, 255, 0.5); box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
@@ -130,7 +128,6 @@
         .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1.5rem; }
         
-        /* Twitter-Style Review System */
         .review-item { display: flex; gap: 12px; transition: var(--transition); }
         .review-avatar { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); object-fit: cover; }
         .review-content { flex: 1; }
@@ -147,10 +144,10 @@
         .reply-indicator { font-size: 0.8rem; font-weight: 700; color: var(--accent); display: none; align-items: center; gap: 5px; }
         .reply-indicator i { cursor: pointer; color: var(--danger); }
         
-        .custom-dialog-box { background: var(--modal-bg); padding: 2rem; border-radius: 8px; border: 1px solid var(--modal-border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
+        .custom-dialog-box { background: var(--modal-bg); padding: 2rem; border-radius: 8px; border: 1px solid var(--modal-border); width: 90%; max-width: 400px; text-align: center; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.25); white-space: pre-wrap;}
         .modal-overlay.show .custom-dialog-box { transform: translateY(0); }
         .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; color: var(--text-main); }
-        .custom-dialog-box p { color: var(--text-muted); margin-bottom: 2rem; font-size: 1rem; }
+        .custom-dialog-box p { color: var(--text-muted); margin-bottom: 2rem; font-size: 1rem; line-height: 1.5; }
         .dialog-actions { display: flex; gap: 10px; justify-content: center; }
         .btn-modal-primary { background: var(--text-main); color: var(--bg-body); border: none; padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; transition: 0.3s; }
         .btn-modal-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; transition: 0.3s; }
@@ -160,9 +157,6 @@
         .form-input { width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); border-radius: 4px; font-family: inherit; font-weight: 600; outline: none; transition: border-color 0.3s; }
         .form-input:focus { border-color: var(--text-main); }
 
-        /* =========================================
-           MUSIC PLAYER & LIBRARY STYLES
-           ========================================= */
         .music-ecosystem { position: fixed; bottom: 2rem; right: 2rem; z-index: 1500; display: flex; align-items: flex-end; gap: 1rem; }
         
         .music-player { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; position: relative; }
@@ -237,7 +231,7 @@
 
     <nav>
         <div class="brand-container">
-            <img src="/assets/images/logo.png" alt="Krazy Konfigs Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/32'">
+            <img src="/assets/images/logo.png" alt="Krazy Konfigs Logo" class="brand-logo" onerror="this.src='/assets/images/logo.png'">
             <span style="font-weight:900; font-size: 1.2rem; letter-spacing: 0.5px; text-transform: uppercase;">Krazy Konfigs</span>
         </div>
         
@@ -297,10 +291,13 @@
             </div>
             <div class="modal-body" id="reviewList"></div>
             <div class="review-input-area">
-                <div class="reply-indicator" id="replyIndicator">
-                    Replying to @<span id="replyUsername"></span> <i class="fas fa-times" onclick="cancelReply()"></i>
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <div class="reply-indicator" id="replyIndicator" style="margin:0;">
+                        Replying to @<span id="replyUsername"></span> <i class="fas fa-times" onclick="cancelReply()"></i>
+                    </div>
+                    <span id="charCounter" style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-left: auto;">0 / 112</span>
                 </div>
-                <div class="input-stars" id="starSelector">
+                <div class="input-stars" id="starSelector" style="margin-bottom: 5px;">
                     <i class="fas fa-star input-star active" data-val="1"></i>
                     <i class="fas fa-star input-star active" data-val="2"></i>
                     <i class="fas fa-star input-star active" data-val="3"></i>
@@ -308,7 +305,7 @@
                     <i class="fas fa-star input-star active" data-val="5"></i>
                 </div>
                 <div style="display:flex; gap: 10px;">
-                    <input type="text" id="reviewTextInput" class="form-input" style="margin:0;" placeholder="Write a review/reply...">
+                    <input type="text" id="reviewTextInput" class="form-input" style="margin:0;" placeholder="Write a review/reply..." oninput="updateCharCount()">
                     <button onclick="submitReview()" class="hero-btn" style="padding: 10px 20px; border-radius: 4px;"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
@@ -638,9 +635,12 @@
         function updateLibraryHighlight() { document.querySelectorAll('.lib-item').forEach(el => el.classList.remove('active')); const act = document.getElementById(`lib-track-${currentTrackIndex}`); if (act) act.classList.add('active'); }
 
         // ==========================================
+        // CONFIGS & CONTRIBUTORS LOGIC
+        // ==========================================
 
         async function fetchConfigs() {
-            const { data } = await _supabase.from('configs').select('*').eq('is_archived', 'false').order('id', {ascending: true});
+            // UPDATED: Now sorts by priority ascending
+            const { data } = await _supabase.from('configs').select('*').eq('is_archived', 'false').order('priority', {ascending: true});
             allConfigs = data || []; renderConfigs(allConfigs);
         }
 
@@ -680,7 +680,6 @@
                             </div>
                             <div style="text-align: right;">
                                 <span style="font-size:0.8rem; font-style:italic; font-weight: 600; color:var(--text-muted); display: block;">by ${c.creator || 'Kriz'}</span>
-                                <span style="font-size:0.65rem; color:var(--text-muted); font-weight: 600;">ID: ${c.id}</span>
                             </div>
                         </div>
                         <button class="review-trigger-btn" onclick="openReviews(${c.id})"><i class="fas fa-comments"></i> View Reviews</button>
@@ -720,9 +719,53 @@
         }
 
         // ==========================================
-        // TWITTER-STYLE NESTED REVIEWS
+        // TWITTER-STYLE NESTED REVIEWS & SPAM CONTROL
         // ==========================================
         
+        function updateCharCount() {
+            const input = document.getElementById('reviewTextInput');
+            const counter = document.getElementById('charCounter');
+            const len = input.value.length;
+            counter.innerText = `${len} / 112`;
+            if (len > 112) counter.style.color = 'var(--danger)';
+            else counter.style.color = 'var(--text-muted)';
+        }
+
+        let cooldownTimer = null;
+        function showCooldownPopup(secondsLeft) {
+            const overlay = document.getElementById('customDialogOverlay');
+            document.getElementById('dialogTitle').innerText = "Hold up! You're reviewing too fast";
+            document.getElementById('dialogBtnCancel').style.display = 'none';
+            const msgEl = document.getElementById('dialogMessage');
+            const confirmBtn = document.getElementById('dialogBtnConfirm');
+            confirmBtn.innerText = 'OK';
+            confirmBtn.className = 'btn-modal-primary';
+
+            const updateText = (sec) => {
+                const m = Math.floor(sec / 60); const s = sec % 60;
+                msgEl.innerText = `You may comment again in:\n${m}:${s < 10 ? '0' : ''}${s}`;
+            };
+
+            updateText(secondsLeft);
+            overlay.classList.add('show');
+
+            if (cooldownTimer) clearInterval(cooldownTimer);
+            cooldownTimer = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    clearInterval(cooldownTimer);
+                    msgEl.innerText = "You can post now!";
+                } else updateText(secondsLeft);
+            }, 1000);
+
+            const handleConfirm = () => { 
+                overlay.classList.remove('show'); 
+                confirmBtn.removeEventListener('click', handleConfirm); 
+                if (cooldownTimer) clearInterval(cooldownTimer);
+            };
+            confirmBtn.addEventListener('click', handleConfirm);
+        }
+
         function buildReviewTree(reviews) {
             const tree = []; const lookup = {};
             reviews.forEach(r => lookup[r.id] = { ...r, children: [] });
@@ -770,6 +813,7 @@
             activeConfigId = configId; replyingToId = null;
             document.getElementById('replyIndicator').style.display = 'none';
             document.getElementById('reviewTextInput').value = '';
+            updateCharCount();
             document.getElementById('reviewModal').classList.add('show');
             
             const { data } = await _supabase.from('reviews').select('*').eq('config_id', configId).order('created_at', {ascending: true});
@@ -823,11 +867,39 @@
         });
 
         async function submitReview() {
-            const input = document.getElementById('reviewTextInput'); const comment = input.value.trim();
+            const input = document.getElementById('reviewTextInput'); 
+            const comment = input.value.trim();
             if(!currentUser) return await customAlert("You must be logged in to leave a review.", "Notice");
             if(!comment || !activeConfigId) return;
 
+            if (comment.length > 112) {
+                return await customAlert(`${comment.length}/112`, "Hold up! Your review is too long");
+            }
+
             input.disabled = true;
+
+            // Server-Side Cooldown Check
+            const { data: lastReview } = await _supabase.from('reviews')
+                .select('created_at')
+                .eq('poster_id', currentUser.discord_id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (lastReview) {
+                const lastPostTime = new Date(lastReview.created_at).getTime();
+                const now = new Date().getTime();
+                const cooldownMs = 3 * 60 * 1000; // 3 mins
+                const timePassed = now - lastPostTime;
+
+                if (timePassed < cooldownMs) {
+                    let timeLeft = Math.ceil((cooldownMs - timePassed) / 1000);
+                    input.disabled = false;
+                    showCooldownPopup(timeLeft);
+                    return;
+                }
+            }
+
             const { error } = await _supabase.from('reviews').insert({
                 config_id: activeConfigId,
                 poster_id: currentUser.discord_id,
@@ -838,8 +910,14 @@
                 replying_to_id: replyingToId,
                 created_at: new Date().toISOString()
             });
+
             input.disabled = false;
-            if(!error) { input.value = ''; cancelReply(); openReviews(activeConfigId); }
+            if(!error) { 
+                input.value = ''; 
+                updateCharCount(); 
+                cancelReply(); 
+                openReviews(activeConfigId); 
+            }
             else { await customAlert("Failed to post review.", "Error"); }
         }
 
