@@ -268,10 +268,10 @@
         <div class="custom-dialog-box">
             <button class="dialog-close-x" onclick="closeCreatorPromo()"><i class="fas fa-times"></i></button>
             <h3 style="font-size: 1.5rem; font-weight: 900; margin-bottom: 0.8rem; color: var(--text-main); margin-top: 0.5rem;">Config Creator?</h3>
-            <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.5;">Hey! wait are you a config creator? , if yes we'd like your configs to have on the site :3, please contact me through discord using the button given below!</p>
+            <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.5;">Hey! Wait, are you a config creator? If yes, we'd like to have your configs on the site :3</p>
             <div class="dialog-actions">
                 <button class="btn-modal-danger" onclick="closeCreatorPromo()">Cancel</button>
-                <a href="https://discord.com/users/1166375714837233705" target="_blank" class="btn-modal-primary" style="background: #5865F2; color: white; text-decoration: none; display: flex; align-items: center; gap: 8px;" onclick="closeCreatorPromo()"><i class="fab fa-discord"></i> Contact Me</a>
+                <a href="https://discord.com/users/988436092984393738" target="_blank" class="btn-modal-primary" style="background: #5865F2; color: white; text-decoration: none; display: flex; align-items: center; gap: 8px;" onclick="closeCreatorPromo()"><i class="fab fa-discord"></i> Contact Me</a>
             </div>
         </div>
     </div>
@@ -315,14 +315,23 @@
     <section class="section-padding" id="configs">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; flex-wrap: wrap; gap: 1rem;">
             <h2 style="font-weight: 900; font-size: 2rem; letter-spacing: -1px;">CONFIGS</h2>
-            <div style="display:flex; gap: 0.8rem;">
-                <button class="filter-btn active" onclick="filterConfigs('all', this)">All</button>
-                <button class="filter-btn" onclick="filterConfigs('low', this)">Low Ping</button>
-                <button class="filter-btn" onclick="filterConfigs('mid', this)">Mid Ping</button>
-                <button class="filter-btn" onclick="filterConfigs('high', this)">High Ping</button>
+            <div style="display:flex; gap: 0.8rem; flex-wrap: wrap; align-items: center;">
+                <input type="text" id="configSearch" class="form-input" style="margin:0; width: 220px; padding: 8px 16px; min-height: 38px;" placeholder="Search configs..." oninput="applyFilters()">
+                <select id="creatorFilter" class="form-input" style="margin:0; width: auto; padding: 8px 16px; min-height: 38px;" onchange="applyFilters()">
+                    <option value="all">By Creator</option>
+                </select>
+                <button class="filter-btn active" onclick="applyFilters('all', this)">All</button>
+                <button class="filter-btn" onclick="applyFilters('low', this)">Low Ping</button>
+                <button class="filter-btn" onclick="applyFilters('mid', this)">Mid Ping</button>
+                <button class="filter-btn" onclick="applyFilters('high', this)">High Ping</button>
             </div>
         </div>
+        
         <div class="config-grid" id="config-container"></div>
+        
+        <div id="showMoreConfigsBtnWrap" style="text-align:center; margin-top:2.5rem; display:none;">
+            <button class="hero-btn" style="width:100%; max-width: 800px; padding: 18px; letter-spacing: 2px;" onclick="showMoreConfigs()">SHOW MORE CONFIGS <i class="fas fa-chevron-down" style="margin-left: 10px;"></i></button>
+        </div>
     </section>
 
     <section class="section-padding" id="contributors" style="background: var(--tag-bg);">
@@ -411,6 +420,10 @@
         const _supabase = supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE');
         
         let allConfigs = [];
+        let currentFilteredConfigs = [];
+        let currentVisibleCount = 9;
+        let currentPingTier = 'all';
+        
         let currentUser = null;
         let activeConfigId = null;
         let currentRatingInput = 5;
@@ -445,7 +458,7 @@
 
         if (ecoResizer) {
             ecoResizer.addEventListener('mousedown', (e) => {
-                e.stopPropagation(); // Prevent dragEco from activating
+                e.stopPropagation(); 
                 isResizingEco = true;
                 mouseStartX = e.clientX;
                 mouseStartY = e.clientY;
@@ -458,7 +471,7 @@
         if (musicPlayer) {
             musicPlayer.style.cursor = 'grab';
             musicPlayer.addEventListener('mousedown', (e) => {
-                if(e.target.closest('button') || e.target.closest('.progress-container') || e.target.tagName.toLowerCase() === 'img') return;
+                if(e.target.closest('button') || e.target.closest('.progress-container') || e.target.tagName.toLowerCase() === 'img' || e.target.closest('.eco-resizer')) return;
                 isDraggingEco = true;
                 mouseStartX = e.clientX; mouseStartY = e.clientY;
                 ecoStartX = tgEcoX; ecoStartY = tgEcoY;
@@ -654,7 +667,6 @@
                 if(document.getElementById('ambientStateText')) document.getElementById('ambientStateText').innerText = 'OFF';
             }
             
-            // Fire the Creator Promo if it hasn't been seen this session
             if (!sessionStorage.getItem('creatorPromoSeen')) {
                 sessionStorage.setItem('creatorPromoSeen', 'true');
                 document.getElementById('creatorPromoOverlay').classList.add('show');
@@ -753,16 +765,58 @@
         function updateLibraryHighlight() { document.querySelectorAll('.lib-item').forEach(el => el.classList.remove('active')); const act = document.getElementById(`lib-track-${currentTrackIndex}`); if (act) act.classList.add('active'); }
 
         // ==========================================
-        // CONFIGS & CONTRIBUTORS LOGIC
+        // CONFIGS LOGIC (PAGINATION, SEARCH, FILTER)
         // ==========================================
 
         async function fetchConfigs() {
             const { data } = await _supabase.from('configs').select('*').eq('is_archived', 'false').order('priority', {ascending: true});
-            allConfigs = data || []; renderConfigs(allConfigs);
+            allConfigs = data || []; 
+            
+            // Populate Creator Filter
+            const creators = [...new Set(allConfigs.map(c => c.creator).filter(Boolean))];
+            const creatorSelect = document.getElementById('creatorFilter');
+            if (creatorSelect) {
+                creatorSelect.innerHTML = '<option value="all">By Creator</option>' + creators.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+            }
+            
+            applyFilters(null, document.querySelector('.filter-btn.active'));
         }
 
-        function renderConfigs(configs) {
-            document.getElementById('config-container').innerHTML = configs.map(c => `
+        function applyFilters(pingTier = null, btnElement = null) {
+            if (pingTier) {
+                currentPingTier = pingTier;
+                if (btnElement) {
+                    document.querySelectorAll('#configs .filter-btn').forEach(b => b.classList.remove('active'));
+                    btnElement.classList.add('active');
+                }
+            }
+            
+            currentVisibleCount = 9; // Reset pagination on new filter
+            const searchTerm = (document.getElementById('configSearch')?.value || '').toLowerCase();
+            const creatorTerm = document.getElementById('creatorFilter')?.value || 'all';
+
+            currentFilteredConfigs = allConfigs.filter(c => {
+                const matchesPing = currentPingTier === 'all' || (c.ping_tier || '').toLowerCase().includes(currentPingTier);
+                const matchesSearch = (c.title || '').toLowerCase().includes(searchTerm);
+                const matchesCreator = creatorTerm === 'all' || c.creator === creatorTerm;
+                return matchesPing && matchesSearch && matchesCreator;
+            });
+
+            renderConfigs();
+        }
+
+        function showMoreConfigs() {
+            currentVisibleCount += 9;
+            renderConfigs();
+        }
+
+        function renderConfigs() {
+            const container = document.getElementById('config-container');
+            const showMoreWrap = document.getElementById('showMoreConfigsBtnWrap');
+            
+            const configsToShow = currentFilteredConfigs.slice(0, currentVisibleCount);
+            
+            container.innerHTML = configsToShow.map(c => `
                 <div class="config-card">
                     <div>
                         <div class="card-head">${escapeHTML(c.title)} | ${escapeHTML(c.ping_tier) || 'N/A'} PING</div>
@@ -803,13 +857,23 @@
                     </div>
                 </div>
             `).join('');
+
+            if (configsToShow.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-muted); text-align:center; grid-column: 1/-1; padding: 2rem;">No configs match your search criteria.</p>`;
+            }
+
+            if (showMoreWrap) {
+                if (currentVisibleCount >= currentFilteredConfigs.length) {
+                    showMoreWrap.style.display = 'none';
+                } else {
+                    showMoreWrap.style.display = 'block';
+                }
+            }
         }
 
-        function filterConfigs(tier, btn) {
-            document.querySelectorAll('#configs .filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
-            const filtered = tier === 'all' ? allConfigs : allConfigs.filter(c => c.ping_tier?.toLowerCase().includes(tier.toLowerCase()));
-            renderConfigs(filtered);
-        }
+        // ==========================================
+        // CONTRIBUTORS LOGIC
+        // ==========================================
 
         function getBadgeColor(tag) {
             const t = tag.toUpperCase();
@@ -854,12 +918,9 @@
             document.getElementById('dialogTitle').innerText = "Hold up! You're reviewing too fast";
             document.getElementById('dialogBtnCancel').style.display = 'none';
             const msgEl = document.getElementById('dialogMessage');
-            
             const confirmBtn = document.getElementById('dialogBtnConfirm');
             confirmBtn.innerText = 'OK';
             confirmBtn.className = 'btn-modal-primary';
-            
-            const closeX = document.getElementById('dialogCloseX');
 
             const updateText = (sec) => {
                 const m = Math.floor(sec / 60); const s = sec % 60;
@@ -881,11 +942,9 @@
             const handleConfirm = () => { 
                 overlay.classList.remove('show'); 
                 confirmBtn.removeEventListener('click', handleConfirm); 
-                closeX.removeEventListener('click', handleConfirm);
                 if (cooldownTimer) clearInterval(cooldownTimer);
             };
             confirmBtn.addEventListener('click', handleConfirm);
-            closeX.addEventListener('click', handleConfirm);
         }
 
         function buildReviewTree(reviews) {
