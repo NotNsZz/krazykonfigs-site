@@ -88,12 +88,12 @@
 
         #dynamic-container { flex: 1; padding: 2.5rem; overflow-y: auto; }
         
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .page-header h1 { font-size: 2rem; font-weight: 900; letter-spacing: -0.5px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+        .page-header h1 { font-size: 2rem; font-weight: 900; letter-spacing: -0.5px; margin: 0; }
         .search-bar { background: var(--input-bg); border: 1px solid var(--border); padding: 10px 16px; border-radius: 8px; color: var(--text); width: 250px; outline: none; font-family: inherit; font-size: 0.9rem; transition: var(--transition); }
         .search-bar:focus { border-color: var(--accent); }
 
-        .btn-primary { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+        .btn-primary { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 8px; }
         .btn-primary:hover { filter: brightness(1.1); transform: scale(1.05); }
         .btn-danger { background: rgba(237, 66, 69, 0.1); color: var(--danger); border: 1px solid rgba(237, 66, 69, 0.2); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: var(--transition); }
         .btn-danger:hover { background: var(--danger); color: #fff; transform: scale(1.05); }
@@ -125,7 +125,7 @@
         input:checked + .slider { background-color: var(--success); }
         input:checked + .slider:before { transform: translateX(20px); background-color: #fff; }
 
-        .status-select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; outline: none; font-weight: 600; }
+        .status-select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; outline: none; font-weight: 600; font-family: inherit; }
 
         .stat-banner { background: linear-gradient(135deg, var(--card-bg), rgba(88, 101, 242, 0.1)); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 2rem; }
         .stat-banner h2 { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; }
@@ -142,10 +142,6 @@
         .custom-dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; color: var(--text); }
         .custom-dialog-box p { color: var(--text-dim); margin-bottom: 2rem; font-size: 1rem; line-height: 1.5; }
         .dialog-actions { display: flex; gap: 10px; justify-content: center; }
-        .btn-modal-primary { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-modal-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-modal-danger { background: var(--danger); color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-modal-primary:hover, .btn-modal-secondary:hover, .btn-modal-danger:hover { transform: scale(1.05); }
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
@@ -349,10 +345,13 @@
 
         let currentUser = null;
         let activeDataStore = []; 
+        let adminAllConfigs = [];
+        let adminFilteredConfigs = [];
+        let adminVisibleCount = 9;
 
         // --- XSS SANITIZER ---
         function escapeHTML(str) {
-            if (!str) return '';
+            if (str === null || str === undefined) return '';
             return str.toString().replace(/[&<>'"]/g, tag => ({
                 '&': '&amp;',
                 '<': '&lt;',
@@ -586,7 +585,10 @@
                     case 'settings': html = await renderSettings(); break;
                 }
             } catch (err) { html = `<p style="color:var(--danger)">Error loading module: ${escapeHTML(err.message)}</p>`; }
-            container.innerHTML = html;
+            
+            if (html) {
+                container.innerHTML = html;
+            }
         }
 
         async function renderHome() {
@@ -638,28 +640,91 @@
                 </table></div>`;
         }
 
+        // --- Admin Pagination, Search, and Filtering ---
         async function renderConfigs(isArchivedStr) {
+            const title = isArchivedStr === 'true' ? 'Draft & Archive' : 'Config Editor';
             const { data } = await _supabase.from('configs').select('*').eq('is_archived', isArchivedStr).order('priority', {ascending: true});
-            activeDataStore = data || []; const title = isArchivedStr === 'true' ? 'Draft & Archive' : 'Config Editor';
+            
+            activeDataStore = data || []; 
+            adminAllConfigs = data || [];
+            adminFilteredConfigs = [...adminAllConfigs];
+            adminVisibleCount = 9;
+
+            const creators = [...new Set(adminAllConfigs.map(c => c.creator).filter(Boolean))];
+            const creatorOpts = '<option value="all">By Creator</option>' + creators.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+
             return `
-                <div class="page-header"><h1>${title}</h1><button class="btn-primary" onclick="openConfigModal()"><i class="fas fa-plus"></i> Create New</button></div>
-                <div class="config-grid">
-                    ${activeDataStore.map(c => {
-                        const actionLabel = c.is_archived === 'true' ? 'Publish' : 'Archive'; const toggleArchive = c.is_archived === 'true' ? 'false' : 'true';
-                        return `
-                        <div class="item-card">
-                            <h3>${escapeHTML(c.title)} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">Pri: ${escapeHTML(c.priority) || 1}</span></h3>
-                            <div class="card-section"><h4>Prediction</h4><div class="data-row"><span class="data-label">Sim Timer:</span> <span class="data-val">${escapeHTML(c.sim_timer) || '-'}</span></div><div class="data-row"><span class="data-label">Pred Int:</span> <span class="data-val">${escapeHTML(c.pred_interval) || '-'}</span></div></div>
-                            <div class="card-section"><h4>Multiplier</h4><div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">${escapeHTML(c.vertical) || '-'}</span></div><div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">${escapeHTML(c.horizontal) || '-'}</span></div></div>
-                            <div class="card-actions" style="justify-content:flex-end;">
-                                <button class="btn-secondary" onclick="openConfigModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
-                                <button class="btn-secondary" onclick="verifyAndExecute('archive', 'configs', ${c.id}, '${toggleArchive}')">${actionLabel}</button>
-                                <button class="btn-danger" title="Delete" onclick="verifyAndExecute('delete', 'configs', ${c.id})"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>`;
-                    }).join('')}
-                    ${activeDataStore.length === 0 ? '<p style="color:var(--text-dim);">No configs found in this section.</p>' : ''}
+                <div class="page-header">
+                    <h1>${title}</h1>
+                    <div style="display:flex; gap: 10px; align-items:center; flex-wrap: wrap;">
+                        <input type="text" id="adminConfigSearch" class="search-bar" placeholder="Search configs..." oninput="adminApplyFilters()">
+                        <select id="adminCreatorFilter" class="status-select" onchange="adminApplyFilters()">
+                            ${creatorOpts}
+                        </select>
+                        <button class="btn-primary" onclick="openConfigModal()"><i class="fas fa-plus"></i> Create New</button>
+                    </div>
+                </div>
+                <div class="config-grid" id="admin-config-container">
+                    ${buildAdminConfigGridHTML(adminFilteredConfigs.slice(0, adminVisibleCount))}
+                </div>
+                <div id="adminShowMoreWrap" style="text-align:center; margin-top:2rem; display:${adminFilteredConfigs.length > adminVisibleCount ? 'block' : 'none'};">
+                    <button class="btn-secondary" style="width:100%; padding:15px; font-size:1rem;" onclick="adminShowMoreConfigs()">SHOW MORE CONFIGS <i class="fas fa-chevron-down" style="margin-left: 10px;"></i></button>
+                </div>
+            `;
+        }
+
+        function adminApplyFilters() {
+            const searchTerm = (document.getElementById('adminConfigSearch')?.value || '').toLowerCase();
+            const creatorTerm = document.getElementById('adminCreatorFilter')?.value || 'all';
+
+            adminFilteredConfigs = adminAllConfigs.filter(c => {
+                const matchesSearch = (c.title || '').toLowerCase().includes(searchTerm);
+                const matchesCreator = creatorTerm === 'all' || c.creator === creatorTerm;
+                return matchesSearch && matchesCreator;
+            });
+
+            adminVisibleCount = 9;
+            updateAdminConfigGrid();
+        }
+
+        function adminShowMoreConfigs() {
+            adminVisibleCount += 9;
+            updateAdminConfigGrid();
+        }
+
+        function updateAdminConfigGrid() {
+            const container = document.getElementById('admin-config-container');
+            const showMoreWrap = document.getElementById('adminShowMoreWrap');
+            if(!container) return;
+
+            const configsToShow = adminFilteredConfigs.slice(0, adminVisibleCount);
+            container.innerHTML = buildAdminConfigGridHTML(configsToShow);
+
+            if (configsToShow.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-dim); grid-column:1/-1;">No configs found matching search criteria.</p>';
+            }
+
+            if (showMoreWrap) {
+                showMoreWrap.style.display = adminVisibleCount >= adminFilteredConfigs.length ? 'none' : 'block';
+            }
+        }
+
+        function buildAdminConfigGridHTML(configs) {
+            return configs.map(c => {
+                const actionLabel = c.is_archived === 'true' ? 'Publish' : 'Archive'; 
+                const toggleArchive = c.is_archived === 'true' ? 'false' : 'true';
+                return `
+                <div class="item-card">
+                    <h3>${escapeHTML(c.title)} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">Pri: ${escapeHTML(c.priority) || 1}</span></h3>
+                    <div class="card-section"><h4>Prediction</h4><div class="data-row"><span class="data-label">Sim Timer:</span> <span class="data-val">${escapeHTML(c.sim_timer) || '-'}</span></div><div class="data-row"><span class="data-label">Pred Int:</span> <span class="data-val">${escapeHTML(c.pred_interval) || '-'}</span></div></div>
+                    <div class="card-section"><h4>Multiplier</h4><div class="data-row"><span class="data-label">Vertical:</span> <span class="data-val">${escapeHTML(c.vertical) || '-'}</span></div><div class="data-row"><span class="data-label">Horizontal:</span> <span class="data-val">${escapeHTML(c.horizontal) || '-'}</span></div></div>
+                    <div class="card-actions" style="justify-content:flex-end;">
+                        <button class="btn-secondary" onclick="openConfigModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn-secondary" onclick="verifyAndExecute('archive', 'configs', ${c.id}, '${toggleArchive}')">${actionLabel}</button>
+                        <button class="btn-danger" title="Delete" onclick="verifyAndExecute('delete', 'configs', ${c.id})"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>`;
+            }).join('');
         }
 
         async function renderReviews() {
@@ -688,10 +753,9 @@
                 <div class="config-grid">
                     ${activeDataStore.map(c => `
                         <div class="item-card">
-                            <h3>${escapeHTML(c.name)}</h3>
+                            <h3>${escapeHTML(c.name)} <span style="float:right; font-size:0.75rem; color:var(--text-dim);">Pri: ${escapeHTML(c.priority) || 1}</span></h3>
                             <div class="data-row"><span class="data-label">Role Icon:</span> <span class="data-val"><i class="${escapeHTML(c.role_icon)}" style="color:${escapeHTML(c.icon_color)}"></i> ${escapeHTML(c.role_icon)}</span></div>
                             <div class="data-row"><span class="data-label">Tags:</span> <span class="data-val" style="font-size:0.8rem;">${escapeHTML((c.tags||[]).join(', '))}</span></div>
-                            <div class="data-row"><span class="data-label">Priority:</span> <span class="data-val" style="color:var(--accent);">${escapeHTML(c.priority) || 0}</span></div>
                             <div class="card-actions" style="justify-content:flex-end; margin-top:1.5rem;">
                                 <button class="btn-secondary" onclick="openContributorModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
                                 <button class="btn-danger" title="Delete" onclick="verifyAndExecute('delete', 'contributors', ${c.id})"><i class="fas fa-trash"></i></button>
