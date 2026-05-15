@@ -15,5 +15,5 @@
   { "id": "random-jumpstyle", "title": "Random Jumpstyle", "src": "/assets/music/phonk/random jumpstyle.m4a", "cover": "/assets/images/covers/randomjumpstyle.webp" },
   { "id": "wutiwant", "title": "Wutiwant", "src": "/assets/music/phonk/wutiwant.m4a", "cover": "/assets/images/covers/wutiwant.webp" },
   { "id": "iltwykm", "title": "I Like The Way You Kiss Me", "src": "/assets/music/extra/iltwykm.m4a", "cover": "/assets/images/covers/iltwykm.webp" },
-  { "id": "modjo", "title": "Modjo", "src": "/assets/music/extra/Modjo.mp3", "cover": "/assets/images/covers/modjo.webp" }
+  { "id": "modjo", "title": "Modjo", "src": "/assets/music/extra/Modjo.m4a", "cover": "/assets/images/covers/modjo.webp" }
 ]
