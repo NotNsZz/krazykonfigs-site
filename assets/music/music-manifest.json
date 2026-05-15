@@ -1,11 +1,18 @@
 [
-  { "id": "gta-v", "title": "GTA V Welcome To LS", "category": "GTA", "src": "/assets/music/gta/GTA_V.m4a", "cover": "/assets/images/covers/gtav.webp" },
-  { "id": "gta-iv", "title": "GTA IV Theme", "category": "GTA", "src": "/assets/music/gta/GTA_IV.m4a", "cover": "/assets/images/covers/gtaiv.webp" },
-  { "id": "gta-sa", "title": "GTA San Andreas Theme", "category": "GTA", "src": "/assets/music/gta/GTA_SA.m4a", "cover": "/assets/images/covers/gtasa.webp" },
-  { "id": "gta-vc", "title": "GTA Vice City Theme", "category": "GTA", "src": "/assets/music/gta/GTA_VC.m4a", "cover": "/assets/images/covers/gtavc.webp" },
-  { "id": "gta-lcs", "title": "GTA Liberty City Stories", "category": "GTA", "src": "/assets/music/gta/GTA_LCS.m4a", "cover": "/assets/images/covers/gtalcs.webp" },
-  { "id": "gta-iii", "title": "GTA III Theme", "category": "GTA", "src": "/assets/music/gta/GTA_III.m4a", "cover": "/assets/images/covers/gtaiii.webp" },
+  { "id": "gta-v", "title": "GTA V Welcome To LS", "category": "Grand Theft Auto", "src": "/assets/music/gta/GTA_V.m4a", "cover": "/assets/images/covers/gtav.webp" },
+  { "id": "gta-iv", "title": "GTA IV Theme", "category": "Grand Theft Auto", "src": "/assets/music/gta/GTA_IV.m4a", "cover": "/assets/images/covers/gtaiv.webp" },
+  { "id": "gta-sa", "title": "GTA San Andreas Theme", "category": "Grand Theft Auto", "src": "/assets/music/gta/GTA_SA.m4a", "cover": "/assets/images/covers/gtasa.webp" },
+  { "id": "gta-vc", "title": "GTA Vice City Theme", "category": "Grand Theft Auto", "src": "/assets/music/gta/GTA_VC.m4a", "cover": "/assets/images/covers/gtavc.webp" },
+  { "id": "gta-lcs", "title": "GTA Liberty City Stories", "category": "Grand Theft Auto", "src": "/assets/music/gta/GTA_LCS.m4a", "cover": "/assets/images/covers/gtalcs.webp" },
+  { "id": "gta-iii", "title": "GTA III Theme", "category": "Grand Theft Auto", "src": "/assets/music/gta/GTA_III.m4a", "cover": "/assets/images/covers/gtaiii.webp" },
   { "id": "heavenly-jumpstyle", "title": "HEAVENLY JUMPSTYLE", "category": "Phonk", "src": "/assets/music/phonk/HEAVENLY_JUMPSTYLE.m4a", "cover": "/assets/images/covers/hj.webp" },
   { "id": "trillium-hardtekk", "title": "TRILLIUM_HARDTEKK", "category": "Phonk", "src": "/assets/music/phonk/TRILLIUM_HARDTEKK.m4a", "cover": "/assets/images/covers/th.webp" },
-  { "id": "montagem-yueshi-wuys", "title": "MONTAGEM-YUESHI-WUYS", "category": "Phonk", "src": "/assets/music/phonk/MONTAGEM-YUESHI-WUYS.m4a", "cover": "/assets/images/covers/myw.webp" }
+  { "id": "montagem-yueshi-wuys", "title": "MONTAGEM-YUESHI-WUYS", "category": "Phonk", "src": "/assets/music/phonk/MONTAGEM-YUESHI-WUYS.m4a", "cover": "/assets/images/covers/myw.webp" },
+  { "id": "23-59", "title": "23 59", "category": "Phonk", "src": "/assets/music/phonk/23 59.m4a", "cover": "/assets/images/covers/2359.webp" },
+  { "id": "cala-bonita", "title": "CALA BONITA", "category": "Phonk", "src": "/assets/music/phonk/CALA BONITA.m4a", "cover": "/assets/images/covers/calabonita.webp" },
+  { "id": "neon-jump", "title": "Neon Jump", "category": "Phonk", "src": "/assets/music/phonk/Neon jump.m4a", "cover": "/assets/images/covers/neonjump.webp" },
+  { "id": "lol", "title": "lol", "category": "Phonk", "src": "/assets/music/phonk/lol.m4a", "cover": "/assets/images/covers/lol.webp" },
+  { "id": "random-jumpstyle", "title": "Random Jumpstyle", "category": "Phonk", "src": "/assets/music/phonk/random jumpstyle.m4a", "cover": "/assets/images/covers/randomjumpstyle.webp" },
+  { "id": "wutiwant", "title": "Wutiwant", "category": "Phonk", "src": "/assets/music/phonk/wutiwant.m4a", "cover": "/assets/images/covers/wutiwant.webp" },
+  { "id": "iltwykm", "title": "I Like The Way You Kiss Me", "category": "Extra", "src": "/assets/music/extra/iltwykm.m4a", "cover": "/assets/images/covers/iltwykm.webp" }
 ]
