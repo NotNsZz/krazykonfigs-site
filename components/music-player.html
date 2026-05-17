@@ -1,0 +1,43 @@
+<div id="music-ecosystem" class="music-ecosystem">
+    <audio id="global-audio" preload="metadata"></audio>
+    <div id="music-player" class="music-player maximized">
+        <div id="eco-resizer" class="eco-resizer"><i class="fas fa-arrows-alt-v" style="transform:rotate(-45deg)"></i></div>
+        <div class="util-controls">
+            <button class="util-btn lib-btn" onclick="toggleLibrary()" title="Open Library"><i class="fas fa-list-ul"></i></button> 
+            <button class="util-btn" onclick="togglePlayerSize()" id="resize-btn" title="Minimize"><i class="fas fa-compress-alt"></i></button>
+        </div>
+        <div style="display:flex;align-items:center">
+            <div class="cd-container">
+                <img id="vinyl-spin" src="" class="vinyl-record" alt="Cover Art" onerror="this.src='/assets/images/logo.png'">
+            </div>
+            <div class="track-info">
+                <span id="player-category">Loading...</span>
+                <div class="track-title" id="player-title">Booting Audio...</div>
+                <div class="player-controls">
+                    <button class="control-btn" onclick="prevTrack()"><i class="fas fa-backward-step"></i></button> 
+                    <button class="control-btn" onclick="togglePlay()" id="play-btn"><i class="fas fa-circle-play"></i></button> 
+                    <button class="control-btn" onclick="nextTrack()"><i class="fas fa-forward-step"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="time-display">
+            <span id="current-time">0:00</span> <span id="duration-time">0:00</span>
+        </div>
+        <div class="progress-container" id="progress-bar-container" onclick="seekAudio(event)">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </div>
+    <div id="music-library" class="music-library">
+        <div class="lib-header">
+            <h3>Track Library</h3>
+            <button class="lib-close" onclick="toggleLibrary()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="lib-filters">
+            <input type="text" id="libSearch" class="lib-search-input" placeholder="Search tracks..." oninput="filterLibrary()"> 
+            <select id="libCategory" class="lib-cat-select" onchange="filterLibrary()">
+                <option value="all">All Categories</option>
+            </select>
+        </div>
+        <div class="lib-list" id="library-list"></div>
+    </div>
+</div>
