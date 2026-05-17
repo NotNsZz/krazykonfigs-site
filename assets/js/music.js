@@ -162,7 +162,6 @@ window.addEventListener('mouseup', () => {
     if(isResizingEco) { isResizingEco = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
 });
 
-// Self-contained loop for the music player animation!
 function animatePlayerLoop() {
     ecoX += (tgEcoX - ecoX) * 0.15;
     ecoY += (tgEcoY - ecoY) * 0.15;
@@ -170,4 +169,4 @@ function animatePlayerLoop() {
     if(dragEco) dragEco.style.transform = `translate(${ecoX}px, ${ecoY}px) scale(${ecoScale})`;
     requestAnimationFrame(animatePlayerLoop);
 }
-animatePlayerLoop(); // Start immediately
+animatePlayerLoop();
