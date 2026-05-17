@@ -1,6 +1,7 @@
 let playlist = [], currentTrackIndex = 0, isPlaying = false;
 let audioEngine = null, dragEco = null, musicPlayer = null, ecoResizer = null;
-let isDraggingEco=false, isResizingEco=false, ecoX=0, ecoY=0, tgEcoX=0, tgEcoY=0, ecoScale=1, tgEcoScale=1, startScale=1, ecoStartX=0, ecoStartY=0, mouseStartX=0, mouseStartY=0;
+let isDraggingEco=false, isResizingEco=false;
+let ecoX=0, ecoY=0, tgEcoX=0, tgEcoY=0, ecoScale=1, tgEcoScale=1, startScale=1, mouseStartX=0, mouseStartY=0, ecoStartX=0, ecoStartY=0;
 
 function formatTime(t) {
     if(isNaN(t)) return "0:00";
@@ -121,12 +122,16 @@ function updateLibraryHighlight() {
     document.getElementById(`lib-track-${currentTrackIndex}`)?.classList.add('active');
 }
 
-// --- DRAG AND RESIZE LOGIC ---
+// --- DRAG AND RESIZE LOGIC (REPAIRED) ---
 function bindPlayerDrag() {
-    dragEco = document.getElementById('music-ecosystem'); musicPlayer = document.getElementById('music-player'); ecoResizer = document.getElementById('eco-resizer');
+    dragEco = document.getElementById('music-ecosystem'); 
+    musicPlayer = document.getElementById('music-player'); 
+    ecoResizer = document.getElementById('eco-resizer');
+
     if(ecoResizer) {
         ecoResizer.addEventListener('mousedown', e => {
-            e.stopPropagation(); isResizingEco = true; mouseStartX = e.clientX; mouseStartY = e.clientY; startScale = tgEcoScale;
+            e.stopPropagation(); isResizingEco = true; 
+            mouseStartX = e.clientX; mouseStartY = e.clientY; startScale = tgEcoScale;
             document.body.style.cursor = 'nwse-resize'; document.body.style.userSelect = 'none';
         });
     }
@@ -134,18 +139,35 @@ function bindPlayerDrag() {
         musicPlayer.style.cursor = 'grab';
         musicPlayer.addEventListener('mousedown', e => {
             if(e.target.closest('button') || e.target.closest('.progress-container') || e.target.tagName.toLowerCase() === 'img' || e.target.closest('.eco-resizer')) return;
-            isDraggingEco = true; mouseStartX = e.clientX; mouseStartY = e.clientY; ecoStartX = tgEcoX; ecoStartY = tgEcoY;
+            isDraggingEco = true; 
+            mouseStartX = e.clientX; mouseStartY = e.clientY; 
+            ecoStartX = tgEcoX; ecoStartY = tgEcoY;
             musicPlayer.style.cursor = 'grabbing'; document.body.style.userSelect = 'none';
         });
     }
 }
 
 window.addEventListener('mousemove', e => {
-    if(isDraggingEco) { tgEcoX = ecoStartX + (e.clientX - mouseStartX); tgEcoY = ecoStartY + (e.clientY - mouseStartY); }
-    if(isResizingEco) { tgEcoScale = Math.max(0.5, Math.min(2.5, startScale + ((mouseStartX - e.clientX) + (mouseStartY - e.clientY)) * 0.003)); }
+    if(isDraggingEco) { 
+        tgEcoX = ecoStartX + (e.clientX - mouseStartX); 
+        tgEcoY = ecoStartY + (e.clientY - mouseStartY); 
+    }
+    if(isResizingEco) { 
+        tgEcoScale = Math.max(0.5, Math.min(2.5, startScale + ((mouseStartX - e.clientX) + (mouseStartY - e.clientY)) * 0.003)); 
+    }
 });
 
 window.addEventListener('mouseup', () => {
     if(isDraggingEco) { isDraggingEco = false; if(musicPlayer) musicPlayer.style.cursor = 'grab'; document.body.style.userSelect = ''; }
     if(isResizingEco) { isResizingEco = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
 });
+
+// Self-contained loop for the music player animation!
+function animatePlayerLoop() {
+    ecoX += (tgEcoX - ecoX) * 0.15;
+    ecoY += (tgEcoY - ecoY) * 0.15;
+    ecoScale += (tgEcoScale - ecoScale) * 0.15;
+    if(dragEco) dragEco.style.transform = `translate(${ecoX}px, ${ecoY}px) scale(${ecoScale})`;
+    requestAnimationFrame(animatePlayerLoop);
+}
+animatePlayerLoop(); // Start immediately
