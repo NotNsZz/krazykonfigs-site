@@ -43,7 +43,6 @@ function renderConfigs() {
     const container = document.getElementById('config-container'), btnWrap = document.getElementById('showMoreConfigsBtnWrap');
     const toShow = currentFilteredConfigs.slice(0, currentVisibleCount);
     
-    // Hardcoded HTML Template ensures ALL properties show up, falling back to default values if DB is empty
     container.innerHTML = toShow.map(t => `
         <div class="config-card">
             <div>
@@ -135,7 +134,6 @@ function renderReviewNode(r, depth=0) {
     const isMine = currentUser && String(r.poster_id) === String(currentUser.discord_id);
     const delBtn = isMine ? `<button class="delete-btn" title="Delete" onclick="deleteReview(${r.id})"><i class="fas fa-trash"></i></button>` : '';
     
-    // Automatically splits the #0 off the usernames in the reviews!
     const cleanUsername = escapeHTML(r.poster_username).split('#')[0];
     
     let html = `
@@ -206,7 +204,7 @@ function closeReviews(e) {
     currentRatingInput = 5;
 }
 
-// FIX: Event Delegation allows injected stars to be clicked!
+// FIX: Event Delegation allows injected stars to be clickable!
 document.addEventListener('click', (e) => {
     if(e.target.classList.contains('input-star')) {
         currentRatingInput = parseInt(e.target.getAttribute('data-val'));
