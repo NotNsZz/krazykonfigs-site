@@ -2,12 +2,12 @@ let allConfigs = [], currentFilteredConfigs = [], currentVisibleCount = 9, curre
 let activeConfigId = null, currentRatingInput = 5, replyingToId = null, cooldownTimer = null;
 
 // --- INITIALIZATION ---
-// We removed the DOMContentLoaded and the 500ms timer. 
-// Now, this function waits patiently until dashboard.html explicitly tells it to run.
-function initDashboardLogic() {
-    if(typeof bootSequence === 'function') bootSequence();
-    if(typeof initMusicPlayer === 'function') initMusicPlayer();
+async function initDashboardLogic() {
+    // 1. Run the auth check and make the body visible
+    if(typeof bootSequence === 'function') await bootSequence();
     
+    // 2. Init music and fetch data
+    if(typeof initMusicPlayer === 'function') initMusicPlayer();
     fetchConfigs();
     fetchContributors();
 
