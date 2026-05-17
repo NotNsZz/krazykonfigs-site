@@ -1,3 +1,9 @@
+// --- 0. INSTANT GLOBAL THEME SYNC ---
+// Checks your saved theme the millisecond the page loads
+if(localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+}
+
 // --- 1. GLOBAL VARIABLES & SUPABASE ---
 const _supabase = supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE');
 let currentUser = null;
@@ -16,7 +22,7 @@ async function bootSequence() {
         
         if(!n) {
             if(isMaintenance) return window.location.href = 'maintenance.html';
-            document.body.classList.add('ready'); // Makes the screen visible!
+            document.body.classList.add('ready'); 
             return;
         }
         
@@ -49,11 +55,10 @@ async function bootSequence() {
         const adminBtn = document.getElementById('adminPanelOption');
 
         if(navName) navName.innerText = escapeHTML(currentUser.display_name);
-        // Uses your local logo if Discord avatar is missing, fixing the placeholder error
         if(navPfp) navPfp.src = escapeHTML(currentUser.avatar_url) || '/assets/images/logo.png';
         if(adminBtn && currentUser.rank.toLowerCase() === "admin") adminBtn.style.display = 'flex';
         
-        document.body.classList.add('ready'); // Makes the screen visible!
+        document.body.classList.add('ready'); 
     } catch(err) {
         console.error(err);
         document.body.classList.add('ready');
@@ -70,6 +75,11 @@ async function injectComponents() {
             if (response.ok) el.innerHTML = await response.text();
         } catch (e) { console.error('Failed to load component:', file); }
     }
+    
+    // Auto-update the theme moon/sun icon after navbar injects!
+    const isDark = document.body.classList.contains('dark-mode');
+    const tBtn = document.getElementById('themeBtn');
+    if(tBtn) tBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
 }
 
 // --- 4. TAG DICTIONARY LOADER ---
