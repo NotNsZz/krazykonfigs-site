@@ -134,6 +134,7 @@ function renderReviewNode(r, depth=0) {
     const isMine = currentUser && String(r.poster_id) === String(currentUser.discord_id);
     const delBtn = isMine ? `<button class="delete-btn" title="Delete" onclick="deleteReview(${r.id})"><i class="fas fa-trash"></i></button>` : '';
     
+    // Automatically strips the #0 from old Discord users
     const cleanUsername = escapeHTML(r.poster_username).split('#')[0];
     
     let html = `
@@ -204,14 +205,25 @@ function closeReviews(e) {
     currentRatingInput = 5;
 }
 
-// FIX: Using ".closest()" ensures that even if you click slightly off-center 
-// or on the SVG inside the star, it perfectly selects the star element!
+// --- BULLETPROOF STAR CLICK LOGIC ---
 document.addEventListener('click', (e) => {
-    const star = e.target.closest('.input-star');
-    if (star) {
+    // This perfectly grabs the target even if they click the tiny SVG path inside the star!
+    const star = e.target.closest('[data-val]');
+    
+    if (star && star.classList.contains('input-star')) {
         currentRatingInput = parseInt(star.getAttribute('data-val'));
+        
         document.querySelectorAll('.input-star').forEach(s => {
-            s.classList.toggle('active', parseInt(s.getAttribute('data-val')) <= currentRatingInput);
+            const val = parseInt(s.getAttribute('data-val'));
+            if (val <= currentRatingInput) {
+                // Fills the star in (solid)
+                s.classList.add('active');
+                s.classList.replace('far', 'fas'); 
+            } else {
+                // Empties the star (outline)
+                s.classList.remove('active');
+                s.classList.replace('fas', 'far');
+            }
         });
     }
 });
