@@ -2,21 +2,20 @@ let allConfigs = [], currentFilteredConfigs = [], currentVisibleCount = 9, curre
 let activeConfigId = null, currentRatingInput = 5, replyingToId = null, cooldownTimer = null;
 
 // --- INITIALIZATION ---
-document.addEventListener("DOMContentLoaded", () => {
-    // Wait for core components to inject, then initialize
-    setTimeout(() => {
-        if(typeof bootSequence === 'function') bootSequence();
-        if(typeof initMusicPlayer === 'function') initMusicPlayer();
-        
-        fetchConfigs();
-        fetchContributors();
+// We removed the DOMContentLoaded and the 500ms timer. 
+// Now, this function waits patiently until dashboard.html explicitly tells it to run.
+function initDashboardLogic() {
+    if(typeof bootSequence === 'function') bootSequence();
+    if(typeof initMusicPlayer === 'function') initMusicPlayer();
+    
+    fetchConfigs();
+    fetchContributors();
 
-        if(!sessionStorage.getItem('creatorPromoSeen')){
-            sessionStorage.setItem('creatorPromoSeen', 'true');
-            document.getElementById('creatorPromoOverlay')?.classList.add('show');
-        }
-    }, 500); // 500ms buffer to ensure HTML is injected before binding
-});
+    if(!sessionStorage.getItem('creatorPromoSeen')){
+        sessionStorage.setItem('creatorPromoSeen', 'true');
+        document.getElementById('creatorPromoOverlay')?.classList.add('show');
+    }
+}
 
 // --- CONFIG LOGIC ---
 async function fetchConfigs() {
