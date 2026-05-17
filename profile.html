@@ -17,6 +17,7 @@
             --card-bg: #fff;
             --tag-bg: #f0f0f0;
             --accent: #5865F2;
+            --danger: #ed4245;
         }
 
         body.dark-mode {
@@ -57,28 +58,36 @@
 
         /* Profile Layout */
         .profile-container {
-            margin-top: 120px; width: 90%; max-width: 600px;
+            margin-top: 100px; width: 90%; max-width: 600px;
             display: flex; flex-direction: column; gap: 1.5rem;
-            animation: fadeIn 0.5s ease;
+            animation: fadeIn 0.5s ease; padding-bottom: 3rem;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--text-muted); text-decoration: none; font-weight: 800;
+            margin-bottom: -0.5rem; transition: 0.2s; font-size: 0.9rem; text-transform: uppercase;
+        }
+        .back-btn:hover { color: var(--text-main); transform: translateX(-5px); }
 
         /* The Main Profile Card (guns.lol style) */
         .profile-card {
             background: var(--card-bg); border: 1px solid var(--border);
             border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            display: flex; flex-direction: column; gap: 1.5rem;
+            display: flex; flex-direction: column; gap: 1.5rem; position: relative;
+            overflow: hidden;
         }
 
         body.dark-mode .profile-card { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
-        .profile-header-row { display: flex; align-items: center; gap: 1.5rem; }
+        .profile-header-row { display: flex; align-items: center; gap: 1.5rem; position: relative; z-index: 2; }
         
         .profile-avatar {
             width: 90px; height: 90px; border-radius: 50%;
             border: 3px solid var(--border); object-fit: cover;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2); background: var(--bg-body);
         }
 
         .profile-info { flex: 1; }
@@ -92,14 +101,12 @@
 
         /* Badges */
         .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-        .role-badge {
-            font-size: 0.75rem; padding: 5px 12px; border-radius: 20px; font-weight: 800; text-transform: uppercase;
-        }
+        .role-badge { font-size: 0.75rem; padding: 5px 12px; border-radius: 20px; font-weight: 800; text-transform: uppercase; }
         .badge-user { background: rgba(88, 101, 242, 0.1); color: #5865F2; border: 1px solid #5865F2; }
         .badge-creator { background: rgba(241, 196, 15, 0.1); color: #f1c40f; border: 1px solid #f1c40f; }
 
-        .contributor-tags { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 1rem; border-top: 1px solid var(--border); }
-        .con-tag { font-size: 0.7rem; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); font-weight: 700; color: var(--text-main); }
+        .contributor-tags { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 1rem; border-top: 1px solid var(--border); position: relative; z-index: 2;}
+        .con-tag { font-size: 0.7rem; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); font-weight: 700; color: var(--text-main); background: var(--card-bg); }
 
         /* Review History Card */
         .history-card {
@@ -114,7 +121,8 @@
         
         .review-content { flex: 1; }
         .review-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-        .review-target { font-size: 0.8rem; font-weight: 800; color: var(--accent); }
+        .review-target { font-size: 0.8rem; font-weight: 800; color: var(--accent); text-decoration: none;}
+        .review-target:hover { text-decoration: underline; }
         .review-stars { color: #f1c40f; font-size: 0.75rem; }
         .review-text { font-size: 0.9rem; color: var(--text-muted); margin: 0; line-height: 1.4; }
 
@@ -176,16 +184,23 @@
                 const { data: user, error: userError } = await _supabase.from('users').select('*').eq('discord_id', targetDiscordId).single();
                 
                 if (userError || !user) {
-                    container.innerHTML = `<h2 style="text-align:center;">User not found in the database.</h2>`;
+                    container.innerHTML = `<h2 style="text-align:center;">User not found in the database.</h2><a href="dashboard.html" style="text-align:center; color:var(--accent); display:block;">Return Home</a>`;
                     return;
                 }
 
-                // 2. Determine Creator Status
-                const { data: configs } = await _supabase.from('configs').select('id').eq('creator', user.username).limit(1);
+                // Compile names to check for tags (Both Username AND Display Name)
+                const dName = user.display_name || user.username;
+                const uName = user.username;
+                const namesToCheck = [uName];
+                if(dName !== uName) namesToCheck.push(dName);
+
+                // 2. Check if Creator (Using .in to check multiple names simultaneously)
+                const { data: configs } = await _supabase.from('configs').select('id').in('creator', namesToCheck).limit(1);
                 const isCreator = configs && configs.length > 0;
 
                 // 3. Fetch Contributor Tags
-                const { data: contributor } = await _supabase.from('contributors').select('tags').eq('name', user.username).single();
+                const { data: contributorData } = await _supabase.from('contributors').select('tags').in('name', namesToCheck).limit(1);
+                const contributor = contributorData ? contributorData[0] : null;
                 const tags = contributor && contributor.tags ? (Array.isArray(contributor.tags) ? contributor.tags : contributor.tags.split(',')) : [];
 
                 // 4. Fetch Reviews History
@@ -193,15 +208,17 @@
 
                 // Build HTML
                 let profileHTML = `
-                    <div class="profile-card" style="background-color: ${user.profile_theme || 'var(--card-bg)'}; background-image: linear-gradient(rgba(0,0,0,0.4), var(--card-bg) 60%);">
+                    <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+                    
+                    <div class="profile-card" style="background-color: ${user.profile_theme || 'var(--card-bg)'}; background-image: linear-gradient(rgba(0,0,0,0.4), var(--card-bg) 65%);">
                         <div class="profile-header-row">
                             <img src="${escapeHTML(user.avatar_url) || 'https://via.placeholder.com/90'}" class="profile-avatar" alt="PFP">
                             <div class="profile-info">
                                 <h1 class="profile-name">
-                                    ${escapeHTML(user.username)}
+                                    ${escapeHTML(dName)}
                                     ${user.guild_tag ? `<span class="guild-tag">${escapeHTML(user.guild_tag)}</span>` : ''}
                                 </h1>
-                                <p class="profile-username">@${escapeHTML(user.username).toLowerCase().replace(/\s/g, '')}</p>
+                                <p class="profile-username">@${escapeHTML(uName).toLowerCase().replace(/\s/g, '')}</p>
                                 
                                 <div class="badge-row">
                                     <span class="role-badge badge-user"><i class="fas fa-user"></i> User</span>
@@ -233,7 +250,7 @@
                             <img src="${escapeHTML(r.poster_avatar)}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">
                             <div class="review-content">
                                 <div class="review-meta">
-                                    <span class="review-target">Config ID: #${r.config_id}</span>
+                                    <a href="dashboard.html#configs" class="review-target">Config ID: #${r.config_id}</a>
                                     <span class="review-stars">${r.rating ? stars : '<i class="fas fa-reply" style="color:var(--text-muted)"></i> Reply'}</span>
                                 </div>
                                 <p class="review-text">${escapeHTML(r.comment)}</p>
@@ -247,7 +264,7 @@
                 container.innerHTML = profileHTML + reviewsHTML;
 
             } catch (err) {
-                container.innerHTML = `<p style="color:var(--danger); text-align:center;">Failed to load profile data.</p>`;
+                container.innerHTML = `<p style="color:var(--danger); text-align:center;">Failed to load profile data.</p><a href="dashboard.html" style="text-align:center; color:var(--accent); display:block;">Return Home</a>`;
                 console.error(err);
             }
         }
