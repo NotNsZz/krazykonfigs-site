@@ -1,0 +1,35 @@
+<nav>
+    <div class="brand-container">
+        <img src="/assets/images/logo.png" alt="Krazy Konfigs Logo" class="brand-logo" onerror="this.src='/assets/images/logo.png'"> 
+        <span style="font-weight:900;font-size:1.2rem;letter-spacing:.5px;text-transform:uppercase">Krazy Konfigs</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:2rem">
+        <div class="nav-links">
+            <a href="#about" class="nav-link">About</a> 
+            <a href="#configs" class="nav-link">Configs</a> 
+            <a href="#contributors" class="nav-link">Contributors</a>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme">
+            <i class="fas fa-moon"></i>
+        </button>
+        <div class="user-profile">
+            <div class="username-container">
+                <span id="navName">User</span>
+            </div>
+            <div class="pfp-container" onclick="toggleUserDropdown(event)">
+                <img src="https://via.placeholder.com/32" id="navPfp" class="header-pfp" alt="PFP">
+                <div class="dropdown-menu" id="userDropdown">
+                    <a href="admin.html" id="adminPanelOption" class="dropdown-item admin-btn" style="display:none">
+                        <i class="fas fa-shield-alt"></i> Admin Panel
+                    </a>
+                    <div class="dropdown-item logout-btn" onclick="handleLogoutClick()">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
+                    </div>
+                    <div class="dropdown-item ambient-btn" onclick="toggleAmbient()">
+                        <i class="fas fa-sparkles"></i> Ambient: <span id="ambientStateText">ON</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
