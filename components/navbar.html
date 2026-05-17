@@ -1,13 +1,13 @@
 <nav>
-    <div class="brand-container">
+    <div class="brand-container" style="cursor:pointer;" onclick="window.location.href='dashboard.html'">
         <img src="/assets/images/logo.png" alt="Krazy Konfigs Logo" class="brand-logo" onerror="this.src='/assets/images/logo.png'"> 
         <span style="font-weight:900;font-size:1.2rem;letter-spacing:.5px;text-transform:uppercase">Krazy Konfigs</span>
     </div>
     <div style="display:flex;align-items:center;gap:2rem">
         <div class="nav-links">
-            <a href="#about" class="nav-link">About</a> 
-            <a href="#configs" class="nav-link">Configs</a> 
-            <a href="#contributors" class="nav-link">Contributors</a>
+            <a href="dashboard.html#about" class="nav-link">About</a> 
+            <a href="dashboard.html#configs" class="nav-link">Configs</a> 
+            <a href="dashboard.html#contributors" class="nav-link">Contributors</a>
         </div>
         <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme">
             <i class="fas fa-moon"></i>
@@ -19,6 +19,9 @@
             <div class="pfp-container" onclick="toggleUserDropdown(event)">
                 <img src="https://via.placeholder.com/32" id="navPfp" class="header-pfp" alt="PFP">
                 <div class="dropdown-menu" id="userDropdown">
+                    <div class="dropdown-item" onclick="if(currentUser) window.location.href='profile.html?user=' + currentUser.discord_id">
+                        <i class="fas fa-user-circle"></i> My Profile
+                    </div>
                     <a href="admin.html" id="adminPanelOption" class="dropdown-item admin-btn" style="display:none">
                         <i class="fas fa-shield-alt"></i> Admin Panel
                     </a>
