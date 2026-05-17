@@ -73,7 +73,7 @@ body.dark-mode .music-player{box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .minimized .vinyl-record{width:100%;height:100%;border:none}
 .vinyl-record.playing{animation-play-state:running}
 @keyframes spin{100%{transform:rotate(360deg)}}
-.track-info{flex:1;overflow:hidden}
+.track-info { flex: 1; overflow: hidden; padding-right: 65px; } /* Added padding to prevent collision! */
 .track-info span{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;letter-spacing:1px}
 .track-title{font-size:1.1rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px;color:var(--text-main)}
 .minimized .track-title{font-size:.95rem;margin-bottom:0}
