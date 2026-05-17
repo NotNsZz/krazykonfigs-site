@@ -1,5 +1,4 @@
 // --- 0. INSTANT GLOBAL THEME SYNC ---
-// Checks your saved theme the millisecond the page loads
 if(localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark-mode');
 }
@@ -76,7 +75,7 @@ async function injectComponents() {
         } catch (e) { console.error('Failed to load component:', file); }
     }
     
-    // Auto-update the theme moon/sun icon after navbar injects!
+    // Auto-update theme toggle icons
     const isDark = document.body.classList.contains('dark-mode');
     const tBtn = document.getElementById('themeBtn');
     if(tBtn) tBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
