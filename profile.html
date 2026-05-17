@@ -70,7 +70,6 @@
         }
         .back-btn:hover { color: var(--text-main); transform: translateX(-5px); }
 
-        /* Sleek Profile Card */
         .profile-card {
             background: var(--card-bg); border: 1px solid var(--border);
             border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.05);
@@ -128,7 +127,6 @@
         .review-stars { color: #f1c40f; font-size: 0.8rem; }
         .review-text { font-size: 0.95rem; color: var(--text-muted); margin: 0; line-height: 1.5; font-weight: 600;}
 
-        /* Review link styling inside the profile */
         .profile-review-username { color: var(--text-main); font-weight: 800; text-decoration: none; }
         .profile-review-username:hover { text-decoration: underline; }
 
@@ -174,8 +172,9 @@
             }[tag] || tag));
         }
 
-        // PERMANENT TAG COLOR DICTIONARY (Update these hex codes to whatever you want!)
-        const TAG_COLORS = {
+        // --- DYNAMIC TAG COLOR LOADER ---
+        // This holds fallback colors just in case the JSON takes a millisecond too long to load
+        let tagColorDictionary = {
             "OWNER": "#f1c40f",
             "DEVELOPER": "#2ecc71",
             "CONTRIBUTOR": "#9b59b6",
@@ -183,15 +182,41 @@
             "TESTER": "#e67e22"
         };
 
+        // Fetches your tags.json file
+        async function loadTagColors() {
+            try {
+                const response = await fetch('/assets/data/tags.json');
+                if (response.ok) {
+                    tagColorDictionary = await response.json();
+                }
+            } catch (error) {
+                console.warn("Using fallback tag colors.");
+            }
+        }
+        
+        // Execute immediately
+        loadTagColors();
+
+        // The Smart Color Matcher
         function getBadgeColor(t){
             const cleanTag = t.trim().toUpperCase();
-            return TAG_COLORS[cleanTag] || 'var(--text-muted)';
+            
+            // 1. Try an exact match first
+            if (tagColorDictionary[cleanTag]) return tagColorDictionary[cleanTag];
+            
+            // 2. Try a partial match (e.g., if tag is "Head Developer", it finds "DEVELOPER")
+            for (const key in tagColorDictionary) {
+                if (cleanTag.includes(key.toUpperCase())) return tagColorDictionary[key];
+            }
+            
+            return 'var(--text-muted)';
         }
+        // ---------------------------------
 
         async function loadProfile() {
             const urlParams = new URLSearchParams(window.location.search);
             const targetDiscordId = urlParams.get('user');
-            const targetName = urlParams.get('name'); // Supports routing from Config cards
+            const targetName = urlParams.get('name'); 
             const container = document.getElementById('profileContainer');
 
             if (!targetDiscordId && !targetName) {
@@ -202,7 +227,6 @@
             try {
                 let user = null;
 
-                // Lookup logic: Try ID first, then Display Name, then Username
                 if (targetDiscordId) {
                     const { data } = await _supabase.from('users').select('*').eq('discord_id', targetDiscordId).maybeSingle();
                     user = data;
@@ -216,7 +240,6 @@
                     }
                 }
 
-                // If user STILL doesn't exist, throw them to the 404 page
                 if (!user) {
                     window.location.href = '/404.html';
                     return;
@@ -274,7 +297,6 @@
                 if (!reviews || reviews.length === 0) {
                     reviewsHTML += `<p style="color:var(--text-muted); font-size:0.9rem; font-weight:600;">This user hasn't left any reviews yet.</p>`;
                 } else {
-                    // Note: reviews in the profile page also link to profiles now!
                     reviewsHTML += reviews.map(r => {
                         const stars = Array(5).fill(0).map((_, i) => i < r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('');
                         return `
