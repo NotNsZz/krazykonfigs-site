@@ -57,7 +57,7 @@ nav { position: fixed; top: 0; width: 100%; padding: 1rem 5%; background: var(--
 .btn-modal-danger { background: var(--danger); color: #fff; border: none; }
 .btn-modal-danger:hover, .btn-modal-primary:hover, .btn-modal-secondary:hover { transform: scale(1.05); }
 
-/* --- MUSIC PLAYER ECOSYSTEM (RESTORED!) --- */
+/* --- MUSIC PLAYER ECOSYSTEM --- */
 .music-ecosystem{position:fixed;bottom:2rem;right:2rem;z-index:1500;display:flex;align-items:flex-end;gap:1rem;transform-origin:bottom right}
 .music-player{background:var(--card-bg);color:var(--text-main);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.1);transition:width .5s cubic-bezier(.16,1,.3,1),padding .5s cubic-bezier(.16,1,.3,1),transform .5s cubic-bezier(.16,1,.3,1);overflow:hidden;position:relative}
 body.dark-mode .music-player{box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -73,7 +73,10 @@ body.dark-mode .music-player{box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .minimized .vinyl-record{width:100%;height:100%;border:none}
 .vinyl-record.playing{animation-play-state:running}
 @keyframes spin{100%{transform:rotate(360deg)}}
-.track-info { flex: 1; overflow: hidden; padding-right: 65px; } /* Added padding to prevent collision! */
+
+/* --- FIX: ADDED PADDING TO STOP TITLE FROM COLLIDING WITH BUTTONS --- */
+.track-info{flex:1;overflow:hidden; padding-right: 65px;} 
+
 .track-info span{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;letter-spacing:1px}
 .track-title{font-size:1.1rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px;color:var(--text-main)}
 .minimized .track-title{font-size:.95rem;margin-bottom:0}
