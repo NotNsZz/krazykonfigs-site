@@ -87,7 +87,6 @@
             background: var(--bg-body); transition: border-color 0.3s;
         }
 
-        /* The white border in dark mode */
         body.dark-mode .profile-avatar { border-color: #fff; }
 
         .profile-info { flex: 1; }
@@ -128,6 +127,10 @@
         .review-target:hover { text-decoration: underline; }
         .review-stars { color: #f1c40f; font-size: 0.8rem; }
         .review-text { font-size: 0.95rem; color: var(--text-muted); margin: 0; line-height: 1.5; font-weight: 600;}
+
+        /* Review link styling inside the profile */
+        .profile-review-username { color: var(--text-main); font-weight: 800; text-decoration: none; }
+        .profile-review-username:hover { text-decoration: underline; }
 
         .spinner { margin: 5rem auto; width: 40px; height: 40px; border: 4px solid var(--border); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -171,36 +174,56 @@
             }[tag] || tag));
         }
 
-        // Tag Color Logic (Ported from Dashboard)
+        // PERMANENT TAG COLOR DICTIONARY (Update these hex codes to whatever you want!)
+        const TAG_COLORS = {
+            "OWNER": "#f1c40f",
+            "DEVELOPER": "#2ecc71",
+            "CONTRIBUTOR": "#9b59b6",
+            "TUFF": "#e74c3c",
+            "TESTER": "#e67e22"
+        };
+
         function getBadgeColor(t){
-            const e=t.toUpperCase();
-            if(e.includes('OWNER')||e.includes('EARLY'))return'#f1c40f';
-            if(e.includes('DEVELOPER')||e.includes('TESTER'))return'#2ecc71';
-            if(e.includes('GUEST')||e.includes('CONTRIBUTOR'))return'#9b59b6';
-            if(e.includes('TUFF'))return'#e74c3c';
-            return'var(--text-muted)';
+            const cleanTag = t.trim().toUpperCase();
+            return TAG_COLORS[cleanTag] || 'var(--text-muted)';
         }
 
         async function loadProfile() {
             const urlParams = new URLSearchParams(window.location.search);
             const targetDiscordId = urlParams.get('user');
+            const targetName = urlParams.get('name'); // Supports routing from Config cards
             const container = document.getElementById('profileContainer');
 
-            if (!targetDiscordId) {
-                container.innerHTML = `<h2 style="text-align:center;">User ID not provided.</h2><a href="dashboard.html" style="text-align:center; color:var(--accent);">Return Home</a>`;
+            if (!targetDiscordId && !targetName) {
+                window.location.href = '/404.html';
                 return;
             }
 
             try {
-                const { data: user, error: userError } = await _supabase.from('users').select('*').eq('discord_id', targetDiscordId).single();
-                
-                if (userError || !user) {
-                    container.innerHTML = `<h2 style="text-align:center;">User not found.</h2><a href="dashboard.html" style="text-align:center; color:var(--accent); display:block;">Return Home</a>`;
+                let user = null;
+
+                // Lookup logic: Try ID first, then Display Name, then Username
+                if (targetDiscordId) {
+                    const { data } = await _supabase.from('users').select('*').eq('discord_id', targetDiscordId).maybeSingle();
+                    user = data;
+                } else if (targetName) {
+                    let { data: dUser } = await _supabase.from('users').select('*').eq('display_name', targetName).maybeSingle();
+                    if (!dUser) {
+                        let { data: uUser } = await _supabase.from('users').select('*').eq('username', targetName).maybeSingle();
+                        user = uUser;
+                    } else {
+                        user = dUser;
+                    }
+                }
+
+                // If user STILL doesn't exist, throw them to the 404 page
+                if (!user) {
+                    window.location.href = '/404.html';
                     return;
                 }
 
                 const dName = user.display_name || user.username;
-                const uName = user.username.split('#')[0]; // Wipes out the #0 from Discord
+                const uName = user.username.split('#')[0]; 
                 const namesToCheck = [user.username];
                 if(dName !== user.username) namesToCheck.push(dName);
 
@@ -211,9 +234,8 @@
                 const contributor = contributorData ? contributorData[0] : null;
                 const tags = contributor && contributor.tags ? (Array.isArray(contributor.tags) ? contributor.tags : contributor.tags.split(',')) : [];
 
-                const { data: reviews } = await _supabase.from('reviews').select('*').eq('poster_id', targetDiscordId).order('created_at', { ascending: false }).limit(10);
+                const { data: reviews } = await _supabase.from('reviews').select('*').eq('poster_id', user.discord_id).order('created_at', { ascending: false }).limit(10);
 
-                // Badge Logic: Only show Creator if they are a creator
                 let roleBadgeHTML = isCreator 
                     ? `<span class="role-badge badge-creator"><i class="fas fa-hammer"></i> Creator</span>` 
                     : `<span class="role-badge badge-user"><i class="fas fa-user"></i> User</span>`;
@@ -252,6 +274,7 @@
                 if (!reviews || reviews.length === 0) {
                     reviewsHTML += `<p style="color:var(--text-muted); font-size:0.9rem; font-weight:600;">This user hasn't left any reviews yet.</p>`;
                 } else {
+                    // Note: reviews in the profile page also link to profiles now!
                     reviewsHTML += reviews.map(r => {
                         const stars = Array(5).fill(0).map((_, i) => i < r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('');
                         return `
@@ -262,7 +285,7 @@
                                     <a href="dashboard.html#configs" class="review-target">Config ID: #${r.config_id}</a>
                                     <span class="review-stars">${r.rating ? stars : '<i class="fas fa-reply" style="color:var(--text-muted)"></i> Reply'}</span>
                                 </div>
-                                <p class="review-text">${escapeHTML(r.comment)}</p>
+                                <p class="review-text"><a href="profile.html?user=${r.poster_id}" class="profile-review-username">${escapeHTML(r.poster_username)}</a>: ${escapeHTML(r.comment)}</p>
                             </div>
                         </div>
                         `;
@@ -273,7 +296,7 @@
                 container.innerHTML = profileHTML + reviewsHTML;
 
             } catch (err) {
-                container.innerHTML = `<p style="color:var(--danger); text-align:center;">Failed to load profile data.</p><a href="dashboard.html" style="text-align:center; color:var(--accent); display:block;">Return Home</a>`;
+                window.location.href = '/404.html';
                 console.error(err);
             }
         }
