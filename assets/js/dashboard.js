@@ -3,11 +3,9 @@ let activeConfigId = null, currentRatingInput = 5, replyingToId = null, cooldown
 
 // --- INITIALIZATION ---
 async function initDashboardLogic() {
-    // 1. Run the auth check and make the body visible
     if(typeof bootSequence === 'function') await bootSequence();
-    
-    // 2. Init music and fetch data
     if(typeof initMusicPlayer === 'function') initMusicPlayer();
+    
     fetchConfigs();
     fetchContributors();
 
@@ -44,6 +42,8 @@ function showMoreConfigs() { currentVisibleCount += 9; renderConfigs(); }
 function renderConfigs() {
     const container = document.getElementById('config-container'), btnWrap = document.getElementById('showMoreConfigsBtnWrap');
     const toShow = currentFilteredConfigs.slice(0, currentVisibleCount);
+    
+    // Hardcoded HTML Template ensures ALL properties show up, falling back to default values if DB is empty
     container.innerHTML = toShow.map(t => `
         <div class="config-card">
             <div>
@@ -51,13 +51,24 @@ function renderConfigs() {
                 <div class="card-divider"></div>
                 <div style="margin-bottom: 1.2rem;">
                     <div class="section-label">🎯 PREDICTION</div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${escapeHTML(t.sim_timer) ?? '-'}</span></div>
+                    <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${escapeHTML(t.sim_timer) || '-'}</span></div>
                     <div class="data-row"><span style="color:var(--text-muted)">Prediction Interval</span> <span class="data-val">${escapeHTML(t.pred_interval) || '-'}</span></div>
                 </div>
                 <div style="margin-bottom: 1.2rem;">
+                    <div class="section-label"><i class="fas fa-cog" style="color:#a6aeb9;"></i> TOGGLES</div>
+                    <div class="data-row"><span style="color:var(--text-muted)">Prioritize Ping</span> <span class="data-val">ON</span></div>
+                    <div class="data-row"><span style="color:var(--text-muted)">Predict Jump</span> <span class="data-val">ON</span></div>
+                    <div class="data-row"><span style="color:var(--text-muted)">Predict Lag</span> <span class="data-val">ON</span></div>
+                    <div class="data-row"><span style="color:var(--text-muted)">Ping Predict</span> <span class="data-val">ON</span></div>
+                </div>
+                <div style="margin-bottom: 1.2rem;">
                     <div class="section-label"><i class="fas fa-sliders-h" style="color:var(--accent);"></i> MULTIPLIERS</div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Vertical</span> <span class="data-val">${escapeHTML(t.vertical) ?? '155'}</span></div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Horizontal</span> <span class="data-val">${escapeHTML(t.horizontal) ?? '165'}</span></div>
+                    <div class="data-row"><span style="color:var(--text-muted)">Vertical</span> <span class="data-val">${escapeHTML(t.vertical) || '155'}</span></div>
+                    <div class="data-row"><span style="color:var(--text-muted)">Horizontal</span> <span class="data-val">${escapeHTML(t.horizontal) || '165'}</span></div>
+                </div>
+                <div style="margin-bottom: 1.2rem;">
+                    <div class="section-label">📍 OFFSETS</div>
+                    <div class="data-row"><span style="color:var(--text-muted)">X / Y / Z</span> <span class="data-val">${escapeHTML(t.offsets) || '0 / -5 / 0'}</span></div>
                 </div>
             </div>
             <div>
@@ -68,6 +79,7 @@ function renderConfigs() {
                 <button class="review-trigger-btn" onclick="openReviews(${t.id})"><i class="fas fa-comments"></i> View Reviews</button>
             </div>
         </div>`).join('');
+        
     if(toShow.length === 0) container.innerHTML = `<p style="color:var(--text-muted); text-align:center; grid-column: 1/-1; padding: 2rem;">No configs match your search criteria.</p>`;
     if(btnWrap) btnWrap.style.display = currentVisibleCount >= currentFilteredConfigs.length ? 'none' : 'block';
 }
@@ -123,17 +135,20 @@ function renderReviewNode(r, depth=0) {
     const isMine = currentUser && String(r.poster_id) === String(currentUser.discord_id);
     const delBtn = isMine ? `<button class="delete-btn" title="Delete" onclick="deleteReview(${r.id})"><i class="fas fa-trash"></i></button>` : '';
     
+    // Automatically splits the #0 off the usernames in the reviews!
+    const cleanUsername = escapeHTML(r.poster_username).split('#')[0];
+    
     let html = `
     <div class="review-item" id="review-${r.id}" style="margin-left: ${margin}px; border-left: ${depth > 0 ? '2px solid var(--border)' : 'none'}; padding-left: ${depth > 0 ? '12px' : '0'}; margin-bottom: ${depth > 0 ? '10px' : '20px'};">
         <img src="${escapeHTML(r.poster_avatar) || 'https://via.placeholder.com/40'}" class="review-avatar">
         <div class="review-content">
             <div class="review-user-row">
-                <a href="profile.html?user=${r.poster_id}" style="font-weight: 800; font-size:0.95rem; color:var(--text-main); text-decoration:none;">${escapeHTML(r.poster_username)}</a>
+                <a href="profile.html?user=${r.poster_id}" style="font-weight: 800; font-size:0.95rem; color:var(--text-main); text-decoration:none;">${cleanUsername}</a>
                 <div>${depth === 0 ? `<span class="review-stars" style="margin-right:8px;">${stars}</span>` : ''}${delBtn}</div>
             </div>
             <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom: 8px;">${escapeHTML(r.comment)}</p>
             <div style="display:flex; gap: 15px; font-size: 0.8rem; font-weight: 700;">
-                <span style="color:var(--text-muted); cursor:pointer; transition:0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'" onclick="setReplyTo(${r.id}, '${escapeHTML(r.poster_username)}')"><i class="fas fa-reply"></i> Reply</span>
+                <span style="color:var(--text-muted); cursor:pointer; transition:0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'" onclick="setReplyTo(${r.id}, '${cleanUsername}')"><i class="fas fa-reply"></i> Reply</span>
                 ${r.children.length > 0 ? `<span style="color:var(--accent); cursor:pointer;" onclick="toggleReplies(${r.id})"><i class="fas fa-chevron-down"></i> View ${r.children.length} Replies</span>` : ''}
             </div>
         </div>
@@ -191,11 +206,14 @@ function closeReviews(e) {
     currentRatingInput = 5;
 }
 
-document.querySelectorAll('.input-star').forEach(t => {
-    t.addEventListener('click', e => {
+// FIX: Event Delegation allows injected stars to be clicked!
+document.addEventListener('click', (e) => {
+    if(e.target.classList.contains('input-star')) {
         currentRatingInput = parseInt(e.target.getAttribute('data-val'));
-        document.querySelectorAll('.input-star').forEach(s => s.classList.toggle('active', parseInt(s.getAttribute('data-val')) <= currentRatingInput));
-    });
+        document.querySelectorAll('.input-star').forEach(s => {
+            s.classList.toggle('active', parseInt(s.getAttribute('data-val')) <= currentRatingInput);
+        });
+    }
 });
 
 async function submitReview() {
