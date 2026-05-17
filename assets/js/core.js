@@ -7,7 +7,60 @@ function escapeHTML(str) {
     return str.toString().replace(/[&<>'"]/g, tag => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[tag] || tag));
 }
 
-// --- 2. THE COMPONENT INJECTOR ---
+// --- 2. AUTHENTICATION & BOOT LOGIC ---
+async function bootSequence() {
+    try {
+        const {data: t} = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
+        const isMaintenance = t?.maintenance_mode === true;
+        const {data: {session: n}} = await _supabase.auth.getSession();
+        
+        if(!n) {
+            if(isMaintenance) return window.location.href = 'maintenance.html';
+            document.body.classList.add('ready'); // Makes the screen visible!
+            return;
+        }
+        
+        const i = n.user, c = i.user_metadata, o = c.provider_id || i.id;
+        const {data: r} = await _supabase.from('users').select('rank, isBlacklisted').eq('id', i.id).single();
+        
+        if(r?.isBlacklisted === 'true') {
+            await _supabase.auth.signOut();
+            return window.location.href = 'maintenance.html';
+        }
+        if(isMaintenance && r?.rank !== 'admin') return window.location.href = 'maintenance.html';
+        
+        const dName = c.custom_claims?.global_name || c.full_name || c.name || 'User';
+        const uName = c.preferred_username || c.name || 'user';
+
+        currentUser = {
+            id: i.id, discord_id: o, 
+            username: uName, display_name: dName, 
+            avatar_url: c.avatar_url, rank: r?.rank || 'user'
+        };
+        
+        await _supabase.from('users').upsert({
+            id: currentUser.id, discord_id: currentUser.discord_id, 
+            username: currentUser.username, display_name: currentUser.display_name, 
+            avatar_url: currentUser.avatar_url, last_login: new Date().toISOString()
+        });
+
+        const navName = document.getElementById('navName');
+        const navPfp = document.getElementById('navPfp');
+        const adminBtn = document.getElementById('adminPanelOption');
+
+        if(navName) navName.innerText = escapeHTML(currentUser.display_name);
+        // Uses your local logo if Discord avatar is missing, fixing the placeholder error
+        if(navPfp) navPfp.src = escapeHTML(currentUser.avatar_url) || '/assets/images/logo.png';
+        if(adminBtn && currentUser.rank.toLowerCase() === "admin") adminBtn.style.display = 'flex';
+        
+        document.body.classList.add('ready'); // Makes the screen visible!
+    } catch(err) {
+        console.error(err);
+        document.body.classList.add('ready');
+    }
+}
+
+// --- 3. THE COMPONENT INJECTOR ---
 async function injectComponents() {
     const elements = document.querySelectorAll('[data-include]');
     for (let el of elements) {
@@ -19,7 +72,7 @@ async function injectComponents() {
     }
 }
 
-// --- 3. TAG DICTIONARY LOADER ---
+// --- 4. TAG DICTIONARY LOADER ---
 let tagColorDictionary = { "OWNER": "#f1c40f", "DEVELOPER": "#2ecc71", "CONTRIBUTOR": "#9b59b6", "TUFF": "#e74c3c", "TESTER": "#e67e22" };
 async function loadTagColors() {
     try { 
@@ -35,7 +88,7 @@ function getBadgeColor(t){
 }
 loadTagColors();
 
-// --- 4. SMOOTH CURSOR LOGIC ---
+// --- 5. SMOOTH CURSOR LOGIC ---
 const cursor = document.getElementById('smooth-cursor');
 let curX = window.innerWidth/2, curY = window.innerHeight/2, tgX = curX, tgY = curY;
 window.addEventListener('mousemove', e => { tgX = e.clientX; tgY = e.clientY; });
@@ -53,7 +106,7 @@ function initCursorHovers() {
 }
 animateCursor();
 
-// --- 5. GLOBAL UTILS (Modals, Theme, Logout) ---
+// --- 6. GLOBAL UTILS (Modals, Theme, Logout) ---
 function toggleTheme() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
