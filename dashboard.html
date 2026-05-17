@@ -32,7 +32,12 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // 1. Wait for ALL HTML components to finish downloading and injecting perfectly
             injectComponents().then(() => {
+                
+                // 2. NOW that the HTML is 100% ready, trigger the dashboard logic
+                if(typeof initDashboardLogic === 'function') initDashboardLogic();
+
                 // Background checks
                 setInterval(async()=>{
                     if(!currentUser) return;
