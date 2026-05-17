@@ -1,0 +1,52 @@
+<div id="customDialogOverlay" class="modal-overlay" style="z-index:3000">
+    <div class="custom-dialog-box">
+        <button class="dialog-close-x" id="dialogCloseX"><i class="fas fa-times"></i></button>
+        <h3 id="dialogTitle">Notice</h3>
+        <p id="dialogMessage">Message</p>
+        <div class="dialog-actions">
+            <button id="dialogBtnCancel" class="btn-modal-secondary" style="display:none">Cancel</button> 
+            <button id="dialogBtnConfirm" class="btn-modal-primary">OK</button>
+        </div>
+    </div>
+</div>
+
+<div id="creatorPromoOverlay" class="modal-overlay" style="z-index:3005">
+    <div class="custom-dialog-box">
+        <button class="dialog-close-x" onclick="closeCreatorPromo()"><i class="fas fa-times"></i></button>
+        <h3 style="font-size:1.5rem;font-weight:900;margin-bottom:.8rem;color:var(--text-main);margin-top:.5rem">Config Creator?</h3>
+        <p style="color:var(--text-muted);margin-bottom:2rem;font-size:.95rem;line-height:1.5">Hey! Wait, are you a config creator? If yes, we'd like to have your configs on the site :3</p>
+        <div class="dialog-actions">
+            <button class="btn-modal-danger" onclick="closeCreatorPromo()">Cancel</button> 
+            <a href="https://discord.com/users/988436092984393738" target="_blank" class="btn-modal-primary" style="background:#5865F2;color:#fff;text-decoration:none;display:flex;align-items:center;gap:8px" onclick="closeCreatorPromo()">
+                <i class="fab fa-discord"></i> Contact Me
+            </a>
+        </div>
+    </div>
+</div>
+
+<div id="reviewModal" class="modal-overlay" onclick="closeReviews(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3 style="font-weight:900;margin:0;font-size:1.2rem">Config Reviews</h3>
+            <button onclick="closeReviews()" style="background:0 0;border:none;color:var(--text-main);font-size:1.2rem;cursor:pointer"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="reviewList"></div>
+        <div class="review-input-area">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                <div class="reply-indicator" id="replyIndicator" style="margin:0">Replying to @<span id="replyUsername"></span> <i class="fas fa-times" onclick="cancelReply()"></i></div>
+                <span id="charCounter" style="font-size:.8rem;font-weight:700;color:var(--text-muted);margin-left:auto">0 / 112</span>
+            </div>
+            <div class="input-stars" id="starSelector" style="margin-bottom:5px">
+                <i class="fas fa-star input-star active" data-val="1"></i> 
+                <i class="fas fa-star input-star active" data-val="2"></i> 
+                <i class="fas fa-star input-star active" data-val="3"></i> 
+                <i class="fas fa-star input-star active" data-val="4"></i> 
+                <i class="fas fa-star input-star active" data-val="5"></i>
+            </div>
+            <div style="display:flex;gap:10px">
+                <input type="text" id="reviewTextInput" class="form-input" style="margin:0" placeholder="Write a review/reply..." oninput="updateCharCount()"> 
+                <button onclick="submitReview()" class="hero-btn" style="padding:10px 20px;border-radius:4px"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
