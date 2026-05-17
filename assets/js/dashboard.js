@@ -204,10 +204,12 @@ function closeReviews(e) {
     currentRatingInput = 5;
 }
 
-// FIX: Event Delegation allows injected stars to be clickable!
+// FIX: Using ".closest()" ensures that even if you click slightly off-center 
+// or on the SVG inside the star, it perfectly selects the star element!
 document.addEventListener('click', (e) => {
-    if(e.target.classList.contains('input-star')) {
-        currentRatingInput = parseInt(e.target.getAttribute('data-val'));
+    const star = e.target.closest('.input-star');
+    if (star) {
+        currentRatingInput = parseInt(star.getAttribute('data-val'));
         document.querySelectorAll('.input-star').forEach(s => {
             s.classList.toggle('active', parseInt(s.getAttribute('data-val')) <= currentRatingInput);
         });
