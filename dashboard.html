@@ -31,28 +31,27 @@
     <script src="/assets/js/dashboard.js"></script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // 1. Wait for ALL HTML components to finish downloading and injecting perfectly
-            injectComponents().then(() => {
+                // --- BULLETPROOF STAR CLICK LOGIC ---
+        document.addEventListener('click', (e) => {
+            // This perfectly grabs the target even if they click the tiny SVG path inside the star!
+            const star = e.target.closest('[data-val]');
+            
+            if (star && star.classList.contains('input-star')) {
+                currentRatingInput = parseInt(star.getAttribute('data-val'));
                 
-                // 2. NOW that the HTML is 100% ready, trigger the dashboard logic
-                if(typeof initDashboardLogic === 'function') initDashboardLogic();
-
-                // Background checks
-                setInterval(async()=>{
-                    if(!currentUser) return;
-                    try{
-                        const{data:t}=await _supabase.from('settings').select('maintenance_mode').eq('id',1).single(),
-                             {data:e}=await _supabase.from('users').select('isBlacklisted, rank').eq('id',currentUser.id).single();
-                        if(e?.isBlacklisted==='true'||(t?.maintenance_mode===true && e?.rank!=='admin')) window.location.href='maintenance.html';
-                    } catch(e){}
-                }, 30000);
-
-                // Auth checking
-                _supabase.auth.onAuthStateChange((event, session) => {
-                    if (event === 'SIGNED_OUT') window.location.href = 'login.html';
+                document.querySelectorAll('.input-star').forEach(s => {
+                    const val = parseInt(s.getAttribute('data-val'));
+                    if (val <= currentRatingInput) {
+                        // Fills the star in (solid)
+                        s.classList.add('active');
+                        s.classList.replace('far', 'fas'); 
+                    } else {
+                        // Empties the star (outline)
+                        s.classList.remove('active');
+                        s.classList.replace('fas', 'far');
+                    }
                 });
-            });
+            }
         });
     </script>
 </body>
