@@ -1,6 +1,6 @@
 {
     "OWNER": { "color": "#ff5100", "icon": "fas fa-crown" },
-    "ADMIN": { "color": "#0044ff", "icon": "fas fa-black-tie" }, 
+    "ADMIN": { "color": "#0044ff", "icon": "fas fa-user-shield" }, 
     "DEVELOPER": { "color": "#2ed141", "icon": "fas fa-code" },
     "CONTRIBUTOR": { "color": "#ffea00", "icon": "fas fa-star" },
     "TUFF": { "color": "#787878", "icon": "fas fa-feather" },
