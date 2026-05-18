@@ -84,7 +84,6 @@ async function initProfileLogic() {
         let avgHitRate = "-", avgRating = "0.0";
         
         if (isCreator) {
-            // 1. Calculate Average Hit Rate
             let totalHit = 0, validHit = 0;
             userConfigs.forEach(c => {
                 let hRate = parseInt((c.hit_rate || '').replace('%', ''));
@@ -92,29 +91,28 @@ async function initProfileLogic() {
             });
             if (validHit > 0) avgHitRate = Math.round(totalHit / validHit) + "%";
 
-            // 2. THE NEW DYNAMIC RATING MATH
+            // THE FIX: Smart Rating Math (Ignores 0-review configs)
             const configIds = userConfigs.map(c => c.id);
             if (configIds.length > 0) {
-                // Fetch all valid reviews for these configs
                 const { data: configReviews } = await _supabase.from('reviews').select('config_id, rating').in('config_id', configIds).not('rating', 'is', null);
 
                 if (configReviews && configReviews.length > 0) {
                     let configSums = {}, configCounts = {};
 
-                    // Group reviews by config
                     configReviews.forEach(r => {
                         if (!configSums[r.config_id]) { configSums[r.config_id] = 0; configCounts[r.config_id] = 0; }
                         configSums[r.config_id] += r.rating;
                         configCounts[r.config_id] += 1;
                     });
 
-                    // Average of all the config averages
                     let totalAvgSum = 0;
                     let validConfigCount = 0;
                     for (let cid in configSums) {
-                        let cAvg = configSums[cid] / configCounts[cid];
-                        totalAvgSum += cAvg;
-                        validConfigCount++;
+                        if (configCounts[cid] > 0) { // Safety check: Only count if it has reviews
+                            let cAvg = configSums[cid] / configCounts[cid];
+                            totalAvgSum += cAvg;
+                            validConfigCount++;
+                        }
                     }
 
                     if (validConfigCount > 0) {
