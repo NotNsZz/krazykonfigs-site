@@ -52,10 +52,7 @@ async function bootSequence() {
             avatar_url: currentUser.avatar_url, last_login: new Date().toISOString()
         });
 
-        // NEW: Ensure their extended profile exists without overwriting existing data!
-        await _supabase.from('user_profiles').insert({
-            id: currentUser.id, discord_id: currentUser.discord_id
-        }).select().maybeSingle(); 
+        // (We removed the old views-table upsert that was located here, it's gone!)
 
         const navName = document.getElementById('navName');
         const navPfp = document.getElementById('navPfp');
