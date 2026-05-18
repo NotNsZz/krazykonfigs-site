@@ -72,7 +72,7 @@ body.dark-mode .profile-avatar { border-color: #fff; }
 /* --- CREATOR STATS CARD --- */
 .creator-stats-card { padding: 1.5rem 2.5rem; }
 .creator-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-.wide-stat { grid-column: 1 / -1; background: rgba(241, 196, 15, 0.05) !important; border-color: rgba(241, 196, 15, 0.2) !important; }
+.wide-stat { grid-column: 1 / -1; }
 
 /* --- REVIEWS HISTORY STYLES --- */
 .history-title { font-size: 1.4rem; font-weight: 900; margin: 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: -0.5px; }
