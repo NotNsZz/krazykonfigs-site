@@ -2,6 +2,8 @@ let userReviews = [], visibleReviewCount = 4;
 let activeProfileUser = null; 
 let extProfileData = null;
 let profileAudio = null;
+
+// Context Maps for Reviews
 let reviewConfigsMap = {};
 let parentReviewMap = {};
 
@@ -42,8 +44,7 @@ async function initProfileLogic() {
         const dName = user.display_name || user.username.split('#')[0];
         const uName = user.username.split('#')[0]; 
 
-        // THE FIX: Aggressive Creator Fetching
-        // Scans ALL configs and allows fuzzy matching for legacy tags to ensure your rank triggers.
+        // Aggressive Creator Fetching
         const cleanDName = dName.toLowerCase().trim();
         const cleanUName = uName.toLowerCase().trim();
         
@@ -75,6 +76,7 @@ async function initProfileLogic() {
         const { data: contributorData } = await _supabase.from('contributors').select('tags').in('name', [user.username, dName, uName]).limit(1);
         const tags = contributorData && contributorData[0]?.tags ? (Array.isArray(contributorData[0].tags) ? contributorData[0].tags : contributorData[0].tags.split(',')) : [];
 
+        // Build Review Context Maps
         const configIds = [...new Set(userReviews.map(r => r.config_id))];
         if(configIds.length > 0) {
             const {data: rConfigs} = await _supabase.from('configs').select('id, title').in('id', configIds);
@@ -119,6 +121,7 @@ async function initProfileLogic() {
                 statusDot.title = status.charAt(0).toUpperCase() + status.slice(1);
             }
 
+            // Apply Theme Colors to ALL Profile Cards
             if (extProfile.theme_colors && extProfile.theme_colors.length > 0) {
                 const c1 = escapeHTML(extProfile.theme_colors[0]);
                 const c2 = extProfile.theme_colors.length > 1 ? escapeHTML(extProfile.theme_colors[1]) : c1;
@@ -129,23 +132,38 @@ async function initProfileLogic() {
                 });
             }
 
-            // THE FIX: Safe Background Injection (Doesn't break the UI!)
+            // Global Background Color
             if (extProfile.bg_color) {
                 document.body.style.backgroundColor = escapeHTML(extProfile.bg_color);
             }
 
-            // NEW: Custom Text Color
+            // Custom Text Color
             if (extProfile.text_color) {
                 document.documentElement.style.setProperty('--text-main', escapeHTML(extProfile.text_color));
-                document.documentElement.style.setProperty('--text-muted', escapeHTML(extProfile.text_color) + 'cc'); // Adds slight transparency for muted
+                document.documentElement.style.setProperty('--text-muted', escapeHTML(extProfile.text_color) + 'cc'); 
             }
 
-            // NEW: Custom Navbar Color
+            // Custom Navbar Color
             if (extProfile.nav_color) {
                 const navElement = document.querySelector('nav') || document.querySelector('.navbar');
                 if (navElement) navElement.style.backgroundColor = escapeHTML(extProfile.nav_color);
             }
 
+            // Custom UI Box Color (Fixes Light Mode Modal readability)
+            if (extProfile.ui_box_color) {
+                const uiColor = escapeHTML(extProfile.ui_box_color);
+                document.documentElement.style.setProperty('--card-bg', uiColor);
+                document.documentElement.style.setProperty('--card-inner', uiColor);
+                
+                const modalEl = document.querySelector('.modal-content');
+                if (modalEl) modalEl.style.backgroundColor = uiColor;
+                
+                document.querySelectorAll('.review-item').forEach(item => {
+                    item.style.backgroundColor = uiColor;
+                });
+            }
+
+            // Looping Audio Player
             if (extProfile.music_track) {
                 profileAudio = new Audio(extProfile.music_track);
                 profileAudio.loop = true;
@@ -249,6 +267,7 @@ async function openEditProfileModal() {
         if (extProfileData.bg_color) document.getElementById('edit-bg-color').value = extProfileData.bg_color;
         if (extProfileData.text_color) document.getElementById('edit-text-color').value = extProfileData.text_color;
         if (extProfileData.nav_color) document.getElementById('edit-nav-color').value = extProfileData.nav_color;
+        if (extProfileData.ui_box_color) document.getElementById('edit-ui-color').value = extProfileData.ui_box_color;
     }
     
     toggleColorMode();
@@ -302,6 +321,7 @@ async function saveProfileChanges() {
     const bgColor = document.getElementById('edit-bg-color').value;
     const textColor = document.getElementById('edit-text-color').value;
     const navColor = document.getElementById('edit-nav-color').value;
+    const uiColor = document.getElementById('edit-ui-color').value;
     const music = document.getElementById('edit-music').value;
 
     const { error } = await _supabase.from('user_profiles').update({
@@ -311,6 +331,7 @@ async function saveProfileChanges() {
         bg_color: bgColor,
         text_color: textColor,
         nav_color: navColor,
+        ui_box_color: uiColor,
         music_track: music || null
     }).eq('id', currentUser.id);
 
