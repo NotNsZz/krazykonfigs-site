@@ -86,41 +86,42 @@ function renderConfigs() {
     const container = document.getElementById('config-container'), btnWrap = document.getElementById('showMoreConfigsBtnWrap');
     const toShow = currentFilteredConfigs.slice(0, currentVisibleCount);
     
+    // Uses the EXACT original index.html structure!
     container.innerHTML = toShow.map(t => `
         <div class="config-card">
             <div>
-                <div class="card-head">${escapeHTML(t.title)} | ${escapeHTML(t.ping_tier) || 'N/A'} PING</div>
-                <div class="card-divider"></div>
-                <div style="margin-bottom: 1.2rem;">
-                    <div class="section-label">🎯 PREDICTION</div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Simulation Timer</span> <span class="data-val">${escapeHTML(t.sim_timer) || '-'}</span></div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Prediction Interval</span> <span class="data-val">${escapeHTML(t.pred_interval) || '-'}</span></div>
+                <div class="card-head"><div class="config-title">${escapeHTML(t.title)} | ${escapeHTML(t.ping_tier) || 'N/A'} PING</div></div>
+                <div class="data-section">
+                    <span class="section-label">🎯 PREDICTION</span>
+                    <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">${escapeHTML(t.sim_timer) || '-'}</span></div>
+                    <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">${escapeHTML(t.pred_interval) || '-'}</span></div>
                 </div>
-                <div style="margin-bottom: 1.2rem;">
-                    <div class="section-label"><i class="fas fa-cog" style="color:#a6aeb9;"></i> TOGGLES</div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Prioritize Ping</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Predict Jump</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Predict Lag</span> <span class="data-val">ON</span></div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Ping Predict</span> <span class="data-val">ON</span></div>
+                <div class="data-section">
+                    <span class="section-label">⚙️ TOGGLES</span>
+                    <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
+                    <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
+                    <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
+                    <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
                 </div>
-                <div style="margin-bottom: 1.2rem;">
-                    <div class="section-label"><i class="fas fa-sliders-h" style="color:var(--accent);"></i> MULTIPLIERS</div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Vertical</span> <span class="data-val">${escapeHTML(t.vertical) || '155'}</span></div>
-                    <div class="data-row"><span style="color:var(--text-muted)">Horizontal</span> <span class="data-val">${escapeHTML(t.horizontal) || '165'}</span></div>
+                <div class="data-section">
+                    <span class="section-label">📊 MULTIPLIERS</span>
+                    <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${escapeHTML(t.vertical) || '155'}</span></div>
+                    <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${escapeHTML(t.horizontal) || '165'}</span></div>
                 </div>
-                <div style="margin-bottom: 1.2rem;">
-                    <div class="section-label">📍 OFFSETS</div>
-                    <div class="data-row"><span style="color:var(--text-muted)">X / Y / Z</span> <span class="data-val">${escapeHTML(t.offsets) || '0 / -5 / 0'}</span></div>
+                <div class="data-section">
+                    <span class="section-label">📍 OFFSETS</span>
+                    <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">${escapeHTML(t.offsets) || '0 / -5 / 0'}</span></div>
                 </div>
             </div>
-            <div>
-                <div class="card-footer-box">
-                    <div>
-                        <div class="revert-badge">REVERT | ${escapeHTML(t.hit_rate) || '85%'} HIT RATE | <i class="fas fa-star" style="color:#f1c40f;"></i> ${t.calc_rating}</div>
-                    </div>
-                    <div style="text-align: right;"><span style="font-size:0.8rem; font-style:italic; font-weight: 600; color:var(--text-muted); display: block;">by <a href="profile.html?name=${encodeURIComponent(t.creator)}" style="color:var(--text-main); text-decoration:underline; cursor:pointer;">${escapeHTML(t.creator)}</a></span></div>
+            
+            <div class="card-footer" style="flex-direction: column; align-items: stretch; gap: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <span class="system-tag">Revert | ${escapeHTML(t.hit_rate) || '85%'} Hit Rate | <i class="fas fa-star" style="color:#f1c40f;"></i> ${t.calc_rating}</span>
+                    <span class="creator-tag">by <a href="profile.html?name=${encodeURIComponent(t.creator)}" style="color:var(--text-main); font-weight:700;">${escapeHTML(t.creator)}</a></span>
                 </div>
-                <button class="review-trigger-btn" onclick="openReviews(${t.id})"><i class="fas fa-comments"></i> View Reviews</button>
+                <button class="review-trigger-btn" onclick="openReviews(${t.id})" style="width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; cursor: pointer; font-weight: 800; font-family: inherit; transition: 0.2s;" onmouseover="this.style.background='var(--text-main)'; this.style.color='var(--bg-body)';" onmouseout="this.style.background='transparent'; this.style.color='var(--text-main)';">
+                    <i class="fas fa-comments"></i> View Reviews
+                </button>
             </div>
         </div>`).join('');
         
@@ -150,7 +151,6 @@ function renderContributors() {
             return `<span class="con-tag" style="color: ${tData.color}; border-color: ${tData.color}; font-size: 0.75rem;"><i class="${tData.icon}"></i> ${escapeHTML(tag)}</span>`;
         }).join('');
         
-        // FIX: Added cursor styling and onclick routing to the profile page!
         return `<div class="member-card" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="window.location.href='profile.html?name=${encodeURIComponent(t.name)}'">
             <div class="member-header">
                 <i class="${t.role_icon ? escapeHTML(t.role_icon.trim()) : 'fa-solid fa-user'}" style="color: ${escapeHTML(t.icon_color) || '#ffffff'}; font-size: 1.2rem;"></i> 
