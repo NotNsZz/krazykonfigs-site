@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Krazy Konfigs | Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KrazyKonfigs | Dashboard</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="/assets/css/global.css">
     <link rel="stylesheet" href="/assets/css/components.css">
     <link rel="stylesheet" href="/assets/css/dashboard.css">
-    
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body id="body">
@@ -20,12 +20,55 @@
 
     <div data-include="/components/modals.html"></div>
     <div data-include="/components/navbar.html"></div>
-
-    <div data-include="/components/dashboard/hero.html"></div>
-    <div data-include="/components/dashboard/configs-grid.html"></div>
-    <div data-include="/components/dashboard/contributors-grid.html"></div>
-
     <div data-include="/components/music-player.html"></div>
+
+    <div class="dashboard-container">
+        
+        <div class="dash-header">
+            <div>
+                <h1 style="margin: 0 0 5px 0; font-weight: 900; font-size: 2.2rem; text-transform: uppercase;">CONFIGS</h1>
+                <p style="color: var(--text-muted); margin: 0; font-weight: 600;">Find the perfect setup for your playstyle.</p>
+            </div>
+            
+            <div class="filter-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="configSearch" placeholder="Search configs..." oninput="applyFilters()">
+                </div>
+                <select id="creatorFilter" class="creator-dropdown" onchange="applyFilters()">
+                    <option value="all">By Creator</option>
+                </select>
+                <div style="display: flex; gap: 8px;">
+                    <button class="filter-btn active" onclick="applyFilters('all', this)">ALL</button>
+                    <button class="filter-btn" onclick="applyFilters('low', this)">LOW PING</button>
+                    <button class="filter-btn" onclick="applyFilters('mid', this)">MID PING</button>
+                    <button class="filter-btn" onclick="applyFilters('high', this)">HIGH PING</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="config-container" class="config-grid">
+            <div style="text-align:center; grid-column: 1/-1; padding: 3rem; color:var(--accent);">
+                <i class="fas fa-circle-notch fa-spin fa-3x"></i>
+                <p style="margin-top: 15px; font-weight: 800;">Fetching from database...</p>
+            </div>
+        </div>
+        
+        <div id="showMoreConfigsBtnWrap" style="display: none; margin-top: 2rem;">
+            <button class="show-more-wide-btn" onclick="showMoreConfigs()">Load More Configs</button>
+        </div>
+
+        <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+            <h2 style="font-weight: 900; text-transform: uppercase; font-size: 1.8rem; margin: 0 0 1.5rem 0;"><i class="fas fa-users" style="color:var(--accent);"></i> Directory</h2>
+            
+            <div id="contributor-container" class="member-grid"></div>
+            
+            <div id="showMoreContributorsBtnWrap" style="display: none; margin-top: 1.5rem;">
+                <button class="show-more-wide-btn" onclick="showMoreContributors()">Show More Contributors</button>
+            </div>
+        </div>
+
+    </div>
 
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/music.js"></script>
@@ -33,24 +76,8 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Wait for ALL HTML components to finish downloading
             injectComponents().then(() => {
-                // NOW trigger the dashboard logic
                 if(typeof initDashboardLogic === 'function') initDashboardLogic();
-
-                // Background Security checks
-                setInterval(async()=>{
-                    if(!currentUser) return;
-                    try{
-                        const{data:t}=await _supabase.from('settings').select('maintenance_mode').eq('id',1).single(),
-                             {data:e}=await _supabase.from('users').select('isBlacklisted, rank').eq('id',currentUser.id).single();
-                        if(e?.isBlacklisted==='true'||(t?.maintenance_mode===true && e?.rank!=='admin')) window.location.href='maintenance.html';
-                    } catch(e){}
-                }, 30000);
-
-                _supabase.auth.onAuthStateChange((event, session) => {
-                    if (event === 'SIGNED_OUT') window.location.href = 'login.html';
-                });
             });
         });
     </script>
