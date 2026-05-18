@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KrazyKonfigs | Dashboard</title>
+    <title>KrazyKonfigs | Precision Redefined</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,13 +22,15 @@
     <div data-include="/components/navbar.html"></div>
     <div data-include="/components/music-player.html"></div>
 
-    <div class="dashboard-container">
-        
-        <div class="dash-header">
-            <div>
-                <h1 style="margin: 0 0 5px 0; font-weight: 900; font-size: 2.2rem; text-transform: uppercase;">CONFIGS</h1>
-                <p style="color: var(--text-muted); margin: 0; font-weight: 600;">Find the perfect setup for your playstyle.</p>
-            </div>
+    <section class="hero" id="hero">
+        <h1>Krazy Konfigs</h1>
+        <p>Premium optimization presets for competitive play. Precision-tuned profiles for every connection type.</p>
+        <a href="#configs" class="btn-get-started">Get Started</a>
+    </section>
+
+    <section class="section-padding" id="configs">
+        <div class="config-header">
+            <h2>Configs</h2>
             
             <div class="filter-controls">
                 <div class="search-box">
@@ -38,11 +40,11 @@
                 <select id="creatorFilter" class="creator-dropdown" onchange="applyFilters()">
                     <option value="all">By Creator</option>
                 </select>
-                <div style="display: flex; gap: 8px;">
-                    <button class="filter-btn active" onclick="applyFilters('all', this)">ALL</button>
-                    <button class="filter-btn" onclick="applyFilters('low', this)">LOW PING</button>
-                    <button class="filter-btn" onclick="applyFilters('mid', this)">MID PING</button>
-                    <button class="filter-btn" onclick="applyFilters('high', this)">HIGH PING</button>
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="applyFilters('all', this)">All Pings</button>
+                    <button class="filter-btn" onclick="applyFilters('low', this)">Low Ping</button>
+                    <button class="filter-btn" onclick="applyFilters('mid', this)">Mid Ping</button>
+                    <button class="filter-btn" onclick="applyFilters('high', this)">High Ping</button>
                 </div>
             </div>
         </div>
@@ -50,25 +52,41 @@
         <div id="config-container" class="config-grid">
             <div style="text-align:center; grid-column: 1/-1; padding: 3rem; color:var(--accent);">
                 <i class="fas fa-circle-notch fa-spin fa-3x"></i>
-                <p style="margin-top: 15px; font-weight: 800;">Fetching from database...</p>
+                <p style="margin-top: 15px; font-weight: 800;">Fetching configs...</p>
             </div>
         </div>
         
-        <div id="showMoreConfigsBtnWrap" style="display: none; margin-top: 2rem;">
-            <button class="show-more-wide-btn" onclick="showMoreConfigs()">Load More Configs</button>
+        <div id="showMoreConfigsBtnWrap" style="display: none; margin-top: 2rem; text-align: center;">
+            <button class="btn-get-started" style="border:none; cursor:pointer;" onclick="showMoreConfigs()">Load More Configs</button>
         </div>
+    </section>
 
-        <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border);">
-            <h2 style="font-weight: 900; text-transform: uppercase; font-size: 1.8rem; margin: 0 0 1.5rem 0;"><i class="fas fa-users" style="color:var(--accent);"></i> Directory</h2>
-            
-            <div id="contributor-container" class="member-grid"></div>
-            
-            <div id="showMoreContributorsBtnWrap" style="display: none; margin-top: 1.5rem;">
-                <button class="show-more-wide-btn" onclick="showMoreContributors()">Show More Contributors</button>
-            </div>
+    <section class="section-padding" id="contributors" style="background: var(--card-bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+        <h2 style="margin-bottom: 2rem;">Contributors</h2>
+        
+        <div id="contributor-container" class="contributor-grid"></div>
+        
+        <div id="showMoreContributorsBtnWrap" style="display: none; margin-top: 2rem; text-align: center;">
+            <button class="btn-get-started" style="border:none; cursor:pointer;" onclick="showMoreContributors()">Show More Contributors</button>
         </div>
+    </section>
 
-    </div>
+    <section class="section-padding" id="contact">
+        <h2 style="text-align:center; margin-bottom:3rem;">Contact</h2>
+        <div class="contact-form-container" style="max-width:600px; margin:0 auto; border: 1px solid var(--border); padding: 2rem; border-radius: 12px; background: var(--card-bg);">
+            <form id="webhookForm">
+                <input type="text" id="dcUser" placeholder="Discord Username" style="width:100%; padding:10px; margin-bottom:1rem; border:1px solid var(--border); border-radius:5px; background: var(--bg-body); color: var(--text-main);" required>
+                <textarea id="dcDetails" rows="5" maxlength="1000" placeholder="Details (Suggestions or Requests)... Max 1000 Chars" style="width:100%; padding:10px; margin-bottom:1rem; border:1px solid var(--border); border-radius:5px; background: var(--bg-body); color: var(--text-main); resize: vertical;" required></textarea>
+                
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Include File (Max 10MB)</label>
+                <input type="file" id="dcFile" style="width:100%; margin-bottom:1rem; color: var(--text-muted); font-size: 0.8rem;">
+                
+                <button type="submit" id="submitBtn" style="width:100%; padding:12px; background:var(--text-main); color:var(--bg-body); border:none; font-weight:700; border-radius:5px; cursor:pointer;">Submit Request</button>
+            </form>
+        </div>
+    </section>
+
+    <footer><p>© 2026 KRAZY KONFIGS • PURE PRECISION</p></footer>
 
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/music.js"></script>
@@ -79,6 +97,53 @@
             injectComponents().then(() => {
                 if(typeof initDashboardLogic === 'function') initDashboardLogic();
             });
+        });
+        
+        // Webhook Logic exactly from index.html
+        document.getElementById('webhookForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const lastSent = localStorage.getItem('lastSentTimestamp');
+            const now = Date.now();
+            const cooldown = 6 * 60 * 60 * 1000; 
+
+            if (lastSent && (now - lastSent < cooldown)) {
+                const hoursLeft = Math.ceil((cooldown - (now - lastSent)) / (1000 * 60 * 60));
+                alert(`Slow down! You can send another request in ${hoursLeft} hours.`);
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const user = document.getElementById('dcUser').value;
+            const details = document.getElementById('dcDetails').value;
+            const fileInput = document.getElementById('dcFile');
+            const webhookURL = "https://discord.com/api/webhooks/1498387587092709468/EY0XBVlIy5cnAgaIJxWbTliIB8lPvfrywiCXM4tMmw6Y2D7ku5wgIbFFSb-8YC_wCECz";
+
+            if (fileInput.files.length > 0 && fileInput.files[0].size > 10 * 1024 * 1024) {
+                alert('File is too large! Maximum limit is 10MB.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Sending...";
+
+            const formData = new FormData();
+            const payload = {
+                embeds: [{
+                    title: "New Config Request/Suggestion",
+                    color: 0, fields: [{ name: "Discord User", value: user, inline: true }, { name: "Message", value: details.substring(0, 1000) }],
+                    footer: { text: "KrazyKonfigs Internal System" }, timestamp: new Date()
+                }]
+            };
+
+            formData.append('payload_json', JSON.stringify(payload));
+            if (fileInput.files.length > 0) formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch(webhookURL, { method: 'POST', body: formData });
+                if (response.ok) { alert('Success! Your request has been sent.'); localStorage.setItem('lastSentTimestamp', Date.now()); document.getElementById('webhookForm').reset(); } 
+                else { alert('Failed to send. Discord might be down.'); }
+            } catch (error) { console.error(error); alert('An error occurred while sending.'); } 
+            finally { submitBtn.disabled = false; submitBtn.innerText = "Submit Request"; }
         });
     </script>
 </body>
