@@ -1,12 +1,17 @@
 <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
 
-<div class="profile-card" id="p-card-bg">
+<div class="profile-card profile-theme-target" id="p-card-bg">
     <div class="profile-header-row">
         <img src="/assets/images/logo.png" id="p-avatar" class="profile-avatar" alt="PFP">
         <div class="profile-info">
-            <div class="name-badge-row">
+            <div class="name-badge-row" id="p-name-row">
                 <h1 class="profile-name" id="p-dname">Loading...</h1>
-                <i id="p-verified" class="fas fa-check-circle verified-badge" style="display: none;" title="Verified Creator"></i>
+                
+                <svg id="p-verified" style="display:none; width: 22px; height: 22px; margin-top: 2px; color: #1abc9c;" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M22.5 12l-1.93-2.67c-.24-.33-.36-.74-.33-1.16l.32-3.26c.07-.69-.45-1.28-1.14-1.33l-3.24-.26c-.41-.03-.79-.22-1.07-.53l-2.18-2.45c-.47-.53-1.29-.53-1.76 0L8.99 2.79c-.28.31-.66.5-1.07.53l-3.24.26c-.69.05-1.21.64-1.14 1.33l.32 3.26c.03.42-.09.83-.33 1.16L1.5 12l1.93 2.67c.24.33.36.74.33 1.16l-.32 3.26c-.07.69.45 1.28 1.14 1.33l3.24.26c.41.03.79.22 1.07.53l2.18 2.45c.47.53 1.29.53 1.76 0l2.18-2.45c.28-.31.66-.5 1.07-.53l3.24-.26c.69-.05 1.21-.64 1.14-1.33l-.32-3.26c-.03-.42.09-.83.33-1.16L22.5 12z"></path>
+                    <path fill="var(--card-bg)" d="M10.23 16.5l-3.87-3.86 1.4-1.4 2.47 2.46 6.13-6.13 1.4 1.4-7.53 7.53z"></path>
+                </svg>
+
                 <a href="#" id="p-discord-link" target="_blank" class="social-icon-btn discord-color" style="display: none;" title="Discord Profile"><i class="fab fa-discord"></i></a>
                 <button id="p-edit-btn" class="social-icon-btn edit-color" style="display: none;" title="Edit Profile" onclick="openEditProfileModal()"><i class="fas fa-edit"></i></button>
             </div>
@@ -31,7 +36,7 @@
     <div class="contributor-tags" id="p-tags" style="display: none; margin-top: 1rem;"></div>
 </div>
 
-<div class="profile-card creator-stats-card" id="creator-stats-card" style="display: none; margin-top: 1.5rem;">
+<div class="profile-card creator-stats-card profile-theme-target" id="creator-stats-card" style="display: none; margin-top: 1.5rem;">
     <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 900; text-transform: uppercase;"><i class="fas fa-chart-line" style="color: var(--accent);"></i> Creator Statistics</h3>
     <div class="creator-stats-grid">
         <div class="stat-box">
@@ -73,19 +78,25 @@
             </div>
 
             <div class="input-group">
-                <label>Profile Card Colors (Static or Gradient)</label>
+                <label>Profile Card Colors</label>
+                <select id="edit-color-mode" class="form-input" onchange="toggleColorMode()" style="margin-bottom: 8px;">
+                    <option value="static">Static Color</option>
+                    <option value="gradient">Gradient</option>
+                </select>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <input type="color" id="edit-color-1" class="color-picker" value="#1a1b26">
-                    <span>to</span>
-                    <input type="color" id="edit-color-2" class="color-picker" value="#16161e">
+                    <div id="color-2-wrap" style="display: flex; gap: 10px; align-items: center;">
+                        <span style="font-size:0.85rem; font-weight:700;">to</span>
+                        <input type="color" id="edit-color-2" class="color-picker" value="#16161e">
+                    </div>
                     <div id="gradient-preview" style="width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--border);"></div>
                 </div>
             </div>
 
             <div class="input-group">
-                <label>Background Dot Texture Color</label>
+                <label>Global Background Color</label>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="color" id="edit-bg-dot-color" class="color-picker" value="#2a2b36">
+                    <input type="color" id="edit-bg-color" class="color-picker" value="#0a0a0c">
                 </div>
             </div>
 
