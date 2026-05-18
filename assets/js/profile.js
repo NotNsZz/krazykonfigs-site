@@ -2,15 +2,27 @@ let userReviews = [], visibleReviewCount = 4;
 let activeProfileUser = null; 
 let extProfileData = null;
 let profileAudio = null;
-
-// Context Maps for Reviews
 let reviewConfigsMap = {};
 let parentReviewMap = {};
 
+let profileTagData = {}; // Stores the new object-based JSON
+
 async function loadProfileTags() {
-    try { const res = await fetch('/assets/data/tags.json'); if (res.ok) tagColorDictionary = await res.json(); } 
-    catch (e) { console.warn("Using fallback tag colors."); }
+    try { 
+        const res = await fetch('/assets/data/tags.json'); 
+        if (res.ok) profileTagData = await res.json(); 
+    } catch (e) { console.warn("Failed to load tag data."); }
 }
+
+function getTagData(t) {
+    const cleanTag = t.trim().toUpperCase();
+    if (profileTagData[cleanTag]) return profileTagData[cleanTag];
+    for (const key in profileTagData) { 
+        if (cleanTag.includes(key.toUpperCase())) return profileTagData[key]; 
+    }
+    return { color: '#666', icon: 'fas fa-tag' }; // Fallback
+}
+
 loadProfileTags();
 
 async function initProfileLogic() {
@@ -44,16 +56,31 @@ async function initProfileLogic() {
         const dName = user.display_name || user.username.split('#')[0];
         const uName = user.username.split('#')[0]; 
 
-        // Aggressive Creator Fetching
+        // THE FIX: Strict Creator Fetching Logic (Display Name -> Username)
         const cleanDName = dName.toLowerCase().trim();
         const cleanUName = uName.toLowerCase().trim();
-        
         const { data: allConfigs } = await _supabase.from('configs').select('id, hit_rate, rating, title, creator');
-        const userConfigs = (allConfigs || []).filter(c => {
+        
+        let userConfigs = [];
+        
+        // 1. First check Display Name similarity
+        let dNameMatch = (allConfigs || []).filter(c => {
             if(!c.creator) return false;
             const cr = c.creator.toLowerCase().trim();
-            return cr === cleanDName || cr === cleanUName || cr.includes(cleanUName);
+            return cr === cleanDName || cr.includes(cleanDName) || cleanDName.includes(cr);
         });
+
+        if (dNameMatch.length > 0) {
+            userConfigs = dNameMatch;
+        } else {
+            // 2. If no Display Name match, check Username similarity
+            let uNameMatch = (allConfigs || []).filter(c => {
+                if(!c.creator) return false;
+                const cr = c.creator.toLowerCase().trim();
+                return cr === cleanUName || cr.includes(cleanUName) || cleanUName.includes(cr);
+            });
+            if (uNameMatch.length > 0) userConfigs = uNameMatch;
+        }
         
         const isCreator = userConfigs.length > 0;
         let avgHitRate = "-", avgRating = "0.0";
@@ -76,7 +103,6 @@ async function initProfileLogic() {
         const { data: contributorData } = await _supabase.from('contributors').select('tags').in('name', [user.username, dName, uName]).limit(1);
         const tags = contributorData && contributorData[0]?.tags ? (Array.isArray(contributorData[0].tags) ? contributorData[0].tags : contributorData[0].tags.split(',')) : [];
 
-        // Build Review Context Maps
         const configIds = [...new Set(userReviews.map(r => r.config_id))];
         if(configIds.length > 0) {
             const {data: rConfigs} = await _supabase.from('configs').select('id, title').in('id', configIds);
@@ -121,7 +147,6 @@ async function initProfileLogic() {
                 statusDot.title = status.charAt(0).toUpperCase() + status.slice(1);
             }
 
-            // Apply Theme Colors to ALL Profile Cards
             if (extProfile.theme_colors && extProfile.theme_colors.length > 0) {
                 const c1 = escapeHTML(extProfile.theme_colors[0]);
                 const c2 = extProfile.theme_colors.length > 1 ? escapeHTML(extProfile.theme_colors[1]) : c1;
@@ -132,24 +157,18 @@ async function initProfileLogic() {
                 });
             }
 
-            // Global Background Color
-            if (extProfile.bg_color) {
-                document.body.style.backgroundColor = escapeHTML(extProfile.bg_color);
-            }
+            if (extProfile.bg_color) document.body.style.backgroundColor = escapeHTML(extProfile.bg_color);
 
-            // Custom Text Color
             if (extProfile.text_color) {
                 document.documentElement.style.setProperty('--text-main', escapeHTML(extProfile.text_color));
                 document.documentElement.style.setProperty('--text-muted', escapeHTML(extProfile.text_color) + 'cc'); 
             }
 
-            // Custom Navbar Color
             if (extProfile.nav_color) {
                 const navElement = document.querySelector('nav') || document.querySelector('.navbar');
                 if (navElement) navElement.style.backgroundColor = escapeHTML(extProfile.nav_color);
             }
 
-            // Custom UI Box Color (Fixes Light Mode Modal readability)
             if (extProfile.ui_box_color) {
                 const uiColor = escapeHTML(extProfile.ui_box_color);
                 document.documentElement.style.setProperty('--card-bg', uiColor);
@@ -158,12 +177,9 @@ async function initProfileLogic() {
                 const modalEl = document.querySelector('.modal-content');
                 if (modalEl) modalEl.style.backgroundColor = uiColor;
                 
-                document.querySelectorAll('.review-item').forEach(item => {
-                    item.style.backgroundColor = uiColor;
-                });
+                document.querySelectorAll('.review-item').forEach(item => { item.style.backgroundColor = uiColor; });
             }
 
-            // Looping Audio Player
             if (extProfile.music_track) {
                 profileAudio = new Audio(extProfile.music_track);
                 profileAudio.loop = true;
@@ -193,10 +209,14 @@ async function initProfileLogic() {
         const badgesEl = document.getElementById('p-badges');
         if (badgesEl) badgesEl.innerHTML = isCreator ? `<span class="role-badge badge-creator"><i class="fas fa-hammer"></i> Creator</span>` : `<span class="role-badge badge-user"><i class="fas fa-user"></i> User</span>`;
 
+        // INJECTING THE DASHBOARD ICONS
         const tagsContainer = document.getElementById('p-tags');
         if (tags.length > 0 && tagsContainer) {
             tagsContainer.style.display = 'flex'; tagsContainer.style.gap = '8px'; tagsContainer.style.flexWrap = 'wrap';
-            tagsContainer.innerHTML = tags.map(t => `<span class="con-tag" style="color: ${typeof getBadgeColor === 'function' ? getBadgeColor(t) : '#666'}; border-color: ${typeof getBadgeColor === 'function' ? getBadgeColor(t) : '#666'};">${escapeHTML(t.trim())}</span>`).join('');
+            tagsContainer.innerHTML = tags.map(t => {
+                const tData = getTagData(t);
+                return `<span class="con-tag" style="color: ${tData.color}; border-color: ${tData.color};"><i class="${tData.icon}"></i> ${escapeHTML(t.trim())}</span>`;
+            }).join('');
         } else if (tagsContainer) tagsContainer.style.display = 'none';
 
         renderProfileReviews(user);
@@ -253,7 +273,7 @@ async function openEditProfileModal() {
     if (extProfileData) {
         document.getElementById('edit-status').value = extProfileData.status || 'offline';
         document.getElementById('edit-bio').value = extProfileData.bio || '';
-        document.getElementById('bio-counter').innerText = `${(extProfileData.bio || '').length} / 50`;
+        document.getElementById('bio-counter').innerText = `${(extProfileData.bio || '').length} / 150`;
         
         if (extProfileData.theme_colors && extProfileData.theme_colors.length > 0) {
             document.getElementById('edit-color-1').value = extProfileData.theme_colors[0];
@@ -290,7 +310,7 @@ async function openEditProfileModal() {
 function closeEditProfileModal() { document.getElementById('editProfileModal').classList.remove('show'); }
 
 document.getElementById('edit-bio')?.addEventListener('input', (e) => {
-    document.getElementById('bio-counter').innerText = `${e.target.value.length} / 50`;
+    document.getElementById('bio-counter').innerText = `${e.target.value.length} / 150`;
 });
 
 function toggleColorMode() {
