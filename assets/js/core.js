@@ -46,7 +46,6 @@ async function bootSequence() {
             avatar_url: c.avatar_url, rank: r?.rank || 'user'
         };
         
-        // ... previous users upsert code ...
         await _supabase.from('users').upsert({
             id: currentUser.id, discord_id: currentUser.discord_id, 
             username: currentUser.username, display_name: currentUser.display_name, 
@@ -56,7 +55,7 @@ async function bootSequence() {
         // NEW: Ensure their extended profile exists without overwriting existing data!
         await _supabase.from('user_profiles').insert({
             id: currentUser.id, discord_id: currentUser.discord_id
-        }).select().maybeSingle(); // Fails silently and safely if they already exist
+        }).select().maybeSingle(); 
 
         const navName = document.getElementById('navName');
         const navPfp = document.getElementById('navPfp');
