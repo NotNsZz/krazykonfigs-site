@@ -4,31 +4,19 @@
     <div class="profile-header-row">
         <img src="/assets/images/logo.png" id="p-avatar" class="profile-avatar" alt="PFP">
         <div class="profile-info">
-            <h1 class="profile-name">
-                <span id="p-dname">Loading...</span> 
-            </h1>
-            <p class="profile-username">
-                <span class="status-dot online" title="Online"></span>
-                <span id="p-uname">@loading</span>
-            </p>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <h1 class="profile-name" id="p-dname">Loading...</h1>
+                <span id="p-guild"></span>
+                <div id="p-discord-badges" style="display: flex; gap: 4px;"></div>
+            </div>
+            <p class="profile-username" id="p-uname">@loading</p>
             
             <div class="badge-row" id="p-badges">
-                <span class="role-badge badge-user"><i class="fas fa-circle-notch fa-spin"></i> Fetching...</span>
-            </div>
-            
-            <div class="badge-row" id="p-tags" style="display: none; margin-top: 8px;">
                 </div>
         </div>
+        <div id="stat-joined" style="position: absolute; top: 1.5rem; right: 1.5rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Joined: --</div>
     </div>
-
-    <div class="profile-stats-grid">
-        <div class="stat-box">
-            <div class="stat-value" id="stat-configs">0</div>
-            <div class="stat-label">Configs Published</div>
+    
+    <div class="contributor-tags" id="p-tags" style="display: none; margin-top: 1rem;">
         </div>
-        <div class="stat-box">
-            <div class="stat-value" id="stat-joined">-</div>
-            <div class="stat-label">Joined</div>
-        </div>
-    </div>
 </div>
