@@ -2,8 +2,6 @@ let userReviews = [], visibleReviewCount = 4;
 let activeProfileUser = null; 
 let extProfileData = null;
 let profileAudio = null;
-
-// Context Maps for Reviews
 let reviewConfigsMap = {};
 let parentReviewMap = {};
 
@@ -43,11 +41,18 @@ async function initProfileLogic() {
 
         const dName = user.display_name || user.username.split('#')[0];
         const uName = user.username.split('#')[0]; 
-        const namesToCheck = [user.username, dName, uName].map(n => n.toLowerCase());
 
-        // FIX 1: Fetch ALL configs and filter case-insensitively to guarantee creator role matches
+        // THE FIX: Aggressive Creator Fetching
+        // Scans ALL configs and allows fuzzy matching for legacy tags to ensure your rank triggers.
+        const cleanDName = dName.toLowerCase().trim();
+        const cleanUName = uName.toLowerCase().trim();
+        
         const { data: allConfigs } = await _supabase.from('configs').select('id, hit_rate, rating, title, creator');
-        const userConfigs = (allConfigs || []).filter(c => c.creator && namesToCheck.includes(c.creator.toLowerCase()));
+        const userConfigs = (allConfigs || []).filter(c => {
+            if(!c.creator) return false;
+            const cr = c.creator.toLowerCase().trim();
+            return cr === cleanDName || cr === cleanUName || cr.includes(cleanUName);
+        });
         
         const isCreator = userConfigs.length > 0;
         let avgHitRate = "-", avgRating = "0.0";
@@ -64,14 +69,12 @@ async function initProfileLogic() {
             if (validRat > 0) avgRating = (totalRat / validRat).toFixed(1);
         }
 
-        // Fetch Log History & Tags
         const { data: reviews } = await _supabase.from('reviews').select('*').eq('poster_id', user.discord_id).order('created_at', { ascending: false });
         userReviews = reviews || [];
         
         const { data: contributorData } = await _supabase.from('contributors').select('tags').in('name', [user.username, dName, uName]).limit(1);
         const tags = contributorData && contributorData[0]?.tags ? (Array.isArray(contributorData[0].tags) ? contributorData[0].tags : contributorData[0].tags.split(',')) : [];
 
-        // Build Review Context Maps (Config Titles & Parent Usernames)
         const configIds = [...new Set(userReviews.map(r => r.config_id))];
         if(configIds.length > 0) {
             const {data: rConfigs} = await _supabase.from('configs').select('id, title').in('id', configIds);
@@ -83,7 +86,6 @@ async function initProfileLogic() {
             if(pReviews) pReviews.forEach(r => parentReviewMap[r.id] = r.poster_username.split('#')[0]);
         }
 
-        // Fetch Extended Profile Data
         const { data: extProfile } = await _supabase.from('user_profiles').select('*').eq('id', user.id).single();
         extProfileData = extProfile;
 
@@ -117,7 +119,6 @@ async function initProfileLogic() {
                 statusDot.title = status.charAt(0).toUpperCase() + status.slice(1);
             }
 
-            // Apply Theme Colors to ALL Profile Cards
             if (extProfile.theme_colors && extProfile.theme_colors.length > 0) {
                 const c1 = escapeHTML(extProfile.theme_colors[0]);
                 const c2 = extProfile.theme_colors.length > 1 ? escapeHTML(extProfile.theme_colors[1]) : c1;
@@ -128,21 +129,29 @@ async function initProfileLogic() {
                 });
             }
 
-            // Global Background Color Injection
+            // THE FIX: Safe Background Injection (Doesn't break the UI!)
             if (extProfile.bg_color) {
                 document.body.style.backgroundColor = escapeHTML(extProfile.bg_color);
-                document.documentElement.style.setProperty('--bg-body', escapeHTML(extProfile.bg_color));
-                document.documentElement.style.setProperty('--bg-base', escapeHTML(extProfile.bg_color));
             }
 
-            // Looping Audio Player logic
+            // NEW: Custom Text Color
+            if (extProfile.text_color) {
+                document.documentElement.style.setProperty('--text-main', escapeHTML(extProfile.text_color));
+                document.documentElement.style.setProperty('--text-muted', escapeHTML(extProfile.text_color) + 'cc'); // Adds slight transparency for muted
+            }
+
+            // NEW: Custom Navbar Color
+            if (extProfile.nav_color) {
+                const navElement = document.querySelector('nav') || document.querySelector('.navbar');
+                if (navElement) navElement.style.backgroundColor = escapeHTML(extProfile.nav_color);
+            }
+
             if (extProfile.music_track) {
                 profileAudio = new Audio(extProfile.music_track);
                 profileAudio.loop = true;
                 profileAudio.volume = 0.5;
                 
                 profileAudio.play().catch(() => {
-                    // Browsers block autoplay. Show a play button next to their name.
                     const nameRow = document.getElementById('p-name-row');
                     if(nameRow) {
                         const playBtn = document.createElement('button');
@@ -196,10 +205,9 @@ function renderProfileReviews(userObj) {
         const cleanReviewerName = escapeHTML(r.poster_username).split('#')[0];
         const avatarToUse = escapeHTML(userObj.avatar_url || '/assets/images/logo.png');
 
-        // Context Logic
-        let contextText = `<span style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:4px;">Reviewed <strong style="color:var(--text-main);">${escapeHTML(reviewConfigsMap[r.config_id] || `Config #${r.config_id}`)}</strong></span>`;
+        let contextText = `<span style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:4px;">Reviewed <strong style="color:inherit;">${escapeHTML(reviewConfigsMap[r.config_id] || `Config #${r.config_id}`)}</strong></span>`;
         if (r.replying_to_id && parentReviewMap[r.replying_to_id]) {
-            contextText = `<span style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:4px;">Reply to <strong style="color:var(--accent);">@${escapeHTML(parentReviewMap[r.replying_to_id])}</strong> on <strong style="color:var(--text-main);">${escapeHTML(reviewConfigsMap[r.config_id] || `Config #${r.config_id}`)}</strong></span>`;
+            contextText = `<span style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:4px;">Reply to <strong style="color:var(--accent);">@${escapeHTML(parentReviewMap[r.replying_to_id])}</strong> on <strong style="color:inherit;">${escapeHTML(reviewConfigsMap[r.config_id] || `Config #${r.config_id}`)}</strong></span>`;
         }
 
         return `
@@ -208,10 +216,10 @@ function renderProfileReviews(userObj) {
             <div class="review-content">
                 ${contextText}
                 <div class="review-meta">
-                    <span class="profile-review-username">${cleanReviewerName}</span>
+                    <span class="profile-review-username" style="color:inherit;">${cleanReviewerName}</span>
                     <span class="review-stars">${r.rating ? stars : '<i class="fas fa-reply" style="color:var(--text-muted)"></i> Reply'}</span>
                 </div>
-                <p class="review-text">${escapeHTML(r.comment)}</p>
+                <p class="review-text" style="color:inherit;">${escapeHTML(r.comment)}</p>
             </div>
         </div>`;
     }).join('');
@@ -239,6 +247,8 @@ async function openEditProfileModal() {
             }
         }
         if (extProfileData.bg_color) document.getElementById('edit-bg-color').value = extProfileData.bg_color;
+        if (extProfileData.text_color) document.getElementById('edit-text-color').value = extProfileData.text_color;
+        if (extProfileData.nav_color) document.getElementById('edit-nav-color').value = extProfileData.nav_color;
     }
     
     toggleColorMode();
@@ -260,7 +270,6 @@ async function openEditProfileModal() {
 
 function closeEditProfileModal() { document.getElementById('editProfileModal').classList.remove('show'); }
 
-// Handle Bio Char Counting, Toggle, & Gradient Preview
 document.getElementById('edit-bio')?.addEventListener('input', (e) => {
     document.getElementById('bio-counter').innerText = `${e.target.value.length} / 50`;
 });
@@ -291,6 +300,8 @@ async function saveProfileChanges() {
     const color1 = document.getElementById('edit-color-1').value;
     const color2 = mode === 'gradient' ? document.getElementById('edit-color-2').value : color1;
     const bgColor = document.getElementById('edit-bg-color').value;
+    const textColor = document.getElementById('edit-text-color').value;
+    const navColor = document.getElementById('edit-nav-color').value;
     const music = document.getElementById('edit-music').value;
 
     const { error } = await _supabase.from('user_profiles').update({
@@ -298,6 +309,8 @@ async function saveProfileChanges() {
         bio: bio,
         theme_colors: [color1, color2],
         bg_color: bgColor,
+        text_color: textColor,
+        nav_color: navColor,
         music_track: music || null
     }).eq('id', currentUser.id);
 
