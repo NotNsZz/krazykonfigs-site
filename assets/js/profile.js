@@ -2,10 +2,12 @@ let userReviews = [], visibleReviewCount = 4;
 let activeProfileUser = null; 
 let extProfileData = null;
 let profileAudio = null;
+
+// Context Maps for Reviews
 let reviewConfigsMap = {};
 let parentReviewMap = {};
 
-let profileTagData = {}; // Stores the new object-based JSON
+let profileTagData = {}; 
 
 async function loadProfileTags() {
     try { 
@@ -20,7 +22,7 @@ function getTagData(t) {
     for (const key in profileTagData) { 
         if (cleanTag.includes(key.toUpperCase())) return profileTagData[key]; 
     }
-    return { color: '#666', icon: 'fas fa-tag' }; // Fallback
+    return { color: '#666', icon: 'fas fa-tag' }; 
 }
 
 loadProfileTags();
@@ -56,14 +58,11 @@ async function initProfileLogic() {
         const dName = user.display_name || user.username.split('#')[0];
         const uName = user.username.split('#')[0]; 
 
-        // THE FIX: Strict Creator Fetching Logic (Display Name -> Username)
         const cleanDName = dName.toLowerCase().trim();
         const cleanUName = uName.toLowerCase().trim();
-        const { data: allConfigs } = await _supabase.from('configs').select('id, hit_rate, rating, title, creator');
+        const { data: allConfigs } = await _supabase.from('configs').select('id, hit_rate, title, creator');
         
         let userConfigs = [];
-        
-        // 1. First check Display Name similarity
         let dNameMatch = (allConfigs || []).filter(c => {
             if(!c.creator) return false;
             const cr = c.creator.toLowerCase().trim();
@@ -73,7 +72,6 @@ async function initProfileLogic() {
         if (dNameMatch.length > 0) {
             userConfigs = dNameMatch;
         } else {
-            // 2. If no Display Name match, check Username similarity
             let uNameMatch = (allConfigs || []).filter(c => {
                 if(!c.creator) return false;
                 const cr = c.creator.toLowerCase().trim();
@@ -86,15 +84,44 @@ async function initProfileLogic() {
         let avgHitRate = "-", avgRating = "0.0";
         
         if (isCreator) {
-            let totalHit = 0, validHit = 0, totalRat = 0, validRat = 0;
+            // 1. Calculate Average Hit Rate
+            let totalHit = 0, validHit = 0;
             userConfigs.forEach(c => {
                 let hRate = parseInt((c.hit_rate || '').replace('%', ''));
                 if (!isNaN(hRate)) { totalHit += hRate; validHit++; }
-                let rRate = parseFloat(c.rating);
-                if (!isNaN(rRate)) { totalRat += rRate; validRat++; }
             });
             if (validHit > 0) avgHitRate = Math.round(totalHit / validHit) + "%";
-            if (validRat > 0) avgRating = (totalRat / validRat).toFixed(1);
+
+            // 2. THE NEW DYNAMIC RATING MATH
+            const configIds = userConfigs.map(c => c.id);
+            if (configIds.length > 0) {
+                // Fetch all valid reviews for these configs
+                const { data: configReviews } = await _supabase.from('reviews').select('config_id, rating').in('config_id', configIds).not('rating', 'is', null);
+
+                if (configReviews && configReviews.length > 0) {
+                    let configSums = {}, configCounts = {};
+
+                    // Group reviews by config
+                    configReviews.forEach(r => {
+                        if (!configSums[r.config_id]) { configSums[r.config_id] = 0; configCounts[r.config_id] = 0; }
+                        configSums[r.config_id] += r.rating;
+                        configCounts[r.config_id] += 1;
+                    });
+
+                    // Average of all the config averages
+                    let totalAvgSum = 0;
+                    let validConfigCount = 0;
+                    for (let cid in configSums) {
+                        let cAvg = configSums[cid] / configCounts[cid];
+                        totalAvgSum += cAvg;
+                        validConfigCount++;
+                    }
+
+                    if (validConfigCount > 0) {
+                        avgRating = (totalAvgSum / validConfigCount).toFixed(1);
+                    }
+                }
+            }
         }
 
         const { data: reviews } = await _supabase.from('reviews').select('*').eq('poster_id', user.discord_id).order('created_at', { ascending: false });
@@ -209,7 +236,6 @@ async function initProfileLogic() {
         const badgesEl = document.getElementById('p-badges');
         if (badgesEl) badgesEl.innerHTML = isCreator ? `<span class="role-badge badge-creator"><i class="fas fa-hammer"></i> Creator</span>` : `<span class="role-badge badge-user"><i class="fas fa-user"></i> User</span>`;
 
-        // INJECTING THE DASHBOARD ICONS
         const tagsContainer = document.getElementById('p-tags');
         if (tags.length > 0 && tagsContainer) {
             tagsContainer.style.display = 'flex'; tagsContainer.style.gap = '8px'; tagsContainer.style.flexWrap = 'wrap';
@@ -265,7 +291,6 @@ function renderProfileReviews(userObj) {
     if(showMoreBtn) showMoreBtn.style.display = visibleReviewCount >= userReviews.length ? 'none' : 'block';
 }
 
-// --- EDIT PROFILE MODAL LOGIC ---
 async function openEditProfileModal() {
     const modal = document.getElementById('editProfileModal');
     if(!modal) return;
