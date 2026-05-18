@@ -76,9 +76,17 @@ body.dark-mode .profile-avatar { border-color: #fff; }
 .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
 .color-picker::-webkit-color-swatch { border: 1px solid var(--border); border-radius: 8px; }
 
-/* --- UI FIXES --- */
-/* Fixes black boxes in Edit Modal */
-.form-input { background: rgba(128, 128, 128, 0.1) !important; color: var(--text-main) !important; }
+/* --- UI FIXES & LIGHT MODE RESCUE --- */
+/* Makes the modal inputs translucent so they adapt to your custom colors */
+.form-input { background: rgba(128, 128, 128, 0.1) !important; color: var(--text-main) !important; border: 1px solid rgba(128, 128, 128, 0.3) !important; }
 
-/* Kills the dotted texture instantly when in light mode */
-body:not(.dark-mode) .bg-fx { display: none !important; }
+/* FIX: Forces dropdown options to take a solid background so they aren't invisible */
+select.form-input option { background-color: var(--bg-body); color: var(--text-main); font-weight: 600; }
+
+/* FIX: Absolutely obliterates the dotted texture in Light Mode */
+body:not(.dark-mode) .bg-fx { 
+    background-image: none !important; 
+    display: none !important; 
+    opacity: 0 !important; 
+    visibility: hidden !important; 
+}
