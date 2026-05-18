@@ -15,13 +15,33 @@ async function initDashboardLogic() {
     }
 }
 
-// --- CONFIG LOGIC ---
+// --- CONFIG LOGIC (WITH DYNAMIC RATINGS) ---
 async function fetchConfigs() {
     const {data} = await _supabase.from('configs').select('*').eq('is_archived', 'false');
-    allConfigs = (data || []).sort((a, b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
+    
+    // THE NEW FEATURE: Fetch all reviews to calculate dynamic ratings for each card
+    const {data: allReviews} = await _supabase.from('reviews').select('config_id, rating').not('rating', 'is', null);
+    
+    let ratingMap = {};
+    if (allReviews) {
+        let sums = {}, counts = {};
+        allReviews.forEach(r => {
+            sums[r.config_id] = (sums[r.config_id] || 0) + r.rating;
+            counts[r.config_id] = (counts[r.config_id] || 0) + 1;
+        });
+        for (let cid in sums) {
+            ratingMap[cid] = (sums[cid] / counts[cid]).toFixed(1);
+        }
+    }
+
+    // Attach the calculated rating to the config object (defaulting to 0.0)
+    allConfigs = (data || []).map(c => ({...c, calc_rating: ratingMap[c.id] || "0.0"}))
+                             .sort((a, b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
+    
     const creators = [...new Set(allConfigs.map(c => c.creator).filter(Boolean))];
     const filter = document.getElementById('creatorFilter');
     if(filter) filter.innerHTML = '<option value="all">By Creator</option>' + creators.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+    
     applyFilters(null, document.querySelector('.filter-btn.active'));
 }
 
@@ -72,7 +92,9 @@ function renderConfigs() {
             </div>
             <div>
                 <div class="card-footer-box">
-                    <div><div class="revert-badge">REVERT | ${escapeHTML(t.hit_rate) || '85%'} HIT RATE</div></div>
+                    <div>
+                        <div class="revert-badge">REVERT | ${escapeHTML(t.hit_rate) || '85%'} HIT RATE | <i class="fas fa-star" style="color:#f1c40f;"></i> ${t.calc_rating}</div>
+                    </div>
                     <div style="text-align: right;"><span style="font-size:0.8rem; font-style:italic; font-weight: 600; color:var(--text-muted); display: block;">by <a href="profile.html?name=${encodeURIComponent(t.creator)}" style="color:var(--text-main); text-decoration:underline; cursor:pointer;">${escapeHTML(t.creator)}</a></span></div>
                 </div>
                 <button class="review-trigger-btn" onclick="openReviews(${t.id})"><i class="fas fa-comments"></i> View Reviews</button>
@@ -89,7 +111,11 @@ async function fetchContributors() {
     const sorted = (data || []).sort((a,b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
     document.getElementById('contributor-container').innerHTML = sorted.map(t => {
         const tags = Array.isArray(t.tags) ? t.tags : (t.tags?.split(',').map(s => escapeHTML(s.trim())) || []);
-        const badges = tags.map(tag => `<span class="badge-tag" style="color: ${getBadgeColor(tag)};">${tag}</span>`).join('');
+        const badges = tags.map(tag => {
+            // Updated to fetch the new object-based JSON format so dashboard tags match profile!
+            const tData = typeof getTagData === 'function' ? getTagData(tag) : { color: '#666', icon: 'fas fa-tag'};
+            return `<span class="badge-tag" style="color: ${tData.color}; border: 1.5px solid ${tData.color}; background: transparent; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800;"><i class="${tData.icon}"></i> ${tag}</span>`;
+        }).join('');
         return `<div class="member-card"><div class="member-header"><i class="${t.role_icon ? escapeHTML(t.role_icon.trim()) : 'fa-solid fa-user'}" style="color: ${escapeHTML(t.icon_color) || '#ffffff'}; font-size: 1.2rem;"></i> <span style="font-weight: 900; font-size: 1.2rem;">${escapeHTML(t.name) || 'Unknown'}</span></div><div style="display:flex; flex-wrap:wrap; gap:8px;">${badges}</div></div>`;
     }).join('');
 }
@@ -138,11 +164,11 @@ function renderReviewNode(r, depth=0) {
     
     let html = `
     <div class="review-item" id="review-${r.id}" style="margin-left: ${margin}px; border-left: ${depth > 0 ? '2px solid var(--border)' : 'none'}; padding-left: ${depth > 0 ? '12px' : '0'}; margin-bottom: ${depth > 0 ? '10px' : '20px'};">
-        <img src="${escapeHTML(r.poster_avatar) || 'https://via.placeholder.com/40'}" class="review-avatar">
+        <img src="${escapeHTML(r.poster_avatar) || 'https://via.placeholder.com/40'}" class="review-avatar" onerror="this.src='/assets/images/logo.png'">
         <div class="review-content">
             <div class="review-user-row">
                 <a href="profile.html?user=${r.poster_id}" style="font-weight: 800; font-size:0.95rem; color:var(--text-main); text-decoration:none;">${cleanUsername}</a>
-                <div>${depth === 0 ? `<span class="review-stars" style="margin-right:8px;">${stars}</span>` : ''}${delBtn}</div>
+                <div>${depth === 0 ? `<span class="review-stars" style="margin-right:8px; color:#f1c40f;">${stars}</span>` : ''}${delBtn}</div>
             </div>
             <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom: 8px;">${escapeHTML(r.comment)}</p>
             <div style="display:flex; gap: 15px; font-size: 0.8rem; font-weight: 700;">
@@ -195,7 +221,6 @@ async function deleteReview(id) {
     }
 }
 
-// Resets stars when modal is closed
 function closeReviews(e) {
     if(e && e.target !== document.getElementById('reviewModal')) return;
     document.getElementById('reviewModal').classList.remove('show');
@@ -212,24 +237,16 @@ function closeReviews(e) {
 // --- AGGRESSIVE STAR CLICK LOGIC (WITH CAPTURING) ---
 document.addEventListener('click', (e) => {
     const star = e.target.closest('.input-star');
-    
     if (star) {
         currentRatingInput = parseInt(star.getAttribute('data-val'));
-        
         document.querySelectorAll('.input-star').forEach(s => {
             const val = parseInt(s.getAttribute('data-val'));
-            
-            // Forcefully reset classes to prevent styling glitches
             s.classList.remove('fas', 'far', 'active');
-            
-            if (val <= currentRatingInput) {
-                s.classList.add('fas', 'active'); // Fills solid + color
-            } else {
-                s.classList.add('far'); // Leaves outline
-            }
+            if (val <= currentRatingInput) s.classList.add('fas', 'active'); 
+            else s.classList.add('far'); 
         });
     }
-}, true); // <--- THIS 'true' IS THE MAGIC FIX. It intercepts the click before the modal swallows it!
+}, true); 
 
 async function submitReview() {
     const input = document.getElementById('reviewTextInput'), text = input.value.trim();
