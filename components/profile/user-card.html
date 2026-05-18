@@ -6,7 +6,7 @@
         <div class="profile-info">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <h1 class="profile-name" id="p-dname">Loading...</h1>
-                <i id="p-verified" class="fas fa-certificate" style="color: #1abc9c; display: none; font-size: 1.2rem; margin-top: 5px;" title="Verified Creator"></i>
+                <i id="p-verified" class="fas fa-check-circle" style="color: #1abc9c; display: none; font-size: 1.2rem; margin-top: 5px;"></i>
                 <span id="p-guild"></span>
                 <div id="p-discord-badges" style="display: flex; gap: 4px;"></div>
             </div>
@@ -16,12 +16,16 @@
                 <span id="p-uname">@loading</span>
             </p>
             
-            <div class="badge-row" id="p-badges"></div>
+            <div class="badge-row" id="p-badges">
+                <span class="role-badge badge-user"><i class="fas fa-circle-notch fa-spin"></i> Fetching...</span>
+            </div>
         </div>
-        
         <div id="stat-joined" style="position: absolute; top: 1.5rem; right: 1.5rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Joined: --</div>
     </div>
     
+    <div class="contributor-tags" id="p-tags" style="display: none; margin-top: 1rem;">
+        </div>
+
     <div class="profile-bio-section" style="margin-top: 0.5rem;">
         <p class="profile-bio" id="p-bio" style="font-size: 1rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.2rem; line-height: 1.5;">...</p>
         
@@ -30,11 +34,10 @@
                 <i class="fab fa-discord"></i>
             </a>
             
-            <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 800; margin-left: auto; text-transform: uppercase; letter-spacing: 1px;">
-                <i class="fas fa-eye" style="margin-right: 5px;"></i> <span id="p-views">0</span> Views
-            </span>
+            <button id="p-edit-btn" onclick="openEditProfileModal()" style="display: none; margin-left: auto; padding: 10px 18px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
+                <i class="fas fa-edit" style="margin-right: 5px;"></i> Edit Profile
+            </button>
         </div>
     </div>
 
-    <div class="contributor-tags" id="p-tags" style="display: none; margin-top: 1rem;"></div>
-</div>
+    </div>
