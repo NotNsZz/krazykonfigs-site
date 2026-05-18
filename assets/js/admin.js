@@ -18,7 +18,57 @@ function escapeHTML(str) {
     }[tag] || tag));
 }
 
-// --- 2. AUTHENTICATION & BOOT SEQUENCE ---
+// --- 2. CUSTOM POPUP SYSTEM ---
+function customAlert(message, title="Notice") {
+    return new Promise(resolve => {
+        const overlay = document.getElementById('customDialogOverlay');
+        document.getElementById('dialogTitle').innerText = title;
+        document.getElementById('dialogMessage').innerText = message;
+        document.getElementById('dialogBtnCancel').style.display = 'none';
+        const btn = document.getElementById('dialogBtnConfirm');
+        btn.innerText = 'OK';
+        btn.className = 'btn-primary';
+        
+        const close = () => {
+            overlay.classList.remove('show');
+            btn.removeEventListener('click', close);
+            resolve(true);
+        };
+        btn.addEventListener('click', close);
+        overlay.classList.add('show');
+    });
+}
+
+function customConfirm(message, title="Confirm Action", confirmText="Confirm", isDanger=false) {
+    return new Promise(resolve => {
+        const overlay = document.getElementById('customDialogOverlay');
+        document.getElementById('dialogTitle').innerText = title;
+        document.getElementById('dialogMessage').innerText = message;
+        
+        const cancelBtn = document.getElementById('dialogBtnCancel');
+        const confirmBtn = document.getElementById('dialogBtnConfirm');
+        
+        cancelBtn.style.display = 'inline-block';
+        confirmBtn.innerText = confirmText;
+        confirmBtn.className = isDanger ? 'btn-danger' : 'btn-primary';
+        
+        const cleanup = () => {
+            overlay.classList.remove('show');
+            cancelBtn.removeEventListener('click', onCancel);
+            confirmBtn.removeEventListener('click', onConfirm);
+        };
+        
+        const onCancel = () => { cleanup(); resolve(false); };
+        const onConfirm = () => { cleanup(); resolve(true); };
+        
+        cancelBtn.addEventListener('click', onCancel);
+        confirmBtn.addEventListener('click', onConfirm);
+        
+        overlay.classList.add('show');
+    });
+}
+
+// --- 3. AUTHENTICATION & BOOT SEQUENCE ---
 async function verifyAdminAuth() {
     const { data: { session } } = await _supabase.auth.getSession();
     if (!session) return false;
@@ -33,6 +83,7 @@ async function bootSequence() {
         
         const user = session.user;
         const meta = user.user_metadata;
+        const discordId = meta.provider_id || user.id;
         
         const { data: dbUser } = await _supabase.from('users').select('rank, isBlacklisted').eq('id', user.id).single();
         
@@ -44,12 +95,16 @@ async function bootSequence() {
 
         currentUser = {
             id: user.id,
+            discord_id: discordId,
             username: meta.full_name || meta.name || 'Admin',
             avatar_url: meta.avatar_url
         };
 
         document.getElementById('adminName').innerText = escapeHTML(currentUser.username);
         document.getElementById('adminPfp').src = escapeHTML(currentUser.avatar_url) || '/assets/images/logo.png';
+        
+        // Link the My Profile button
+        document.getElementById('myProfileLink').href = `profile.html?user=${currentUser.discord_id}`;
 
         document.getElementById('security-guard').style.display = 'none';
         document.body.classList.add('ready');
@@ -74,13 +129,13 @@ window.onclick = () => {
 };
 
 async function handleLogoutClick() {
-    if(confirm("Are you sure you want to log out?")) {
+    if(await customConfirm("Are you sure you want to log out?", "Logout", "Log Out", true)) {
         await _supabase.auth.signOut();
         window.location.href = 'login.html';
     }
 }
 
-// --- 3. MODULE LOADER & ROUTING ---
+// --- 4. MODULE LOADER & ROUTING ---
 async function loadModule(moduleName, btnElement) {
     const container = document.getElementById('dynamic-container');
     container.innerHTML = '<div class="guard-spinner" style="margin: 3rem auto;"></div>';
@@ -157,7 +212,7 @@ async function renderHome() {
     </div>`; 
 }
 
-// --- 4. PROFILE MODERATION ---
+// --- 5. PROFILE MODERATION ---
 async function renderProfiles() {
     const { data: users } = await _supabase.from('users').select('id, username, discord_id');
     const { data: profiles, error } = await _supabase.from('user_profiles').select('*');
@@ -172,7 +227,6 @@ async function renderProfiles() {
     let rowsHtml = mergedProfiles.map(p => {
         const isVerified = p.is_verified ? '<span style="color:#2ecc71;"><i class="fas fa-check-circle"></i> Yes</span>' : '<span style="color:var(--text-dim);">No</span>';
         
-        // THE FIX: Wrapped ${p.id} in single quotes so the UUID strings don't crash JS!
         return `
         <tr>
             <td style="font-weight:700;">${escapeHTML(p.username)}</td>
@@ -202,22 +256,29 @@ async function renderProfiles() {
     </div>`;
 }
 
+// Replaced native confirm with customConfirm
 async function toggleVerification(id, isCurrentlyVerified) {
-    if (!confirm(`Toggle verification status to ${!isCurrentlyVerified}?`)) return;
+    const confirmed = await customConfirm(`Toggle verification status to ${!isCurrentlyVerified}?`, "Verify Profile", "Yes, Toggle");
+    if (!confirmed) return;
+    
     const { error } = await _supabase.from('user_profiles').update({ is_verified: !isCurrentlyVerified }).eq('id', id);
-    if (error) alert("Error toggling verification: " + error.message);
+    if (error) await customAlert("Error toggling verification: " + error.message, "Database Error");
     else refreshCurrentView();
 }
 
 async function resetProfile(id) {
-    if (!confirm("Are you sure? This will permanently delete their custom background, colors, bio, and music.")) return;
-    await _supabase.from('user_profiles').update({
+    const confirmed = await customConfirm("Are you sure? This will permanently delete their custom background, colors, bio, and music.", "Nuke Profile", "Nuke It", true);
+    if (!confirmed) return;
+    
+    const { error } = await _supabase.from('user_profiles').update({
         bio: null, theme_colors: null, bg_color: null, text_color: null, nav_color: null, ui_box_color: null, music_track: null
     }).eq('id', id);
-    refreshCurrentView();
+    
+    if (error) await customAlert("Failed to nuke profile: " + error.message, "Error");
+    else refreshCurrentView();
 }
 
-// --- 5. CONFIG EDITOR ---
+// --- 6. CONFIG EDITOR ---
 async function renderConfigs(isArchivedStr) {
     const title = isArchivedStr === 'true' ? 'Draft & Archive' : 'Config Editor';
     
@@ -298,7 +359,7 @@ function buildAdminConfigGridHTML(configs) {
     }).join('');
 }
 
-// --- 6. CONTRIBUTORS (WITH TAGS.JSON SYNC) ---
+// --- 7. CONTRIBUTORS (WITH TAGS.JSON SYNC) ---
 async function loadAdminTags() {
     try { 
         const res = await fetch('/assets/data/tags.json'); 
@@ -348,12 +409,11 @@ async function renderContributors() {
     <div class="config-grid">${gridHtml}</div>`;
 }
 
-// --- 7. BASIC ADMIN VIEWS ---
+// --- 8. BASIC ADMIN VIEWS ---
 async function renderUsers() {
     const { data, error } = await _supabase.from('users').select('*').order('last_login', { ascending: false }).limit(50);
     if (error || !data || data.length === 0) return `<div class="page-header"><h1>Users Overview</h1></div><p style="color:var(--text-dim)">No data.</p>`;
     
-    // THE FIX: Added the "Last Login" column and data!
     return `
     <div class="page-header"><h1>Users Overview</h1></div>
     <div class="table-viewer-wrap">
@@ -429,13 +489,13 @@ async function renderSettings() {
     </div>`;
 }
 
-// --- 8. UTILITIES, MODALS & FORMS ---
+// --- 9. UTILITIES, MODALS & FORMS ---
 async function updateDB(table, id, column, value, refresh = false) {
     try {
         const { error } = await _supabase.from(table).update({ [column]: value }).eq('id', id);
         if (error) throw error;
         if (refresh) refreshCurrentView();
-    } catch (err) { alert("Error: " + err.message); }
+    } catch (err) { await customAlert("Error: " + err.message, "Error"); }
 }
 
 async function updateBlacklist(id, isBlacklisted) {
@@ -445,19 +505,24 @@ async function updateBlacklist(id, isBlacklisted) {
 }
 
 async function deleteRecord(table, id) {
-    if (!confirm(`Permanently delete this record?`)) return;
+    const confirmed = await customConfirm("Are you sure you want to permanently delete this record?", "Delete Record", "Delete", true);
+    if (!confirmed) return;
+    
     const { error } = await _supabase.from(table).delete().eq('id', id);
-    if (!error) refreshCurrentView(); else alert("Error: " + error.message);
+    if (!error) refreshCurrentView(); 
+    else await customAlert("Error: " + error.message, "Error");
 }
 
 async function toggleMaintenanceMode(isMaintenance) {
-    if (!confirm(`Turn ${isMaintenance ? 'ON' : 'OFF'} maintenance mode?`)) {
+    const confirmed = await customConfirm(`Turn ${isMaintenance ? 'ON' : 'OFF'} maintenance mode?`, "Maintenance Mode");
+    if (!confirmed) {
         document.getElementById('maintenanceToggle').checked = !isMaintenance;
         return;
     }
+    
     const { error } = await _supabase.from('settings').update({ maintenance_mode: isMaintenance }).eq('id', 1);
     if (error) {
-        alert("Failed to update.");
+        await customAlert("Failed to update.", "Error");
         document.getElementById('maintenanceToggle').checked = !isMaintenance;
     }
 }
@@ -475,7 +540,7 @@ function closeModal(e) {
 
 async function viewTableData(table) {
     const { data, error } = await _supabase.from(table).select('*').limit(20);
-    if (error || !data || data.length === 0) return alert("No data to show.");
+    if (error || !data || data.length === 0) return await customAlert("No data to show.", "Notice");
     const keys = Object.keys(data[0]);
     
     openModal(`Viewing ${escapeHTML(table)}`, `
@@ -541,13 +606,13 @@ function openContributorModal(id = null) {
 
 async function saveForm(e, table, id) {
     e.preventDefault();
-    if (!(await verifyAdminAuth())) return alert("Access Denied");
+    if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
     
     const formData = Object.fromEntries(new FormData(e.target).entries());
     if (formData.tags) formData.tags = formData.tags.split(',').map(s => s.trim());
     if (id) formData.id = id;
 
     const { error } = await _supabase.from(table).upsert(formData);
-    if (error) alert("Save Error: " + error.message);
+    if (error) await customAlert("Save Error: " + error.message, "Error");
     else { closeModal(); refreshCurrentView(); }
 }
