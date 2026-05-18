@@ -117,3 +117,22 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
 /* Tag Pill Styling for Contributor Preview */
 .con-tag { font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; border: 1.5px solid; font-weight: 800; background: transparent; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; }
 .con-tag i { margin-right: 6px; font-size: 0.9em; transform: translateY(-1px); }
+
+/* --- PROFILE DROPDOWN (RESTORED) --- */
+.profile-container { position: relative; }
+.profile-trigger { display: flex; align-items: center; gap: 0; cursor: pointer; padding: 4px; border-radius: 40px; background: var(--card-bg); border: 1px solid var(--border); transition: var(--transition); }
+.profile-trigger:hover { gap: 12px; padding: 4px 18px 4px 4px; border-color: var(--accent); }
+.username-reveal { max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; font-weight: 700; transition: var(--transition); font-size: 0.9rem; }
+.profile-trigger:hover .username-reveal { max-width: 150px; opacity: 1; }
+.profile-pfp { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); object-fit: cover; }
+
+.dropdown { position: absolute; top: calc(100% + 10px); right: 0; width: 180px; background: var(--sidebar-bg); border: 1px solid var(--border); border-radius: 12px; display: none; flex-direction: column; padding: 8px; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.dropdown.active { display: flex; }
+.drop-link, .dropdown-item { padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-dim); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: var(--transition); cursor: pointer; }
+.drop-link:hover, .dropdown-item:hover { background: var(--card-bg); color: #fff; }
+.logout-btn { color: var(--danger); }
+.logout-btn:hover { background: rgba(237,66,69,0.1); color: var(--danger); }
+
+/* --- HOME PAGE BANNER (RESTORED) --- */
+.stat-banner { background: linear-gradient(135deg, var(--card-bg), rgba(88,101,242,0.1)); padding: 2rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 2rem; }
+.stat-banner h2 { font-size: 2.5rem; font-weight: 900; margin-top: 0; margin-bottom: 0.5rem; color: var(--text); }
