@@ -1,7 +1,7 @@
 // --- 1. SUPABASE & GLOBAL VARIABLES ---
 const _supabase = supabase.createClient(
     'https://unjdjduiqtldgoybgmnq.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE'
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE' 
 );
 
 let currentUser = null;
@@ -48,6 +48,10 @@ async function bootSequence() {
             avatar_url: meta.avatar_url
         };
 
+        // Populate header dropdown details
+        document.getElementById('adminName').innerText = escapeHTML(currentUser.username);
+        document.getElementById('adminPfp').src = escapeHTML(currentUser.avatar_url) || '/assets/images/logo.png';
+
         document.getElementById('security-guard').style.display = 'none';
         document.body.classList.add('ready');
         
@@ -60,6 +64,16 @@ async function bootSequence() {
     }
 }
 bootSequence();
+
+// Dropdown Logic
+function toggleDropdown(e) {
+    e.stopPropagation();
+    document.getElementById('profileDropdown').classList.toggle('active');
+}
+window.onclick = () => {
+    const dd = document.getElementById('profileDropdown');
+    if (dd) dd.classList.remove('active');
+};
 
 async function handleLogoutClick() {
     if(confirm("Are you sure you want to log out?")) {
@@ -104,6 +118,48 @@ function refreshCurrentView() {
     if (activeBtn) activeBtn.click();
 }
 
+// --- THE RESTORED HOME GREETING & STATS ---
+async function renderHome() { 
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const [uData, cData, pData, lData] = await Promise.all([
+        _supabase.from('users').select('id', { count: 'exact', head: true }),
+        _supabase.from('configs').select('id', { count: 'exact', head: true }),
+        _supabase.from('contributors').select('id', { count: 'exact', head: true }),
+        _supabase.from('users').select('id', { count: 'exact', head: true }).gte('last_login', todayStr)
+    ]);
+
+    return `
+    <div class="stat-banner">
+        <h2>${greeting}, ${escapeHTML(currentUser.username)}</h2>
+        <p style="color:var(--text-dim); font-size:1.1rem; margin:0;">Welcome to the KrazyKonfigs Administration Dashboard.</p>
+    </div>
+    <div class="config-grid">
+        <div class="item-card" style="align-items:center; text-align:center;">
+            <i class="fas fa-users" style="font-size:2rem; color:var(--accent); margin-bottom:10px;"></i>
+            <h3 style="border:none; padding:0; margin:0;">Total Users</h3>
+            <h2 style="font-size:2.5rem; font-weight:900; margin:5px 0 0 0;">${uData.count || 0}</h2>
+        </div>
+        <div class="item-card" style="align-items:center; text-align:center;">
+            <i class="fas fa-file-code" style="font-size:2rem; color:var(--success); margin-bottom:10px;"></i>
+            <h3 style="border:none; padding:0; margin:0;">Total Configs</h3>
+            <h2 style="font-size:2.5rem; font-weight:900; margin:5px 0 0 0;">${cData.count || 0}</h2>
+        </div>
+        <div class="item-card" style="align-items:center; text-align:center;">
+            <i class="fas fa-address-book" style="font-size:2rem; color:#f1c40f; margin-bottom:10px;"></i>
+            <h3 style="border:none; padding:0; margin:0;">Contributors</h3>
+            <h2 style="font-size:2.5rem; font-weight:900; margin:5px 0 0 0;">${pData.count || 0}</h2>
+        </div>
+        <div class="item-card" style="align-items:center; text-align:center;">
+            <i class="fas fa-sign-in-alt" style="font-size:2rem; color:#e0d484; margin-bottom:10px;"></i>
+            <h3 style="border:none; padding:0; margin:0;">Logins Today</h3>
+            <h2 style="font-size:2.5rem; font-weight:900; margin:5px 0 0 0;">${lData.count || 0}</h2>
+        </div>
+    </div>`; 
+}
+
 // --- 4. PROFILE MODERATION ---
 async function renderProfiles() {
     const { data: users } = await _supabase.from('users').select('id, username, discord_id');
@@ -125,7 +181,7 @@ async function renderProfiles() {
             <td style="font-size:0.85rem; color:var(--text-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHTML(p.bio || 'None')}</td>
             <td>${isVerified}</td>
             <td>
-                <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="toggleVerification(${p.id}, ${p.is_verified})">
+                <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="toggleVerification(${p.id}, ${!!p.is_verified})">
                     <i class="fas fa-certificate"></i> Toggle Verif.
                 </button>
                 <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem; margin-left: 5px;" title="Reset Bio/Colors/Music" onclick="resetProfile(${p.id})">
@@ -148,10 +204,12 @@ async function renderProfiles() {
     </div>`;
 }
 
-async function toggleVerification(id, currentStatus) {
-    if (!confirm(`Toggle verification status to ${!currentStatus}?`)) return;
-    await _supabase.from('user_profiles').update({ is_verified: !currentStatus }).eq('id', id);
-    refreshCurrentView();
+// FIXED VERIFICATION TOGGLE
+async function toggleVerification(id, isCurrentlyVerified) {
+    if (!confirm(`Toggle verification status to ${!isCurrentlyVerified}?`)) return;
+    const { error } = await _supabase.from('user_profiles').update({ is_verified: !isCurrentlyVerified }).eq('id', id);
+    if (error) alert("Error toggling verification: " + error.message);
+    else refreshCurrentView();
 }
 
 async function resetProfile(id) {
@@ -294,14 +352,6 @@ async function renderContributors() {
 }
 
 // --- 7. BASIC ADMIN VIEWS ---
-async function renderHome() { 
-    return `
-    <div class="page-header"><h1>Admin Overview</h1></div>
-    <div class="config-grid">
-        <div class="item-card"><h3>Welcome</h3><p style="color:var(--text-dim)">Select an option from the sidebar to begin management.</p></div>
-    </div>`; 
-}
-
 async function renderUsers() {
     const { data, error } = await _supabase.from('users').select('*').order('last_login', { ascending: false }).limit(50);
     if (error || !data || data.length === 0) return `<div class="page-header"><h1>Users Overview</h1></div><p style="color:var(--text-dim)">No data.</p>`;
