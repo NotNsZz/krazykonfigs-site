@@ -37,9 +37,11 @@
     </div>
 
     <aside class="sidebar">
-        <div class="sidebar-brand">
-            <img src="/assets/images/logo.png" alt="Logo" class="brand-logo" onerror="this.src='./assets/images/logo.png'"> 
-            <span>ADMIN PANEL</span>
+        <div class="sidebar-brand" style="padding: 2rem 1.5rem; margin-bottom: 0.5rem;">
+            <a href="dashboard.html" style="display:flex; align-items:center; gap: 12px; text-decoration:none; color:var(--text-main);">
+                <div style="font-size: 1.5rem; font-weight: 900; border: 2px solid var(--text-main); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; letter-spacing: -2px; padding-right: 2px;">K</div>
+                <span style="font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px;">KrazyKonfigs</span>
+            </a>
         </div>
 
         <div class="nav-group">Home</div>
@@ -66,9 +68,15 @@
 
     <div class="wrapper">
         <header class="header">
-            <div style="display:flex; align-items:center; gap: 15px;">
-                <a href="dashboard.html" class="btn-secondary" style="text-decoration:none;"><i class="fas fa-tachometer-alt"></i> Back to Dashboard</a>
-                <button class="btn-danger" onclick="handleLogoutClick()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+            <div class="profile-container">
+                <div class="profile-trigger" onclick="toggleDropdown(event)">
+                    <img src="" id="adminPfp" class="profile-pfp" alt="" onerror="this.src='/assets/images/logo.png'">
+                    <span class="username-reveal" id="adminName">Admin</span>
+                </div>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="dashboard.html" class="drop-link"><i class="fas fa-tachometer-alt"></i> Back to Dashboard</a>
+                    <div class="dropdown-item logout-btn" onclick="handleLogoutClick()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+                </div>
             </div>
         </header>
 
