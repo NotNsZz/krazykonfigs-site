@@ -5,7 +5,8 @@
 .profile-container { margin-top: 100px; width: 90%; max-width: 650px; display: flex; flex-direction: column; gap: 1.5rem; animation: fadeIn 0.5s ease; padding-bottom: 3rem; margin-left: auto; margin-right: auto; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-.back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 800; margin-bottom: -0.5rem; transition: 0.2s; font-size: 0.95rem; text-transform: uppercase; }
+/* FIX: Changed margin-bottom to 1.5rem for beautiful spacing! */
+.back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 800; margin-bottom: 1.5rem; transition: 0.2s; font-size: 0.95rem; text-transform: uppercase; }
 .back-btn:hover { color: var(--text-main); transform: translateX(-5px); }
 
 .profile-card, .history-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 1.5rem; position: relative; overflow: hidden; }
