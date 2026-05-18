@@ -1,5 +1,10 @@
-let userReviews = [];
-let visibleReviewCount = 4;
+let userReviews = [], visibleReviewCount = 4;
+
+async function loadProfileTags() {
+    try { const res = await fetch('/assets/data/tags.json'); if (res.ok) tagColorDictionary = await res.json(); } 
+    catch (e) { console.warn("Using fallback tag colors."); }
+}
+loadProfileTags();
 
 async function initProfileLogic() {
     if(typeof bootSequence === 'function') await bootSequence();
@@ -14,26 +19,16 @@ async function initProfileLogic() {
     try {
         let user = null;
 
-        // 1. Direct Unique Match Check via ID
         if (targetDiscordId) {
             const { data } = await _supabase.from('users').select('*').eq('discord_id', targetDiscordId).limit(1);
             if(data && data.length > 0) user = data[0];
         } 
         
-        // 2. Encoded Parameter String Fallback
         if (!user && targetName) {
             const cleanName = decodeURIComponent(targetName).trim(); 
-            
             let { data } = await _supabase.from('users').select('*').ilike('username', cleanName).limit(1);
-            
-            if (!data || data.length === 0) {
-                ({ data } = await _supabase.from('users').select('*').ilike('display_name', cleanName).limit(1));
-            }
-            
-            if (!data || data.length === 0) {
-                ({ data } = await _supabase.from('users').select('*').or(`display_name.ilike.%${cleanName}%,username.ilike.%${cleanName}%`).limit(1));
-            }
-
+            if (!data || data.length === 0) ({ data } = await _supabase.from('users').select('*').ilike('display_name', cleanName).limit(1));
+            if (!data || data.length === 0) ({ data } = await _supabase.from('users').select('*').or(`display_name.ilike.%${cleanName}%,username.ilike.%${cleanName}%`).limit(1));
             if(data && data.length > 0) user = data[0];
         }
 
@@ -43,72 +38,75 @@ async function initProfileLogic() {
         const uName = user.username.split('#')[0]; 
         const namesToCheck = [user.username, dName, uName];
 
-        // Creator Identification Lookup
+        // Fetch Configs, Reviews, and Directory Tags
         const { data: configs } = await _supabase.from('configs').select('id').in('creator', namesToCheck).limit(1);
         const isCreator = configs && configs.length > 0;
-
-        // Fetch Complete Log History For Pagination Handling
         const { data: reviews } = await _supabase.from('reviews').select('*').eq('poster_id', user.discord_id).order('created_at', { ascending: false });
         userReviews = reviews || [];
-
-        // Check Directory Specifications
         const { data: contributorData } = await _supabase.from('contributors').select('tags').in('name', namesToCheck).limit(1);
         const tags = contributorData && contributorData[0]?.tags ? (Array.isArray(contributorData[0].tags) ? contributorData[0].tags : contributorData[0].tags.split(',')) : [];
 
-        // DOM Synchronization
-        const avatarEl = document.getElementById('p-avatar');
-        const dnameEl = document.getElementById('p-dname');
-        const unameEl = document.getElementById('p-uname');
-        const joinedEl = document.getElementById('stat-joined');
-        
-        if(avatarEl) avatarEl.src = escapeHTML(user.avatar_url) || '/assets/images/logo.png';
-        if(dnameEl) dnameEl.innerText = escapeHTML(dName);
-        if(unameEl) unameEl.innerText = "@" + escapeHTML(uName).toLowerCase().replace(/\s/g, '');
-        
-        if(joinedEl) {
-            const rawDate = user.created_at || user.last_login;
-            joinedEl.innerText = rawDate ? "Joined: " + new Date(rawDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Joined: Unknown';
+        // NEW: Fetch Extended Profile Data
+        const { data: extProfile } = await _supabase.from('user_profiles').select('*').eq('id', user.id).single();
+
+        // Increase View Counter (Fires silently in the background)
+        if (extProfile) {
+            _supabase.from('user_profiles').update({ views: (extProfile.views || 0) + 1 }).eq('id', user.id).then();
         }
 
-        const guildEl = document.getElementById('p-guild');
-        if(guildEl) guildEl.innerHTML = user.guild_tag ? `<span class="guild-tag">${escapeHTML(user.guild_tag)}</span>` : '';
+        // --- DOM SYNCHRONIZATION ---
+        if(document.getElementById('p-avatar')) document.getElementById('p-avatar').src = escapeHTML(user.avatar_url) || '/assets/images/logo.png';
+        if(document.getElementById('p-dname')) document.getElementById('p-dname').innerText = escapeHTML(dName);
+        if(document.getElementById('p-uname')) document.getElementById('p-uname').innerText = "@" + escapeHTML(uName).toLowerCase().replace(/\s/g, '');
+        if(document.getElementById('stat-joined')) document.getElementById('stat-joined').innerText = user.created_at ? "Joined: " + new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Joined: Unknown';
+        
+        // Extended Profile UI Injections
+        if (extProfile) {
+            // Bio
+            if(document.getElementById('p-bio')) document.getElementById('p-bio').innerText = escapeHTML(extProfile.bio);
+            // Views
+            if(document.getElementById('p-views')) document.getElementById('p-views').innerText = (extProfile.views || 0) + 1;
+            // Verified Badge
+            if(extProfile.is_verified && document.getElementById('p-verified')) document.getElementById('p-verified').style.display = 'inline-block';
+            // Discord Link Generation
+            if(document.getElementById('p-discord-link')) document.getElementById('p-discord-link').href = `https://discord.com/users/${escapeHTML(extProfile.discord_id)}`;
+            
+            // Discord Status Dot Mapping
+            const statusDot = document.getElementById('p-status-dot');
+            if (statusDot) {
+                const status = (extProfile.status || 'offline').toLowerCase();
+                statusDot.className = `status-dot ${status}`;
+                statusDot.title = status.charAt(0).toUpperCase() + status.slice(1); // Capitalizes title
+            }
 
-        // --- BADGES & TAGS (Properly Placed!) ---
+            // Custom Background Gradient
+            if (extProfile.theme_colors && extProfile.theme_colors.length >= 2) {
+                const card = document.getElementById('p-card-bg');
+                if (card) {
+                    card.style.background = `linear-gradient(135deg, ${escapeHTML(extProfile.theme_colors[0])}, ${escapeHTML(extProfile.theme_colors[1])})`;
+                    card.style.border = `1px solid ${escapeHTML(extProfile.theme_colors[1])}55`; // Adds a subtle matching border glow!
+                }
+            }
+        }
+
         const badgesEl = document.getElementById('p-badges');
-        if (badgesEl) {
-            badgesEl.innerHTML = isCreator ? `<span class="role-badge badge-creator"><i class="fas fa-hammer"></i> Creator</span>` : `<span class="role-badge badge-user"><i class="fas fa-user"></i> User</span>`;
-        }
+        if (badgesEl) badgesEl.innerHTML = isCreator ? `<span class="role-badge badge-creator"><i class="fas fa-hammer"></i> Creator</span>` : `<span class="role-badge badge-user"><i class="fas fa-user"></i> User</span>`;
 
         const tagsContainer = document.getElementById('p-tags');
         if (tags.length > 0 && tagsContainer) {
-            tagsContainer.style.display = 'flex';
-            tagsContainer.style.gap = '8px';
-            tagsContainer.style.flexWrap = 'wrap';
-            
-            tagsContainer.innerHTML = tags.map(t => {
-                const color = typeof getBadgeColor === 'function' ? getBadgeColor(t) : '#666';
-                return `<span class="con-tag" style="color: ${color}; border-color: ${color};">${escapeHTML(t.trim())}</span>`;
-            }).join('');
-        } else if (tagsContainer) {
-            tagsContainer.style.display = 'none';
-        }
+            tagsContainer.style.display = 'flex'; tagsContainer.style.gap = '8px'; tagsContainer.style.flexWrap = 'wrap';
+            tagsContainer.innerHTML = tags.map(t => `<span class="con-tag" style="color: ${typeof getBadgeColor === 'function' ? getBadgeColor(t) : '#666'}; border-color: ${typeof getBadgeColor === 'function' ? getBadgeColor(t) : '#666'};">${escapeHTML(t.trim())}</span>`).join('');
+        } else if (tagsContainer) tagsContainer.style.display = 'none';
 
-        renderProfileReviews();
+        renderProfileReviews(user);
 
         const showMoreBtn = document.getElementById('show-more-reviews-btn');
-        if(showMoreBtn) {
-            showMoreBtn.onclick = () => {
-                visibleReviewCount += 4;
-                renderProfileReviews();
-            };
-        }
+        if(showMoreBtn) showMoreBtn.onclick = () => { visibleReviewCount += 4; renderProfileReviews(user); };
 
-    } catch (err) {
-        console.error("Profile Load Exception Core Engine Handler:", err);
-    }
+    } catch (err) { console.error("Profile Engine Load Error:", err); }
 }
 
-function renderProfileReviews() {
+function renderProfileReviews(userObj) {
     const reviewsContainer = document.getElementById('p-reviews-container');
     const showMoreBtn = document.getElementById('show-more-reviews-btn');
     if (!reviewsContainer) return;
@@ -120,13 +118,10 @@ function renderProfileReviews() {
     }
 
     const activeSlice = userReviews.slice(0, visibleReviewCount);
-    
     reviewsContainer.innerHTML = activeSlice.map(r => {
         const stars = Array(5).fill(0).map((_, i) => i < r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('');
         const cleanReviewerName = escapeHTML(r.poster_username).split('#')[0];
-        
-        // Uses the avatar tied to the review in case the user changes their Discord PFP later
-        const avatarToUse = escapeHTML(r.poster_avatar || '/assets/images/logo.png');
+        const avatarToUse = escapeHTML(userObj.avatar_url || '/assets/images/logo.png');
 
         return `
         <div class="review-item">
@@ -141,7 +136,5 @@ function renderProfileReviews() {
         </div>`;
     }).join('');
 
-    if(showMoreBtn) {
-        showMoreBtn.style.display = visibleReviewCount >= userReviews.length ? 'none' : 'block';
-    }
+    if(showMoreBtn) showMoreBtn.style.display = visibleReviewCount >= userReviews.length ? 'none' : 'block';
 }
