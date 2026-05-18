@@ -1,7 +1,7 @@
 // --- 1. SUPABASE & GLOBAL VARIABLES ---
 const _supabase = supabase.createClient(
     'https://unjdjduiqtldgoybgmnq.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE' 
+    'YOUR_SUPABASE_ANON_KEY' 
 );
 
 let currentUser = null;
@@ -48,7 +48,6 @@ async function bootSequence() {
             avatar_url: meta.avatar_url
         };
 
-        // Populate header dropdown details
         document.getElementById('adminName').innerText = escapeHTML(currentUser.username);
         document.getElementById('adminPfp').src = escapeHTML(currentUser.avatar_url) || '/assets/images/logo.png';
 
@@ -65,7 +64,6 @@ async function bootSequence() {
 }
 bootSequence();
 
-// Dropdown Logic
 function toggleDropdown(e) {
     e.stopPropagation();
     document.getElementById('profileDropdown').classList.toggle('active');
@@ -118,7 +116,6 @@ function refreshCurrentView() {
     if (activeBtn) activeBtn.click();
 }
 
-// --- THE RESTORED HOME GREETING & STATS ---
 async function renderHome() { 
     const hour = new Date().getHours();
     const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
@@ -175,16 +172,17 @@ async function renderProfiles() {
     let rowsHtml = mergedProfiles.map(p => {
         const isVerified = p.is_verified ? '<span style="color:#2ecc71;"><i class="fas fa-check-circle"></i> Yes</span>' : '<span style="color:var(--text-dim);">No</span>';
         
+        // THE FIX: Wrapped ${p.id} in single quotes so the UUID strings don't crash JS!
         return `
         <tr>
             <td style="font-weight:700;">${escapeHTML(p.username)}</td>
             <td style="font-size:0.85rem; color:var(--text-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHTML(p.bio || 'None')}</td>
             <td>${isVerified}</td>
             <td>
-                <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="toggleVerification(${p.id}, ${!!p.is_verified})">
+                <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="toggleVerification('${p.id}', ${!!p.is_verified})">
                     <i class="fas fa-certificate"></i> Toggle Verif.
                 </button>
-                <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem; margin-left: 5px;" title="Reset Bio/Colors/Music" onclick="resetProfile(${p.id})">
+                <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem; margin-left: 5px;" title="Reset Bio/Colors/Music" onclick="resetProfile('${p.id}')">
                     <i class="fas fa-bomb"></i> Nuke Profile
                 </button>
             </td>
@@ -204,7 +202,6 @@ async function renderProfiles() {
     </div>`;
 }
 
-// FIXED VERIFICATION TOGGLE
 async function toggleVerification(id, isCurrentlyVerified) {
     if (!confirm(`Toggle verification status to ${!isCurrentlyVerified}?`)) return;
     const { error } = await _supabase.from('user_profiles').update({ is_verified: !isCurrentlyVerified }).eq('id', id);
@@ -293,9 +290,9 @@ function buildAdminConfigGridHTML(configs) {
                 <div class="data-row"><span class="data-label">Pri:</span> <span class="data-val">${escapeHTML(c.priority)}</span></div>
             </div>
             <div class="card-actions" style="justify-content:flex-end;">
-                <button class="btn-secondary" onclick="openConfigModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
-                <button class="btn-secondary" onclick="updateDB('configs', ${c.id}, 'is_archived', '${newArchivedVal}', true)">${actionBtnTxt}</button>
-                <button class="btn-danger" title="Delete" onclick="deleteRecord('configs', ${c.id})"><i class="fas fa-trash"></i></button>
+                <button class="btn-secondary" onclick="openConfigModal('${c.id}')"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn-secondary" onclick="updateDB('configs', '${c.id}', 'is_archived', '${newArchivedVal}', true)">${actionBtnTxt}</button>
+                <button class="btn-danger" title="Delete" onclick="deleteRecord('configs', '${c.id}')"><i class="fas fa-trash"></i></button>
             </div>
         </div>`;
     }).join('');
@@ -337,8 +334,8 @@ async function renderContributors() {
             </h3>
             <div style="margin-bottom: 15px;">${renderedTags}</div>
             <div class="card-actions" style="justify-content:flex-end; margin-top:auto;">
-                <button class="btn-secondary" onclick="openContributorModal(${c.id})"><i class="fas fa-edit"></i> Edit</button>
-                <button class="btn-danger" title="Delete" onclick="deleteRecord('contributors', ${c.id})"><i class="fas fa-trash"></i></button>
+                <button class="btn-secondary" onclick="openContributorModal('${c.id}')"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn-danger" title="Delete" onclick="deleteRecord('contributors', '${c.id}')"><i class="fas fa-trash"></i></button>
             </div>
         </div>`;
     }).join('');
@@ -355,12 +352,21 @@ async function renderContributors() {
 async function renderUsers() {
     const { data, error } = await _supabase.from('users').select('*').order('last_login', { ascending: false }).limit(50);
     if (error || !data || data.length === 0) return `<div class="page-header"><h1>Users Overview</h1></div><p style="color:var(--text-dim)">No data.</p>`;
+    
+    // THE FIX: Added the "Last Login" column and data!
     return `
     <div class="page-header"><h1>Users Overview</h1></div>
     <div class="table-viewer-wrap">
         <table class="data-table">
-            <thead><tr><th>Username</th><th>Discord ID</th><th>Rank</th><th>Blacklisted</th></tr></thead>
-            <tbody>${data.map(u => `<tr><td>${escapeHTML(u.username)}</td><td style="color:var(--text-dim);">${escapeHTML(u.discord_id)}</td><td style="color:${u.rank === 'admin' ? 'var(--accent)' : 'inherit'}">${escapeHTML(u.rank)}</td><td>${u.isBlacklisted === 'true' ? '<span style="color:var(--danger);">True</span>' : 'False'}</td></tr>`).join('')}</tbody>
+            <thead><tr><th>Username</th><th>Discord ID</th><th>Rank</th><th>Blacklisted</th><th>Last Login</th></tr></thead>
+            <tbody>${data.map(u => `
+            <tr>
+                <td style="font-weight:700;">${escapeHTML(u.username)}</td>
+                <td style="color:var(--text-dim); font-size:0.85rem;">${escapeHTML(u.discord_id)}</td>
+                <td style="color:${u.rank === 'admin' ? 'var(--accent)' : 'inherit'}; font-weight:${u.rank === 'admin' ? '900' : 'normal'};">${escapeHTML(u.rank)}</td>
+                <td>${u.isBlacklisted === 'true' ? '<span style="color:var(--danger); font-weight:800;">True</span>' : 'False'}</td>
+                <td style="color:var(--text-dim); font-size:0.85rem;">${u.last_login ? new Date(u.last_login).toLocaleString() : 'Never'}</td>
+            </tr>`).join('')}</tbody>
         </table>
     </div>`;
 }
@@ -396,7 +402,7 @@ async function renderReviews() {
     <div class="table-viewer-wrap">
         <table class="data-table">
             <thead><tr><th>ID</th><th>Reply To</th><th>Config ID</th><th>User</th><th>Comment</th><th>Stars</th><th>Action</th></tr></thead>
-            <tbody>${(data||[]).map(r => `<tr><td style="color:var(--text-dim);">${r.id}</td><td style="color:var(--accent); font-weight:bold;">${r.replying_to_id ? `#${r.replying_to_id}` : '-'}</td><td style="font-weight:bold;">${r.config_id}</td><td>${escapeHTML(r.poster_username)}</td><td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(r.comment)}</td><td style="color:#f1c40f;">${r.rating||'-'} <i class="fas fa-star"></i></td><td><button class="btn-danger" style="padding: 6px 12px;" onclick="deleteRecord('reviews', ${r.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody>
+            <tbody>${(data||[]).map(r => `<tr><td style="color:var(--text-dim);">${r.id}</td><td style="color:var(--accent); font-weight:bold;">${r.replying_to_id ? `#${r.replying_to_id}` : '-'}</td><td style="font-weight:bold;">${r.config_id}</td><td>${escapeHTML(r.poster_username)}</td><td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(r.comment)}</td><td style="color:#f1c40f;">${r.rating||'-'} <i class="fas fa-star"></i></td><td><button class="btn-danger" style="padding: 6px 12px;" onclick="deleteRecord('reviews', '${r.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('')}</tbody>
         </table>
     </div>`;
 }
@@ -484,10 +490,10 @@ async function viewTableData(table) {
 
 function openConfigModal(id = null) {
     document.querySelector('.modal-content').style.maxWidth = "650px";
-    let obj = id ? activeDataStore.find(t => t.id === id) : {};
+    let obj = id ? activeDataStore.find(t => String(t.id) === String(id)) : {};
     
     openModal(id ? 'Edit Config' : 'Create New Config', `
-    <form id="configForm" onsubmit="saveForm(event, 'configs', ${id})">
+    <form id="configForm" onsubmit="saveForm(event, 'configs', '${id || ''}')">
         <div class="form-grid">
             <div class="form-group full"><label>Title</label><input type="text" name="title" class="form-control" value="${escapeHTML(obj.title || '')}" required></div>
             <div class="form-group"><label>Ping Tier</label><input type="text" name="ping_tier" class="form-control" value="${escapeHTML(obj.ping_tier || 'Mid')}"></div>
@@ -515,10 +521,10 @@ function openConfigModal(id = null) {
 
 function openContributorModal(id = null) {
     document.querySelector('.modal-content').style.maxWidth = "500px";
-    let obj = id ? activeDataStore.find(t => t.id === id) : {};
+    let obj = id ? activeDataStore.find(t => String(t.id) === String(id)) : {};
     
     openModal(id ? 'Edit Contributor' : 'Create Contributor', `
-    <form id="contributorForm" onsubmit="saveForm(event, 'contributors', ${id})">
+    <form id="contributorForm" onsubmit="saveForm(event, 'contributors', '${id || ''}')">
         <div class="form-group"><label>Name</label><input type="text" name="name" class="form-control" value="${escapeHTML(obj.name || '')}" required></div>
         <div class="form-grid">
             <div class="form-group"><label>Role Icon (FontAwesome)</label><input type="text" name="role_icon" class="form-control" value="${escapeHTML(obj.role_icon || 'fas fa-crown')}"></div>
