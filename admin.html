@@ -9,121 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <style>
-        :root {
-            --sidebar-bg: #0a0a0a;
-            --main-bg: #0f0f0f;
-            --card-bg: #161616;
-            --accent: #5865F2;
-            --danger: #ed4245;
-            --success: #2ecc71;
-            --text: #fff;
-            --text-dim: #888;
-            --border: #1f1f1f;
-            --input-bg: #111;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        body {
-            background-color: var(--main-bg);
-            color: var(--text);
-            font-family: 'Source Sans Pro', sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            background-image: radial-gradient(var(--border) 1px, transparent 1px);
-            background-size: 24px 24px;
-            margin: 0;
-        }
-
-        body.ready { opacity: 1; }
-        
-        * { box-sizing: border-box; }
-        
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.8); }
-
-        /* Security Guard Loader */
-        #security-guard { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
-        .guard-spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--accent); border-radius: 50%; width: 45px; height: 45px; animation: spin 0.8s linear infinite; margin-bottom: 1.5rem; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Sidebar */
-        .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; z-index: 100; }
-        .sidebar-brand { padding: 2rem 1.5rem; display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 1.3rem; }
-        .brand-logo { width: 35px; height: 35px; border-radius: 8px; object-fit: contain; }
-        
-        .nav-group { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin: 1.5rem 1.5rem 0.5rem; font-weight: 800; }
-        .nav-btn { padding: 12px 1.5rem; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition); font-weight: 600; border-left: 3px solid transparent; font-size: 0.95rem; }
-        .nav-btn:hover { background: rgba(255,255,255,0.03); color: #fff; }
-        .nav-btn.active { background: rgba(88,101,242,0.05); color: #fff; border-left-color: var(--accent); }
-        .nav-btn i { width: 20px; text-align: center; }
-
-        /* Main Content */
-        .wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 100; }
-        .header { height: 70px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 2.5rem; background: var(--main-bg); }
-        
-        #dynamic-container { flex: 1; padding: 2.5rem; overflow-y: auto; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
-        .page-header h1 { font-size: 2rem; font-weight: 900; letter-spacing: -0.5px; margin: 0; }
-
-        /* Buttons & Inputs */
-        .search-bar { background: var(--input-bg); border: 1px solid var(--border); padding: 10px 16px; border-radius: 8px; color: var(--text); width: 250px; outline: 0; font-family: inherit; font-size: 0.9rem; transition: var(--transition); }
-        .search-bar:focus { border-color: var(--accent); }
-        
-        .btn-primary { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 8px; }
-        .btn-primary:hover { filter: brightness(1.1); transform: scale(1.05); }
-        
-        .btn-secondary { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: var(--transition); }
-        .btn-secondary:hover { background: var(--border); transform: scale(1.05); }
-        
-        .btn-danger { background: rgba(237,66,69,0.1); color: var(--danger); border: 1px solid rgba(237,66,69,0.2); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: var(--transition); }
-        .btn-danger:hover { background: var(--danger); color: #fff; transform: scale(1.05); }
-
-        /* Tables & Grids */
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
-        .item-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; }
-        .item-card h3 { font-size: 1.2rem; font-weight: 800; margin: 0 0 1rem 0; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
-        
-        .data-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
-        .data-table th, .data-table td { padding: 14px 20px; text-align: left; font-size: 0.95rem; border-bottom: 1px solid var(--border); }
-        .data-table th { background: rgba(255,255,255,0.02); color: var(--text-dim); font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
-        .data-table tbody tr:hover { background: rgba(255,255,255,0.01); }
-
-        /* Modals */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; opacity: 0; transition: opacity 0.3s; }
-        .modal-overlay.show { display: flex; opacity: 1; }
-        .modal-content { background: var(--card-bg); width: 95%; max-width: 650px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; max-height: 90vh; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
-        .modal-overlay.show .modal-content { transform: translateY(0); }
-        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
-
-        /* Forms */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
-        .form-group.full { grid-column: span 2; }
-        .form-group label { font-size: 0.8rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; }
-        .form-control { background: var(--input-bg); border: 1px solid var(--border); padding: 10px; border-radius: 6px; color: var(--text); font-family: inherit; font-size: 0.95rem; outline: 0; transition: border 0.3s; }
-        .form-control:focus { border-color: var(--accent); }
-        
-        .status-select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; outline: 0; font-weight: 600; font-family: inherit; }
-
-        /* Toggle Switches */
-        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: 0.4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: var(--text-dim); transition: 0.4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(20px); background-color: #fff; }
-
-        /* Tag Pill Styling for Contributor Preview */
-        .con-tag { font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; border: 1.5px solid; font-weight: 800; background: transparent; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; }
-        .con-tag i { margin-right: 6px; font-size: 0.9em; transform: translateY(-1px); }
-    </style>
+    <link rel="stylesheet" href="/assets/css/admin.css">
 </head>
 <body>
 
@@ -188,3 +74,7 @@
 
         <main id="dynamic-container"></main>
     </div>
+
+    <script src="/assets/js/admin.js"></script>
+</body>
+</html>
