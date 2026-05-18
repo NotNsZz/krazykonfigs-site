@@ -1,1 +1,43 @@
+/* --- PROFILE LAYOUT --- */
+.profile-container { margin-top: 100px; width: 90%; max-width: 650px; display: flex; flex-direction: column; gap: 1.5rem; animation: fadeIn 0.5s ease; padding-bottom: 3rem; margin-left: auto; margin-right: auto; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+.back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 800; margin-bottom: -0.5rem; transition: 0.2s; font-size: 0.95rem; text-transform: uppercase; }
+.back-btn:hover { color: var(--text-main); transform: translateX(-5px); }
+
+.profile-card, .history-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 1.5rem; position: relative; overflow: hidden; }
+body.dark-mode .profile-card, body.dark-mode .history-card { box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+
+/* --- USER CARD STYLES --- */
+.profile-header-row { display: flex; align-items: center; gap: 1.5rem; position: relative; z-index: 2; }
+.profile-avatar { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--border); object-fit: cover; background: var(--bg-body); transition: border-color 0.3s; }
+body.dark-mode .profile-avatar { border-color: #fff; }
+
+.profile-info { flex: 1; }
+.profile-name { font-size: 2rem; font-weight: 900; margin: 0 0 4px 0; display: flex; align-items: center; gap: 10px; }
+.profile-username { font-size: 1.1rem; color: var(--text-muted); font-weight: 600; margin: 0; }
+
+.status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; background: var(--text-muted); margin-right: 5px; }
+.status-dot.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
+
+/* --- BADGES & STATS --- */
+.badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.role-badge { font-size: 0.8rem; padding: 6px 14px; border-radius: 20px; font-weight: 800; text-transform: uppercase; }
+.badge-user { background: rgba(88, 101, 242, 0.1); color: #5865F2; border: 1px solid #5865F2; }
+.badge-creator { background: rgba(241, 196, 15, 0.1); color: #f1c40f; border: 1px solid #f1c40f; }
+
+.profile-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+.stat-box { background: var(--bg-body); padding: 12px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
+.stat-value { font-size: 1.5rem; font-weight: 900; color: var(--text-main); }
+.stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-top: 4px; }
+
+/* --- ACTIVITY FEED --- */
+.history-title { font-size: 1.4rem; font-weight: 900; margin: 0 0 1.5rem 0; border-bottom: 1px solid var(--border); padding-bottom: 0.8rem; }
+.review-item { display: flex; gap: 15px; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px dashed var(--border); }
+.review-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.review-content { flex: 1; }
+.review-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.review-target { font-size: 0.9rem; font-weight: 800; color: var(--accent); text-decoration: none;}
+.review-target:hover { text-decoration: underline; }
+.review-stars { color: #f1c40f; font-size: 0.8rem; }
+.review-text { font-size: 0.95rem; color: var(--text-muted); margin: 0; line-height: 1.5; font-weight: 600;}
