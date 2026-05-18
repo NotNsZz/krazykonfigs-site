@@ -35,11 +35,14 @@ async function bootSequence() {
         if(isMaintenance && r?.rank !== 'admin') return window.location.href = 'maintenance.html';
         
         const dName = c.custom_claims?.global_name || c.full_name || c.name || 'User';
-        const uName = c.preferred_username || c.name || 'user';
+        const rawUname = c.preferred_username || c.name || 'user';
+        
+        // DESTROY THE DISCORD TAG PERMANENTLY BEFORE SAVING
+        const cleanUname = rawUname.split('#')[0]; 
 
         currentUser = {
             id: i.id, discord_id: o, 
-            username: uName, display_name: dName, 
+            username: cleanUname, display_name: dName, 
             avatar_url: c.avatar_url, rank: r?.rank || 'user'
         };
         
@@ -75,7 +78,6 @@ async function injectComponents() {
         } catch (e) { console.error('Failed to load component:', file); }
     }
     
-    // Auto-update theme toggle icons
     const isDark = document.body.classList.contains('dark-mode');
     const tBtn = document.getElementById('themeBtn');
     if(tBtn) tBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
