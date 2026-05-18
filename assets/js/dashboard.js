@@ -209,7 +209,7 @@ function closeReviews(e) {
     });
 }
 
-// --- AGGRESSIVE STAR CLICK LOGIC ---
+// --- AGGRESSIVE STAR CLICK LOGIC (WITH CAPTURING) ---
 document.addEventListener('click', (e) => {
     const star = e.target.closest('.input-star');
     
@@ -229,7 +229,7 @@ document.addEventListener('click', (e) => {
             }
         });
     }
-});
+}, true); // <--- THIS 'true' IS THE MAGIC FIX. It intercepts the click before the modal swallows it!
 
 async function submitReview() {
     const input = document.getElementById('reviewTextInput'), text = input.value.trim();
