@@ -5,7 +5,6 @@
 .profile-container { margin-top: 100px; width: 90%; max-width: 650px; display: flex; flex-direction: column; gap: 1.5rem; animation: fadeIn 0.5s ease; padding-bottom: 3rem; margin-left: auto; margin-right: auto; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-/* FIX: Changed margin-bottom to 1.5rem for beautiful spacing! */
 .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 800; margin-bottom: 1.5rem; transition: 0.2s; font-size: 0.95rem; text-transform: uppercase; }
 .back-btn:hover { color: var(--text-main); transform: translateX(-5px); }
 
@@ -20,6 +19,13 @@ body.dark-mode .profile-avatar { border-color: #fff; }
 .profile-info { flex: 1; }
 .profile-name { font-size: 2rem; font-weight: 900; margin: 0; display: inline-block; }
 .profile-username { font-size: 1.1rem; color: var(--text-muted); font-weight: 600; margin: 4px 0 12px 0; }
+
+/* --- DISCORD STATUS DOTS --- */
+.status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; background: #80848e; margin-right: 5px; border: 2px solid var(--card-bg); transition: 0.3s; }
+.status-dot.online { background: #23a559; box-shadow: 0 0 8px rgba(35, 165, 89, 0.4); }
+.status-dot.idle { background: #f0b232; box-shadow: 0 0 8px rgba(240, 178, 50, 0.4); }
+.status-dot.dnd { background: #f23f43; box-shadow: 0 0 8px rgba(242, 63, 67, 0.4); }
+.status-dot.offline { background: #80848e; }
 
 /* --- BADGES & TAGS --- */
 .guild-tag { font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; background: var(--tag-bg); color: var(--text-main); font-weight: 800; border: 1px solid var(--border); }
