@@ -134,7 +134,6 @@ function renderReviewNode(r, depth=0) {
     const isMine = currentUser && String(r.poster_id) === String(currentUser.discord_id);
     const delBtn = isMine ? `<button class="delete-btn" title="Delete" onclick="deleteReview(${r.id})"><i class="fas fa-trash"></i></button>` : '';
     
-    // Automatically strips the #0 from old Discord users
     const cleanUsername = escapeHTML(r.poster_username).split('#')[0];
     
     let html = `
@@ -196,33 +195,37 @@ async function deleteReview(id) {
     }
 }
 
+// Resets stars when modal is closed
 function closeReviews(e) {
     if(e && e.target !== document.getElementById('reviewModal')) return;
     document.getElementById('reviewModal').classList.remove('show');
     activeConfigId = null; replyingToId = null;
     document.getElementById('replyIndicator').style.display = 'none';
-    document.querySelectorAll('.input-star').forEach(el => el.classList.toggle('active', parseInt(el.getAttribute('data-val')) <= 5));
+    
     currentRatingInput = 5;
+    document.querySelectorAll('.input-star').forEach(s => {
+        s.classList.remove('far');
+        s.classList.add('fas', 'active');
+    });
 }
 
-// --- BULLETPROOF STAR CLICK LOGIC ---
+// --- AGGRESSIVE STAR CLICK LOGIC ---
 document.addEventListener('click', (e) => {
-    // This perfectly grabs the target even if they click the tiny SVG path inside the star!
-    const star = e.target.closest('[data-val]');
+    const star = e.target.closest('.input-star');
     
-    if (star && star.classList.contains('input-star')) {
+    if (star) {
         currentRatingInput = parseInt(star.getAttribute('data-val'));
         
         document.querySelectorAll('.input-star').forEach(s => {
             const val = parseInt(s.getAttribute('data-val'));
+            
+            // Forcefully reset classes to prevent styling glitches
+            s.classList.remove('fas', 'far', 'active');
+            
             if (val <= currentRatingInput) {
-                // Fills the star in (solid)
-                s.classList.add('active');
-                s.classList.replace('far', 'fas'); 
+                s.classList.add('fas', 'active'); // Fills solid + color
             } else {
-                // Empties the star (outline)
-                s.classList.remove('active');
-                s.classList.replace('fas', 'far');
+                s.classList.add('far'); // Leaves outline
             }
         });
     }
