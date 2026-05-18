@@ -2,19 +2,34 @@
 
 <div class="profile-card" id="p-card-bg">
     <div class="profile-header-row">
-        <img src="https://via.placeholder.com/100" id="p-avatar" class="profile-avatar" alt="PFP">
+        <img src="/assets/images/logo.png" id="p-avatar" class="profile-avatar" alt="PFP">
         <div class="profile-info">
             <h1 class="profile-name">
                 <span id="p-dname">Loading...</span> 
-                <span id="p-guild"></span>
             </h1>
-            <p class="profile-username" id="p-uname">@loading</p>
+            <p class="profile-username">
+                <span class="status-dot online"></span>
+                <span id="p-uname">@loading</span>
+            </p>
             
             <div class="badge-row" id="p-badges">
-                </div>
+                <span class="role-badge badge-user"><i class="fas fa-circle-notch fa-spin"></i> Fetching...</span>
+            </div>
         </div>
     </div>
-    
-    <div class="contributor-tags" id="p-tags" style="display: none;">
+
+    <div class="profile-stats-grid">
+        <div class="stat-box">
+            <div class="stat-value" id="stat-configs">0</div>
+            <div class="stat-label">Configs</div>
         </div>
+        <div class="stat-box">
+            <div class="stat-value" id="stat-reviews">0</div>
+            <div class="stat-label">Reviews Left</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="stat-joined">-</div>
+            <div class="stat-label">Joined</div>
+        </div>
+    </div>
 </div>
