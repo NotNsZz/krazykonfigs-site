@@ -30,5 +30,29 @@
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/music.js"></script>
     <script src="/assets/js/dashboard.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Wait for ALL HTML components to finish downloading
+            injectComponents().then(() => {
+                // NOW trigger the dashboard logic
+                if(typeof initDashboardLogic === 'function') initDashboardLogic();
+
+                // Background Security checks
+                setInterval(async()=>{
+                    if(!currentUser) return;
+                    try{
+                        const{data:t}=await _supabase.from('settings').select('maintenance_mode').eq('id',1).single(),
+                             {data:e}=await _supabase.from('users').select('isBlacklisted, rank').eq('id',currentUser.id).single();
+                        if(e?.isBlacklisted==='true'||(t?.maintenance_mode===true && e?.rank!=='admin')) window.location.href='maintenance.html';
+                    } catch(e){}
+                }, 30000);
+
+                _supabase.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_OUT') window.location.href = 'login.html';
+                });
+            });
+        });
+    </script>
 </body>
 </html>
