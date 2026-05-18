@@ -4,11 +4,11 @@
     <div class="profile-header-row">
         <img src="/assets/images/logo.png" id="p-avatar" class="profile-avatar" alt="PFP">
         <div class="profile-info">
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="name-badge-row">
                 <h1 class="profile-name" id="p-dname">Loading...</h1>
-                <i id="p-verified" class="fas fa-check-circle" style="color: #1abc9c; display: none; font-size: 1.2rem; margin-top: 5px;"></i>
-                <span id="p-guild"></span>
-                <div id="p-discord-badges" style="display: flex; gap: 4px;"></div>
+                <i id="p-verified" class="fas fa-check-circle verified-badge" style="display: none;" title="Verified Creator"></i>
+                <a href="#" id="p-discord-link" target="_blank" class="social-icon-btn discord-color" style="display: none;" title="Discord Profile"><i class="fab fa-discord"></i></a>
+                <button id="p-edit-btn" class="social-icon-btn edit-color" style="display: none;" title="Edit Profile" onclick="openEditProfileModal()"><i class="fas fa-edit"></i></button>
             </div>
             
             <p class="profile-username">
@@ -20,24 +20,83 @@
                 <span class="role-badge badge-user"><i class="fas fa-circle-notch fa-spin"></i> Fetching...</span>
             </div>
         </div>
-        <div id="stat-joined" style="position: absolute; top: 1.5rem; right: 1.5rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Joined: --</div>
-    </div>
-    
-    <div class="contributor-tags" id="p-tags" style="display: none; margin-top: 1rem;">
-        </div>
-
-    <div class="profile-bio-section" style="margin-top: 0.5rem;">
-        <p class="profile-bio" id="p-bio" style="font-size: 1rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.2rem; line-height: 1.5;">...</p>
         
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <a href="#" id="p-discord-link" target="_blank" class="social-btn" title="View Discord Profile" style="display: flex; justify-content: center; align-items: center; width: 40px; height: 40px; border-radius: 8px; background: var(--tag-bg); color: #5865F2; text-decoration: none; font-size: 1.2rem; transition: 0.2s; border: 1px solid var(--border);">
-                <i class="fab fa-discord"></i>
-            </a>
-            
-            <button id="p-edit-btn" onclick="openEditProfileModal()" style="display: none; margin-left: auto; padding: 10px 18px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
-                <i class="fas fa-edit" style="margin-right: 5px;"></i> Edit Profile
-            </button>
-        </div>
+        <div id="stat-joined" class="joined-date">Joined: --</div>
     </div>
 
+    <div class="bio-box">
+        <p class="profile-bio" id="p-bio">...</p>
     </div>
+
+    <div class="contributor-tags" id="p-tags" style="display: none; margin-top: 1rem;"></div>
+</div>
+
+<div class="profile-card creator-stats-card" id="creator-stats-card" style="display: none; margin-top: 1.5rem;">
+    <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 900; text-transform: uppercase;"><i class="fas fa-chart-line" style="color: var(--accent);"></i> Creator Statistics</h3>
+    <div class="creator-stats-grid">
+        <div class="stat-box">
+            <div class="stat-value" id="stat-configs">0</div>
+            <div class="stat-label">Configs Published</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="stat-rating">0.0</div>
+            <div class="stat-label">Avg Rating <i class="fas fa-star" style="color:#f1c40f;"></i></div>
+        </div>
+    </div>
+    <div class="stat-box wide-stat">
+        <div class="stat-value" id="stat-hitrate">-</div>
+        <div class="stat-label">Average Hit Rate</div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="editProfileModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="margin:0; font-size: 1.2rem;"><i class="fas fa-paint-brush"></i> Customize Profile</h2>
+            <button class="dialog-close-x" onclick="closeEditProfileModal()" style="position:relative; top:0; right:0;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="input-group">
+                <label>Status</label>
+                <select id="edit-status" class="form-input">
+                    <option value="online">Online</option>
+                    <option value="idle">Idle</option>
+                    <option value="dnd">Do Not Disturb</option>
+                    <option value="offline">Offline</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Bio (Max 50 chars)</label>
+                <input type="text" id="edit-bio" class="form-input" maxlength="50" placeholder="Type your bio...">
+                <div id="bio-counter" style="text-align: right; font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">0 / 50</div>
+            </div>
+
+            <div class="input-group">
+                <label>Profile Card Colors (Static or Gradient)</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="color" id="edit-color-1" class="color-picker" value="#1a1b26">
+                    <span>to</span>
+                    <input type="color" id="edit-color-2" class="color-picker" value="#16161e">
+                    <div id="gradient-preview" style="width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--border);"></div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Background Dot Texture Color</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="color" id="edit-bg-dot-color" class="color-picker" value="#2a2b36">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Profile Theme Song</label>
+                <select id="edit-music" class="form-input">
+                    <option value="">None</option>
+                    </select>
+            </div>
+            
+            <button class="btn-modal-primary" style="width: 100%; margin-top: 10px;" onclick="saveProfileChanges()">Save Changes</button>
+        </div>
+    </div>
+</div>
