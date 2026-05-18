@@ -51,8 +51,7 @@ body.dark-mode .profile-avatar { border-color: #fff; }
 
 /* --- NAME & ICON CLUSTER --- */
 .name-badge-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
-.verified-badge { color: #1abc9c; font-size: 1.4rem; }
-.social-icon-btn { background: transparent; border: none; font-size: 1.4rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; padding: 0; }
+.social-icon-btn { background: transparent; border: none; font-size: 1.4rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; padding: 0; text-decoration: none !important; }
 .discord-color { color: #5865F2; }
 .discord-color:hover { color: #7289da; transform: scale(1.1); }
 .edit-color { color: var(--text-muted); margin-left: 5px; }
