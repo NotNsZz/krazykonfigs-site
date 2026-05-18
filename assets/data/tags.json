@@ -2,11 +2,11 @@
     "OWNER": { "color": "#ff5100", "icon": "fas fa-crown" },
     "DEVELOPER": { "color": "#2ed141", "icon": "fas fa-code" },
     "CONTRIBUTOR": { "color": "#ffea00", "icon": "fas fa-star" },
-    "TUFF": { "color": "#787878", "icon": "fas fa-shield-alt" },
+    "TUFF": { "color": "#787878", "icon": "fas fa-angellist" },
     "STAFF": { "color": "#e0d484", "icon": "fas fa-user-shield" },
     "FORMER STAFF": { "color": "#e0d484", "icon": "fas fa-user-clock" },
     "HELPER": { "color": "#00ffc8", "icon": "fas fa-hands-helping" },
-    "EARLY CONTRIBUTOR": { "color": "#ffea00", "icon": "fas fa-seedling" },
+    "EARLY CONTRIBUTOR": { "color": "#ffea00", "icon": "fas fa-star" },
     "TESTER": { "color": "#3fe00d", "icon": "fas fa-bug" },
     "GUEST CONTRIBUTOR": { "color": "#f50cbb", "icon": "fas fa-user-tag" }
 }
