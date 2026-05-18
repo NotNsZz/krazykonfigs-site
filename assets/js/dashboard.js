@@ -1,11 +1,33 @@
 let allConfigs = [], currentFilteredConfigs = [], currentVisibleCount = 9, currentPingTier = 'all';
 let activeConfigId = null, currentRatingInput = 5, replyingToId = null, cooldownTimer = null;
 
+// Contributor Pagination Variables
+let allContributors = [], visibleContributorsCount = 8;
+let dashTagData = {}; 
+
+// Load Tags for Dashboard
+async function loadDashTags() {
+    try { 
+        const res = await fetch('/assets/data/tags.json'); 
+        if (res.ok) dashTagData = await res.json(); 
+    } catch (e) { console.warn("Failed to load tag data."); }
+}
+
+function getDashTagData(t) {
+    const cleanTag = t.trim().toUpperCase();
+    if (dashTagData[cleanTag]) return dashTagData[cleanTag];
+    for (const key in dashTagData) { 
+        if (cleanTag.includes(key.toUpperCase())) return dashTagData[key]; 
+    }
+    return { color: '#666', icon: 'fas fa-tag' }; 
+}
+
 // --- INITIALIZATION ---
 async function initDashboardLogic() {
     if(typeof bootSequence === 'function') await bootSequence();
     if(typeof initMusicPlayer === 'function') initMusicPlayer();
     
+    await loadDashTags();
     fetchConfigs();
     fetchContributors();
 
@@ -15,11 +37,13 @@ async function initDashboardLogic() {
     }
 }
 
-// --- CONFIG LOGIC (WITH DYNAMIC RATINGS) ---
+function closeCreatorPromo() {
+    document.getElementById('creatorPromoOverlay')?.classList.remove('show');
+}
+
+// --- CONFIG LOGIC ---
 async function fetchConfigs() {
     const {data} = await _supabase.from('configs').select('*').eq('is_archived', 'false');
-    
-    // THE NEW FEATURE: Fetch all reviews to calculate dynamic ratings for each card
     const {data: allReviews} = await _supabase.from('reviews').select('config_id, rating').not('rating', 'is', null);
     
     let ratingMap = {};
@@ -34,7 +58,6 @@ async function fetchConfigs() {
         }
     }
 
-    // Attach the calculated rating to the config object (defaulting to 0.0)
     allConfigs = (data || []).map(c => ({...c, calc_rating: ratingMap[c.id] || "0.0"}))
                              .sort((a, b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
     
@@ -108,16 +131,43 @@ function renderConfigs() {
 // --- CONTRIBUTORS LOGIC ---
 async function fetchContributors() {
     const {data} = await _supabase.from('contributors').select('*');
-    const sorted = (data || []).sort((a,b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
-    document.getElementById('contributor-container').innerHTML = sorted.map(t => {
+    allContributors = (data || []).sort((a,b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
+    renderContributors();
+}
+
+function renderContributors() {
+    const container = document.getElementById('contributor-container');
+    const btnWrap = document.getElementById('showMoreContributorsBtnWrap');
+    
+    if(!container) return;
+
+    const toShow = allContributors.slice(0, visibleContributorsCount);
+    
+    container.innerHTML = toShow.map(t => {
         const tags = Array.isArray(t.tags) ? t.tags : (t.tags?.split(',').map(s => escapeHTML(s.trim())) || []);
         const badges = tags.map(tag => {
-            // Updated to fetch the new object-based JSON format so dashboard tags match profile!
-            const tData = typeof getTagData === 'function' ? getTagData(tag) : { color: '#666', icon: 'fas fa-tag'};
-            return `<span class="badge-tag" style="color: ${tData.color}; border: 1.5px solid ${tData.color}; background: transparent; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800;"><i class="${tData.icon}"></i> ${tag}</span>`;
+            const tData = getDashTagData(tag);
+            return `<span class="con-tag" style="color: ${tData.color}; border-color: ${tData.color}; font-size: 0.75rem;"><i class="${tData.icon}"></i> ${escapeHTML(tag)}</span>`;
         }).join('');
-        return `<div class="member-card"><div class="member-header"><i class="${t.role_icon ? escapeHTML(t.role_icon.trim()) : 'fa-solid fa-user'}" style="color: ${escapeHTML(t.icon_color) || '#ffffff'}; font-size: 1.2rem;"></i> <span style="font-weight: 900; font-size: 1.2rem;">${escapeHTML(t.name) || 'Unknown'}</span></div><div style="display:flex; flex-wrap:wrap; gap:8px;">${badges}</div></div>`;
+        
+        // FIX: Added cursor styling and onclick routing to the profile page!
+        return `<div class="member-card" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="window.location.href='profile.html?name=${encodeURIComponent(t.name)}'">
+            <div class="member-header">
+                <i class="${t.role_icon ? escapeHTML(t.role_icon.trim()) : 'fa-solid fa-user'}" style="color: ${escapeHTML(t.icon_color) || '#ffffff'}; font-size: 1.2rem;"></i> 
+                <span style="font-weight: 900; font-size: 1.2rem;">${escapeHTML(t.name) || 'Unknown'}</span>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">${badges}</div>
+        </div>`;
     }).join('');
+
+    if(btnWrap) {
+        btnWrap.style.display = visibleContributorsCount >= allContributors.length ? 'none' : 'block';
+    }
+}
+
+function showMoreContributors() {
+    visibleContributorsCount += 8;
+    renderContributors();
 }
 
 // --- REVIEWS LOGIC ---
@@ -164,7 +214,7 @@ function renderReviewNode(r, depth=0) {
     
     let html = `
     <div class="review-item" id="review-${r.id}" style="margin-left: ${margin}px; border-left: ${depth > 0 ? '2px solid var(--border)' : 'none'}; padding-left: ${depth > 0 ? '12px' : '0'}; margin-bottom: ${depth > 0 ? '10px' : '20px'};">
-        <img src="${escapeHTML(r.poster_avatar) || 'https://via.placeholder.com/40'}" class="review-avatar" onerror="this.src='/assets/images/logo.png'">
+        <img src="${escapeHTML(r.poster_avatar) || '/assets/images/logo.png'}" class="review-avatar" onerror="this.src='/assets/images/logo.png'">
         <div class="review-content">
             <div class="review-user-row">
                 <a href="profile.html?user=${r.poster_id}" style="font-weight: 800; font-size:0.95rem; color:var(--text-main); text-decoration:none;">${cleanUsername}</a>
@@ -234,7 +284,7 @@ function closeReviews(e) {
     });
 }
 
-// --- AGGRESSIVE STAR CLICK LOGIC (WITH CAPTURING) ---
+// --- AGGRESSIVE STAR CLICK LOGIC ---
 document.addEventListener('click', (e) => {
     const star = e.target.closest('.input-star');
     if (star) {
