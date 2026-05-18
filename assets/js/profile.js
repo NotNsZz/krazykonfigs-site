@@ -367,7 +367,10 @@ async function saveProfileChanges() {
     const uiColor = document.getElementById('edit-ui-color').value;
     const music = document.getElementById('edit-music').value;
 
-    const { error } = await _supabase.from('user_profiles').update({
+    // THE FIX: Changed .update() to .upsert() and added the User IDs!
+    const { error } = await _supabase.from('user_profiles').upsert({
+        id: currentUser.id,
+        discord_id: currentUser.discord_id,
         status: status,
         bio: bio,
         theme_colors: [color1, color2],
@@ -376,7 +379,7 @@ async function saveProfileChanges() {
         nav_color: navColor,
         ui_box_color: uiColor,
         music_track: music || null
-    }).eq('id', currentUser.id);
+    }, { onConflict: 'id' });
 
     if (error) {
         alert("Failed to save profile.");
