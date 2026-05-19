@@ -105,3 +105,31 @@ body:not(.dark-mode) .bg-fx {
     opacity: 0 !important; 
     visibility: hidden !important; 
 }
+
+/* --- MOBILE OPTIMIZATION --- */
+@media (max-width: 768px) {
+    .profile-header-row {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    .name-badge-row {
+        justify-content: center;
+    }
+    .joined-date {
+        position: static;
+        display: block;
+        margin-top: 0.5rem;
+        width: 100%;
+        text-align: center;
+    }
+    .badge-row {
+        justify-content: center;
+    }
+    .creator-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .profile-card, .history-card {
+        padding: 1.5rem;
+    }
+}
