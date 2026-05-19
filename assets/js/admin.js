@@ -1,7 +1,7 @@
 // --- 1. SUPABASE & GLOBAL VARIABLES ---
 const _supabase = supabase.createClient(
     'https://unjdjduiqtldgoybgmnq.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE' 
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE'
 );
 
 let currentUser = null;
@@ -102,8 +102,6 @@ async function bootSequence() {
 
         document.getElementById('adminName').innerText = escapeHTML(currentUser.username);
         document.getElementById('adminPfp').src = escapeHTML(currentUser.avatar_url) || '/assets/images/logo.png';
-        
-        // Link the My Profile button
         document.getElementById('myProfileLink').href = `profile.html?user=${currentUser.discord_id}`;
 
         document.getElementById('security-guard').style.display = 'none';
@@ -157,6 +155,7 @@ async function loadModule(moduleName, btnElement) {
             case 'drafts': html = await renderConfigs('true'); break;
             case 'reviews': html = await renderReviews(); break;
             case 'contributors': html = await renderContributors(); break; 
+            case 'private-tags': html = await renderPrivateTags(); break; // NEW TAB!
             case 'db': html = await renderDB(); break;
             case 'settings': html = await renderSettings(); break;
         }
@@ -179,7 +178,7 @@ async function renderHome() {
     const [uData, cData, pData, lData] = await Promise.all([
         _supabase.from('users').select('id', { count: 'exact', head: true }),
         _supabase.from('configs').select('id', { count: 'exact', head: true }),
-        _supabase.from('contributors').select('id', { count: 'exact', head: true }),
+        _supabase.from('contributors').select('id', { count: 'exact', head: true }).eq('is_private', false),
         _supabase.from('users').select('id', { count: 'exact', head: true }).gte('last_login', todayStr)
     ]);
 
@@ -201,7 +200,7 @@ async function renderHome() {
         </div>
         <div class="item-card" style="align-items:center; text-align:center;">
             <i class="fas fa-address-book" style="font-size:2rem; color:#f1c40f; margin-bottom:10px;"></i>
-            <h3 style="border:none; padding:0; margin:0;">Contributors</h3>
+            <h3 style="border:none; padding:0; margin:0;">Public Contributors</h3>
             <h2 style="font-size:2.5rem; font-weight:900; margin:5px 0 0 0;">${pData.count || 0}</h2>
         </div>
         <div class="item-card" style="align-items:center; text-align:center;">
@@ -256,7 +255,6 @@ async function renderProfiles() {
     </div>`;
 }
 
-// Replaced native confirm with customConfirm
 async function toggleVerification(id, isCurrentlyVerified) {
     const confirmed = await customConfirm(`Toggle verification status to ${!isCurrentlyVerified}?`, "Verify Profile", "Yes, Toggle");
     if (!confirmed) return;
@@ -359,7 +357,7 @@ function buildAdminConfigGridHTML(configs) {
     }).join('');
 }
 
-// --- 7. CONTRIBUTORS (WITH TAGS.JSON SYNC) ---
+// --- 7. PUBLIC CONTRIBUTORS AND PRIVATE TAGS ---
 async function loadAdminTags() {
     try { 
         const res = await fetch('/assets/data/tags.json'); 
@@ -376,11 +374,15 @@ function getAdminTagData(t) {
     return { color: '#666', icon: 'fas fa-tag' }; 
 }
 
+// Renders ONLY Public Contributors
 async function renderContributors() {
     const { data } = await _supabase.from('contributors').select('*').order('priority', { ascending: true });
     activeDataStore = data || [];
+    
+    // EXCLUDE IS_PRIVATE = TRUE
+    const publicData = activeDataStore.filter(c => c.is_private !== true && c.is_private !== 'true');
 
-    let gridHtml = activeDataStore.map(c => {
+    let gridHtml = publicData.map(c => {
         const rawTags = Array.isArray(c.tags) ? c.tags : (c.tags?.split(',').map(s => escapeHTML(s.trim())) || []);
         const renderedTags = rawTags.map(tag => {
             const tData = getAdminTagData(tag);
@@ -395,7 +397,7 @@ async function renderContributors() {
             </h3>
             <div style="margin-bottom: 15px;">${renderedTags}</div>
             <div class="card-actions" style="justify-content:flex-end; margin-top:auto;">
-                <button class="btn-secondary" onclick="openContributorModal('${c.id}')"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn-secondary" onclick="openContributorModal('${c.id}', false)"><i class="fas fa-edit"></i> Edit</button>
                 <button class="btn-danger" title="Delete" onclick="deleteRecord('contributors', '${c.id}')"><i class="fas fa-trash"></i></button>
             </div>
         </div>`;
@@ -403,8 +405,51 @@ async function renderContributors() {
 
     return `
     <div class="page-header">
-        <h1>Contributor Directory</h1>
-        <button class="btn-primary" onclick="openContributorModal()"><i class="fas fa-plus"></i> Create New</button>
+        <div>
+            <h1>Public Directory</h1>
+            <p style="color:var(--text-dim); margin-top:5px;">Users shown here will be visible on the main dashboard.</p>
+        </div>
+        <button class="btn-primary" onclick="openContributorModal(null, false)"><i class="fas fa-plus"></i> Create Public Contributor</button>
+    </div>
+    <div class="config-grid">${gridHtml}</div>`;
+}
+
+// NEW: Renders ONLY Private Tags
+async function renderPrivateTags() {
+    const { data } = await _supabase.from('contributors').select('*');
+    activeDataStore = data || [];
+    
+    // EXCLUDE PUBLIC MEMBERS
+    const privateData = activeDataStore.filter(c => c.is_private === true || c.is_private === 'true');
+
+    let gridHtml = privateData.map(c => {
+        const rawTags = Array.isArray(c.tags) ? c.tags : (c.tags?.split(',').map(s => escapeHTML(s.trim())) || []);
+        const renderedTags = rawTags.map(tag => {
+            const tData = getAdminTagData(tag);
+            return `<span class="con-tag" style="color: ${tData.color}; border-color: ${tData.color}; margin-top: 5px;"><i class="${tData.icon}"></i> ${escapeHTML(tag)}</span>`;
+        }).join(' ');
+
+        return `
+        <div class="item-card" style="border-style: dashed; border-color: var(--text-dim);">
+            <h3 style="display:flex; align-items:center; gap: 10px; color: var(--text-dim);">
+                <i class="fas fa-user-secret"></i> 
+                ${escapeHTML(c.name)}
+            </h3>
+            <div style="margin-bottom: 15px;">${renderedTags}</div>
+            <div class="card-actions" style="justify-content:flex-end; margin-top:auto;">
+                <button class="btn-secondary" onclick="openContributorModal('${c.id}', true)"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn-danger" title="Delete" onclick="deleteRecord('contributors', '${c.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+
+    return `
+    <div class="page-header">
+        <div>
+            <h1>Private Tags Archive</h1>
+            <p style="color:var(--text-dim); margin-top:5px;">Hidden from the dashboard directory, but tags still show on configs/reviews.</p>
+        </div>
+        <button class="btn-primary" style="background: var(--text-dim);" onclick="openContributorModal(null, true)"><i class="fas fa-plus"></i> Create Private Tag</button>
     </div>
     <div class="config-grid">${gridHtml}</div>`;
 }
@@ -584,27 +629,49 @@ function openConfigModal(id = null) {
     </form>`);
 }
 
-function openContributorModal(id = null) {
+// NEW: SMART CONTRIBUTOR MODAL (Handles both Public and Private)
+function openContributorModal(id = null, isPrivate = false) {
     document.querySelector('.modal-content').style.maxWidth = "500px";
     let obj = id ? activeDataStore.find(t => String(t.id) === String(id)) : {};
     
-    openModal(id ? 'Edit Contributor' : 'Create Contributor', `
-    <form id="contributorForm" onsubmit="saveForm(event, 'contributors', '${id || ''}')">
-        <div class="form-group"><label>Name</label><input type="text" name="name" class="form-control" value="${escapeHTML(obj.name || '')}" required></div>
+    // If it's a Private Tag, we hide the Role Icon, Icon Color, and Priority fields!
+    let extraFields = isPrivate ? '' : `
         <div class="form-grid">
             <div class="form-group"><label>Role Icon (FontAwesome)</label><input type="text" name="role_icon" class="form-control" value="${escapeHTML(obj.role_icon || 'fas fa-crown')}"></div>
             <div class="form-group"><label>Icon Color (Hex)</label><input type="text" name="icon_color" class="form-control" value="${escapeHTML(obj.icon_color || '#ffffff')}"></div>
         </div>
+        <div class="form-group"><label>Display Priority (Lower is first)</label><input type="number" name="priority" class="form-control" value="${escapeHTML(obj.priority || 1)}" required></div>
+    `;
+
+    const title = id ? (isPrivate ? 'Edit Private Tag' : 'Edit Contributor') : (isPrivate ? 'Create Private Tag' : 'Create Contributor');
+
+    openModal(title, `
+    <form id="contributorForm" onsubmit="saveContributorForm(event, '${id || ''}', ${isPrivate})">
+        <div class="form-group"><label>Name</label><input type="text" name="name" class="form-control" value="${escapeHTML(obj.name || '')}" required></div>
+        ${extraFields}
         <div class="form-group"><label>Tags (Comma separated)</label><input type="text" name="tags" class="form-control" value="${escapeHTML((obj.tags || []).join(', '))}"></div>
-        <div class="form-group"><label>Priority (Lower is first)</label><input type="number" name="priority" class="form-control" value="${escapeHTML(obj.priority || 1)}" required></div>
         <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;">
             <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-            <button type="submit" class="btn-primary" style="margin-left:10px; display:inline-flex;">Save Contributor</button>
+            <button type="submit" class="btn-primary" style="margin-left:10px; display:inline-flex;">Save Data</button>
         </div>
     </form>`);
 }
 
+// Default save logic for configs
 async function saveForm(e, table, id) {
+    e.preventDefault();
+    if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
+    
+    const formData = Object.fromEntries(new FormData(e.target).entries());
+    if (id) formData.id = id;
+
+    const { error } = await _supabase.from(table).upsert(formData);
+    if (error) await customAlert("Save Error: " + error.message, "Error");
+    else { closeModal(); refreshCurrentView(); }
+}
+
+// NEW: Specialized Save Logic for Contributors / Private Tags
+async function saveContributorForm(e, id, isPrivate) {
     e.preventDefault();
     if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
     
@@ -612,7 +679,17 @@ async function saveForm(e, table, id) {
     if (formData.tags) formData.tags = formData.tags.split(',').map(s => s.trim());
     if (id) formData.id = id;
 
-    const { error } = await _supabase.from(table).upsert(formData);
+    // RULE ENFORCEMENT: If private, auto-nullify directory rendering fields!
+    if (isPrivate) {
+        formData.is_private = true;
+        formData.role_icon = null;
+        formData.icon_color = null;
+        formData.priority = null;
+    } else {
+        formData.is_private = false;
+    }
+
+    const { error } = await _supabase.from('contributors').upsert(formData);
     if (error) await customAlert("Save Error: " + error.message, "Error");
     else { closeModal(); refreshCurrentView(); }
 }
