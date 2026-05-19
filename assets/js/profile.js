@@ -91,7 +91,7 @@ async function initProfileLogic() {
             });
             if (validHit > 0) avgHitRate = Math.round(totalHit / validHit) + "%";
 
-            // THE FIX: Smart Rating Math (Ignores 0-review configs)
+            // Smart Rating Math (Ignores 0-review configs)
             const configIds = userConfigs.map(c => c.id);
             if (configIds.length > 0) {
                 const { data: configReviews } = await _supabase.from('reviews').select('config_id, rating').in('config_id', configIds).not('rating', 'is', null);
@@ -108,7 +108,7 @@ async function initProfileLogic() {
                     let totalAvgSum = 0;
                     let validConfigCount = 0;
                     for (let cid in configSums) {
-                        if (configCounts[cid] > 0) { // Safety check: Only count if it has reviews
+                        if (configCounts[cid] > 0) { 
                             let cAvg = configSums[cid] / configCounts[cid];
                             totalAvgSum += cAvg;
                             validConfigCount++;
@@ -182,22 +182,32 @@ async function initProfileLogic() {
                 });
             }
 
-            if (extProfile.bg_color) document.body.style.backgroundColor = escapeHTML(extProfile.bg_color);
+            // Global Background
+            if (extProfile.bg_color) document.body.style.setProperty('background-color', escapeHTML(extProfile.bg_color), 'important');
 
+            // TEXT COLOR: Isolated strictly to profile elements, overriding dark mode
             if (extProfile.text_color) {
-                document.documentElement.style.setProperty('--text-main', escapeHTML(extProfile.text_color));
-                document.documentElement.style.setProperty('--text-muted', escapeHTML(extProfile.text_color) + 'cc'); 
+                document.querySelectorAll('.profile-card, .history-card').forEach(card => {
+                    card.style.setProperty('color', escapeHTML(extProfile.text_color), 'important');
+                    card.style.setProperty('--text-main', escapeHTML(extProfile.text_color), 'important');
+                    card.style.setProperty('--text-muted', escapeHTML(extProfile.text_color) + 'cc', 'important'); 
+                });
             }
 
+            // HEADING COLOR (Replaced old Navbar logic)
             if (extProfile.nav_color) {
-                const navElement = document.querySelector('nav') || document.querySelector('.navbar');
-                if (navElement) navElement.style.backgroundColor = escapeHTML(extProfile.nav_color);
+                document.querySelectorAll('.profile-card h1, .profile-card h2, .profile-card h3, .history-card h3, .stat-value').forEach(heading => {
+                    heading.style.setProperty('color', escapeHTML(extProfile.nav_color), 'important');
+                });
             }
 
+            // UI BOX COLOR
             if (extProfile.ui_box_color) {
                 const uiColor = escapeHTML(extProfile.ui_box_color);
-                document.documentElement.style.setProperty('--card-bg', uiColor);
-                document.documentElement.style.setProperty('--card-inner', uiColor);
+                document.querySelectorAll('.profile-card, .history-card').forEach(card => {
+                    card.style.setProperty('--card-bg', uiColor, 'important');
+                    card.style.setProperty('--card-inner', uiColor, 'important');
+                });
                 
                 const modalEl = document.querySelector('.modal-content');
                 if (modalEl) modalEl.style.backgroundColor = uiColor;
@@ -367,7 +377,6 @@ async function saveProfileChanges() {
     const uiColor = document.getElementById('edit-ui-color').value;
     const music = document.getElementById('edit-music').value;
 
-    // THE FIX: Changed .update() to .upsert() and added the User IDs!
     const { error } = await _supabase.from('user_profiles').upsert({
         id: currentUser.id,
         discord_id: currentUser.discord_id,
