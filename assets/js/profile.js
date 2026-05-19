@@ -182,32 +182,47 @@ async function initProfileLogic() {
                 });
             }
 
-            // Global Background
+            // BACKGROUND COLOR
             if (extProfile.bg_color) document.body.style.setProperty('background-color', escapeHTML(extProfile.bg_color), 'important');
 
-            // TEXT COLOR: Isolated strictly to profile elements, overriding dark mode
+            // --- BULLETPROOF THEME INJECTION FOR TEXT AND HEADINGS ---
+            // This safely forces the text and heading colors without bleeding into the navbar
+            const customThemeStyle = document.createElement('style');
+            let themeCSS = '';
+
             if (extProfile.text_color) {
-                document.querySelectorAll('.profile-card, .history-card').forEach(card => {
-                    card.style.setProperty('color', escapeHTML(extProfile.text_color), 'important');
-                    card.style.setProperty('--text-main', escapeHTML(extProfile.text_color), 'important');
-                    card.style.setProperty('--text-muted', escapeHTML(extProfile.text_color) + 'cc', 'important'); 
-                });
+                const tColor = escapeHTML(extProfile.text_color);
+                themeCSS += `
+                    .profile-card, .history-card, .modal-content {
+                        color: ${tColor} !important;
+                        --text-main: ${tColor} !important;
+                        --text-muted: ${tColor}cc !important;
+                    }
+                `;
             }
 
-            // HEADING COLOR (Replaced old Navbar logic)
             if (extProfile.nav_color) {
-                document.querySelectorAll('.profile-card h1, .profile-card h2, .profile-card h3, .history-card h3, .stat-value').forEach(heading => {
-                    heading.style.setProperty('color', escapeHTML(extProfile.nav_color), 'important');
-                });
+                const hColor = escapeHTML(extProfile.nav_color);
+                themeCSS += `
+                    .profile-card h1, .profile-card h2, .profile-card h3,
+                    .history-card h1, .history-card h2, .history-card h3,
+                    .modal-content h2,
+                    .profile-name, .history-title, .stat-value {
+                        color: ${hColor} !important;
+                    }
+                `;
+            }
+
+            if (themeCSS !== '') {
+                customThemeStyle.innerHTML = themeCSS;
+                document.head.appendChild(customThemeStyle);
             }
 
             // UI BOX COLOR
             if (extProfile.ui_box_color) {
                 const uiColor = escapeHTML(extProfile.ui_box_color);
-                document.querySelectorAll('.profile-card, .history-card').forEach(card => {
-                    card.style.setProperty('--card-bg', uiColor, 'important');
-                    card.style.setProperty('--card-inner', uiColor, 'important');
-                });
+                document.documentElement.style.setProperty('--card-bg', uiColor);
+                document.documentElement.style.setProperty('--card-inner', uiColor);
                 
                 const modalEl = document.querySelector('.modal-content');
                 if (modalEl) modalEl.style.backgroundColor = uiColor;
@@ -215,6 +230,7 @@ async function initProfileLogic() {
                 document.querySelectorAll('.review-item').forEach(item => { item.style.backgroundColor = uiColor; });
             }
 
+            // MUSIC
             if (extProfile.music_track) {
                 profileAudio = new Audio(extProfile.music_track);
                 profileAudio.loop = true;
