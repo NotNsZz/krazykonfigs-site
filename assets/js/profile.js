@@ -186,21 +186,27 @@ async function initProfileLogic() {
             if (extProfile.bg_color) document.body.style.setProperty('background-color', escapeHTML(extProfile.bg_color), 'important');
 
             // --- BULLETPROOF THEME INJECTION FOR TEXT AND HEADINGS ---
-            // This safely forces the text and heading colors without bleeding into the navbar
             const customThemeStyle = document.createElement('style');
             let themeCSS = '';
 
+            // 1. TEXT COLOR (Explicit targeting to prevent black text override)
             if (extProfile.text_color) {
                 const tColor = escapeHTML(extProfile.text_color);
                 themeCSS += `
-                    .profile-card, .history-card, .modal-content {
-                        color: ${tColor} !important;
+                    .profile-container, .modal-overlay {
                         --text-main: ${tColor} !important;
                         --text-muted: ${tColor}cc !important;
+                    }
+                    .profile-card, .history-card, .modal-content,
+                    .profile-bio, .profile-username, .stat-label,
+                    .review-text, .profile-review-username, .joined-date,
+                    .history-card p, .modal-body label {
+                        color: var(--text-main) !important;
                     }
                 `;
             }
 
+            // 2. HEADING COLOR
             if (extProfile.nav_color) {
                 const hColor = escapeHTML(extProfile.nav_color);
                 themeCSS += `
