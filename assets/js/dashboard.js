@@ -1,11 +1,9 @@
 let allConfigs = [], currentFilteredConfigs = [], currentVisibleCount = 9, currentPingTier = 'all';
 let activeConfigId = null, currentRatingInput = 5, replyingToId = null, cooldownTimer = null;
 
-// Contributor Pagination Variables
 let allContributors = [], visibleContributorsCount = 8;
 let dashTagData = {}; 
 
-// Load Tags for Dashboard
 async function loadDashTags() {
     try { 
         const res = await fetch('/assets/data/tags.json'); 
@@ -22,7 +20,6 @@ function getDashTagData(t) {
     return { color: '#666', icon: 'fas fa-tag' }; 
 }
 
-// --- INITIALIZATION ---
 async function initDashboardLogic() {
     if(typeof bootSequence === 'function') await bootSequence();
     if(typeof initMusicPlayer === 'function') initMusicPlayer();
@@ -41,7 +38,6 @@ function closeCreatorPromo() {
     document.getElementById('creatorPromoOverlay')?.classList.remove('show');
 }
 
-// --- CONFIG LOGIC ---
 async function fetchConfigs() {
     const {data} = await _supabase.from('configs').select('*').eq('is_archived', 'false');
     const {data: allReviews} = await _supabase.from('reviews').select('config_id, rating').not('rating', 'is', null);
@@ -86,7 +82,6 @@ function renderConfigs() {
     const container = document.getElementById('config-container'), btnWrap = document.getElementById('showMoreConfigsBtnWrap');
     const toShow = currentFilteredConfigs.slice(0, currentVisibleCount);
     
-    // Uses the EXACT original index.html structure!
     container.innerHTML = toShow.map(t => `
         <div class="config-card">
             <div>
@@ -132,7 +127,12 @@ function renderConfigs() {
 // --- CONTRIBUTORS LOGIC ---
 async function fetchContributors() {
     const {data} = await _supabase.from('contributors').select('*');
-    allContributors = (data || []).sort((a,b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
+    
+    // THE FIX: Aggressively filters out anyone with is_private set to true
+    allContributors = (data || [])
+        .filter(c => c.is_private !== true && c.is_private !== 'true') 
+        .sort((a,b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
+        
     renderContributors();
 }
 
@@ -182,7 +182,7 @@ function showCooldownPopup(seconds){
     document.getElementById('dialogTitle').innerText = "Hold up! You're reviewing too fast";
     document.getElementById('dialogBtnCancel').style.display = 'none';
     const msg = document.getElementById('dialogMessage'), btn = document.getElementById('dialogBtnConfirm');
-    btn.innerText = 'OK'; btn.className = 'btn-modal-primary';
+    btn.innerText = 'OK'; btn.className = 'btn-primary';
     
     const update = (s) => { msg.innerText = `You may comment again in:\n${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; };
     update(seconds); overlay.classList.add('show');
@@ -284,7 +284,6 @@ function closeReviews(e) {
     });
 }
 
-// --- AGGRESSIVE STAR CLICK LOGIC ---
 document.addEventListener('click', (e) => {
     const star = e.target.closest('.input-star');
     if (star) {
