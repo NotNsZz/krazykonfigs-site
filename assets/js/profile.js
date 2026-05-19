@@ -91,7 +91,7 @@ async function initProfileLogic() {
             });
             if (validHit > 0) avgHitRate = Math.round(totalHit / validHit) + "%";
 
-            // Smart Rating Math (Ignores 0-review configs)
+            // Smart Rating Math
             const configIds = userConfigs.map(c => c.id);
             if (configIds.length > 0) {
                 const { data: configReviews } = await _supabase.from('reviews').select('config_id, rating').in('config_id', configIds).not('rating', 'is', null);
@@ -185,44 +185,45 @@ async function initProfileLogic() {
             // BACKGROUND COLOR
             if (extProfile.bg_color) document.body.style.setProperty('background-color', escapeHTML(extProfile.bg_color), 'important');
 
-            // --- BULLETPROOF THEME INJECTION FOR TEXT AND HEADINGS ---
+            // --- BULLETPROOF THEME INJECTION (FIXED FOR HEADINGS) ---
             const customThemeStyle = document.createElement('style');
             let themeCSS = '';
 
-            // 1. TEXT COLOR (Explicit targeting to prevent black text override)
-            if (extProfile.text_color) {
-                const tColor = escapeHTML(extProfile.text_color);
-                themeCSS += `
-                    .profile-container, .modal-overlay {
-                        --text-main: ${tColor} !important;
-                        --text-muted: ${tColor}cc !important;
-                    }
-                    .profile-card, .history-card, .modal-content,
-                    .profile-bio, .profile-username, .stat-label,
-                    .review-text, .profile-review-username, .joined-date,
-                    .history-card p, .modal-body label {
-                        color: var(--text-main) !important;
-                    }
-                `;
+            // Get base text color
+            let finalTextColor = extProfile.text_color ? escapeHTML(extProfile.text_color) : '#ffffff';
+            
+            // Failsafe: If nav_color is the old legacy black (#0a0a0c) or pure black, overwrite it with the text color!
+            let finalHeadingColor = extProfile.nav_color;
+            if (!finalHeadingColor || finalHeadingColor === '#0a0a0c' || finalHeadingColor === '#000000') {
+                finalHeadingColor = finalTextColor; 
+            } else {
+                finalHeadingColor = escapeHTML(finalHeadingColor);
             }
 
-            // 2. HEADING COLOR
-            if (extProfile.nav_color) {
-                const hColor = escapeHTML(extProfile.nav_color);
-                themeCSS += `
-                    .profile-card h1, .profile-card h2, .profile-card h3,
-                    .history-card h1, .history-card h2, .history-card h3,
-                    .modal-content h2,
-                    .profile-name, .history-title, .stat-value {
-                        color: ${hColor} !important;
-                    }
-                `;
-            }
+            themeCSS += `
+                .profile-container, .modal-overlay, .profile-card, .history-card, .modal-content {
+                    color: ${finalTextColor} !important;
+                    --text-main: ${finalTextColor} !important;
+                    --text-muted: ${finalTextColor}cc !important;
+                }
+                
+                .profile-bio, .profile-username, .stat-label,
+                .review-text, .profile-review-username, .joined-date,
+                .history-card p, .modal-body label {
+                    color: var(--text-main) !important;
+                }
 
-            if (themeCSS !== '') {
-                customThemeStyle.innerHTML = themeCSS;
-                document.head.appendChild(customThemeStyle);
-            }
+                /* HEADINGS NOW USE THE SMART FALLBACK */
+                .profile-card h1, .profile-card h2, .profile-card h3,
+                .history-card h1, .history-card h2, .history-card h3,
+                .modal-content h2,
+                .profile-name, .history-title, .stat-value {
+                    color: ${finalHeadingColor} !important;
+                }
+            `;
+
+            customThemeStyle.innerHTML = themeCSS;
+            document.head.appendChild(customThemeStyle);
 
             // UI BOX COLOR
             if (extProfile.ui_box_color) {
@@ -339,10 +340,17 @@ async function openEditProfileModal() {
                 document.getElementById('edit-color-mode').value = 'static';
             }
         }
-        if (extProfileData.bg_color) document.getElementById('edit-bg-color').value = extProfileData.bg_color;
-        if (extProfileData.text_color) document.getElementById('edit-text-color').value = extProfileData.text_color;
-        if (extProfileData.nav_color) document.getElementById('edit-nav-color').value = extProfileData.nav_color;
-        if (extProfileData.ui_box_color) document.getElementById('edit-ui-color').value = extProfileData.ui_box_color;
+        
+        document.getElementById('edit-bg-color').value = extProfileData.bg_color || '#0a0a0c';
+        document.getElementById('edit-text-color').value = extProfileData.text_color || '#ffffff';
+        document.getElementById('edit-ui-color').value = extProfileData.ui_box_color || '#16161e';
+        
+        // Failsafe: Prevent loading the old black legacy color into the modal UI
+        let safeNavColor = extProfileData.nav_color || '#ffffff';
+        if (safeNavColor === '#0a0a0c' || safeNavColor === '#000000') {
+            safeNavColor = extProfileData.text_color || '#ffffff';
+        }
+        document.getElementById('edit-nav-color').value = safeNavColor;
     }
     
     toggleColorMode();
