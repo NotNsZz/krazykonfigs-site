@@ -91,7 +91,7 @@ async function initProfileLogic() {
             });
             if (validHit > 0) avgHitRate = Math.round(totalHit / validHit) + "%";
 
-            // Smart Rating Math
+            // THE FIX: Smart Rating Math (Ignores 0-review configs)
             const configIds = userConfigs.map(c => c.id);
             if (configIds.length > 0) {
                 const { data: configReviews } = await _supabase.from('reviews').select('config_id, rating').in('config_id', configIds).not('rating', 'is', null);
@@ -108,7 +108,7 @@ async function initProfileLogic() {
                     let totalAvgSum = 0;
                     let validConfigCount = 0;
                     for (let cid in configSums) {
-                        if (configCounts[cid] > 0) { 
+                        if (configCounts[cid] > 0) { // Safety check: Only count if it has reviews
                             let cAvg = configSums[cid] / configCounts[cid];
                             totalAvgSum += cAvg;
                             validConfigCount++;
@@ -125,8 +125,27 @@ async function initProfileLogic() {
         const { data: reviews } = await _supabase.from('reviews').select('*').eq('poster_id', user.discord_id).order('created_at', { ascending: false });
         userReviews = reviews || [];
         
-        const { data: contributorData } = await _supabase.from('contributors').select('tags').in('name', [user.username, dName, uName]).limit(1);
-        const tags = contributorData && contributorData[0]?.tags ? (Array.isArray(contributorData[0].tags) ? contributorData[0].tags : contributorData[0].tags.split(',')) : [];
+        // --- IDENTITY FIX: Exact Match Username after comma ---
+        const { data: allContributors } = await _supabase.from('contributors').select('*');
+        let tags = [];
+        
+        if (allContributors) {
+            const matchedContributor = allContributors.find(c => {
+                let storedUsername = '';
+                if (Array.isArray(c.name)) {
+                    storedUsername = c.name[1] || c.name[0];
+                } else if (typeof c.name === 'string') {
+                    const parts = c.name.split(',');
+                    storedUsername = parts[1] ? parts[1].trim() : parts[0].trim();
+                }
+                return storedUsername.toLowerCase() === uName.toLowerCase();
+            });
+
+            if (matchedContributor && matchedContributor.tags) {
+                tags = Array.isArray(matchedContributor.tags) ? matchedContributor.tags : matchedContributor.tags.split(',');
+            }
+        }
+        // --- END IDENTITY FIX ---
 
         const configIds = [...new Set(userReviews.map(r => r.config_id))];
         if(configIds.length > 0) {
@@ -182,50 +201,18 @@ async function initProfileLogic() {
                 });
             }
 
-            // BACKGROUND COLOR
-            if (extProfile.bg_color) document.body.style.setProperty('background-color', escapeHTML(extProfile.bg_color), 'important');
+            if (extProfile.bg_color) document.body.style.backgroundColor = escapeHTML(extProfile.bg_color);
 
-            // --- BULLETPROOF THEME INJECTION (FIXED FOR HEADINGS) ---
-            const customThemeStyle = document.createElement('style');
-            let themeCSS = '';
-
-            // Get base text color
-            let finalTextColor = extProfile.text_color ? escapeHTML(extProfile.text_color) : '#ffffff';
-            
-            // Failsafe: If nav_color is the old legacy black (#0a0a0c) or pure black, overwrite it with the text color!
-            let finalHeadingColor = extProfile.nav_color;
-            if (!finalHeadingColor || finalHeadingColor === '#0a0a0c' || finalHeadingColor === '#000000') {
-                finalHeadingColor = finalTextColor; 
-            } else {
-                finalHeadingColor = escapeHTML(finalHeadingColor);
+            if (extProfile.text_color) {
+                document.documentElement.style.setProperty('--text-main', escapeHTML(extProfile.text_color));
+                document.documentElement.style.setProperty('--text-muted', escapeHTML(extProfile.text_color) + 'cc'); 
             }
 
-            themeCSS += `
-                .profile-container, .modal-overlay, .profile-card, .history-card, .modal-content {
-                    color: ${finalTextColor} !important;
-                    --text-main: ${finalTextColor} !important;
-                    --text-muted: ${finalTextColor}cc !important;
-                }
-                
-                .profile-bio, .profile-username, .stat-label,
-                .review-text, .profile-review-username, .joined-date,
-                .history-card p, .modal-body label {
-                    color: var(--text-main) !important;
-                }
+            if (extProfile.nav_color) {
+                const navElement = document.querySelector('nav') || document.querySelector('.navbar');
+                if (navElement) navElement.style.backgroundColor = escapeHTML(extProfile.nav_color);
+            }
 
-                /* HEADINGS NOW USE THE SMART FALLBACK */
-                .profile-card h1, .profile-card h2, .profile-card h3,
-                .history-card h1, .history-card h2, .history-card h3,
-                .modal-content h2,
-                .profile-name, .history-title, .stat-value {
-                    color: ${finalHeadingColor} !important;
-                }
-            `;
-
-            customThemeStyle.innerHTML = themeCSS;
-            document.head.appendChild(customThemeStyle);
-
-            // UI BOX COLOR
             if (extProfile.ui_box_color) {
                 const uiColor = escapeHTML(extProfile.ui_box_color);
                 document.documentElement.style.setProperty('--card-bg', uiColor);
@@ -237,7 +224,6 @@ async function initProfileLogic() {
                 document.querySelectorAll('.review-item').forEach(item => { item.style.backgroundColor = uiColor; });
             }
 
-            // MUSIC
             if (extProfile.music_track) {
                 profileAudio = new Audio(extProfile.music_track);
                 profileAudio.loop = true;
@@ -340,17 +326,10 @@ async function openEditProfileModal() {
                 document.getElementById('edit-color-mode').value = 'static';
             }
         }
-        
-        document.getElementById('edit-bg-color').value = extProfileData.bg_color || '#0a0a0c';
-        document.getElementById('edit-text-color').value = extProfileData.text_color || '#ffffff';
-        document.getElementById('edit-ui-color').value = extProfileData.ui_box_color || '#16161e';
-        
-        // Failsafe: Prevent loading the old black legacy color into the modal UI
-        let safeNavColor = extProfileData.nav_color || '#ffffff';
-        if (safeNavColor === '#0a0a0c' || safeNavColor === '#000000') {
-            safeNavColor = extProfileData.text_color || '#ffffff';
-        }
-        document.getElementById('edit-nav-color').value = safeNavColor;
+        if (extProfileData.bg_color) document.getElementById('edit-bg-color').value = extProfileData.bg_color;
+        if (extProfileData.text_color) document.getElementById('edit-text-color').value = extProfileData.text_color;
+        if (extProfileData.nav_color) document.getElementById('edit-nav-color').value = extProfileData.nav_color;
+        if (extProfileData.ui_box_color) document.getElementById('edit-ui-color').value = extProfileData.ui_box_color;
     }
     
     toggleColorMode();
