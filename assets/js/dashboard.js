@@ -57,9 +57,33 @@ async function fetchConfigs() {
     allConfigs = (data || []).map(c => ({...c, calc_rating: ratingMap[c.id] || "0.0"}))
                              .sort((a, b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
     
-    const creators = [...new Set(allConfigs.map(c => c.creator).filter(Boolean))];
+    // Build an exact unique lookup map of Creator Usernames to Display Names for the dropdown options
+    const creatorMap = new Map();
+    allConfigs.forEach(c => {
+        if (!c.creator) return;
+        let displayName = '';
+        let username = '';
+        if (Array.isArray(c.creator)) {
+            displayName = c.creator[0] || '';
+            username = c.creator[1] || displayName;
+        } else if (typeof c.creator === 'string') {
+            const parts = c.creator.split(',');
+            displayName = parts[0].trim();
+            username = parts[1] ? parts[1].trim() : parts[0].trim();
+        }
+        if (username) {
+            creatorMap.set(username, displayName);
+        }
+    });
+
     const filter = document.getElementById('creatorFilter');
-    if(filter) filter.innerHTML = '<option value="all">By Creator</option>' + creators.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+    if(filter) {
+        let optionsHtml = '<option value="all">By Creator</option>';
+        creatorMap.forEach((displayName, username) => {
+            optionsHtml += `<option value="${escapeHTML(username)}">${escapeHTML(displayName)}</option>`;
+        });
+        filter.innerHTML = optionsHtml;
+    }
     
     applyFilters(null, document.querySelector('.filter-btn.active'));
 }
@@ -71,8 +95,26 @@ function applyFilters(tier = null, btn = null) {
     }
     currentVisibleCount = 9;
     const search = (document.getElementById('configSearch')?.value || '').toLowerCase();
-    const creator = document.getElementById('creatorFilter')?.value || 'all';
-    currentFilteredConfigs = allConfigs.filter(c => (currentPingTier === 'all' || (c.ping_tier || '').toLowerCase().includes(currentPingTier)) && (c.title || '').toLowerCase().includes(search) && (creator === 'all' || c.creator === creator));
+    const creatorFilterVal = document.getElementById('creatorFilter')?.value || 'all';
+    
+    currentFilteredConfigs = allConfigs.filter(c => {
+        const matchesTier = currentPingTier === 'all' || (c.ping_tier || '').toLowerCase().includes(currentPingTier);
+        const matchesSearch = (c.title || '').toLowerCase().includes(search);
+        
+        let matchesCreator = true;
+        if (creatorFilterVal !== 'all') {
+            let uName = '';
+            if (Array.isArray(c.creator)) {
+                uName = c.creator[1] || c.creator[0];
+            } else if (typeof c.creator === 'string') {
+                const parts = c.creator.split(',');
+                uName = parts[1] ? parts[1].trim() : parts[0].trim();
+            }
+            matchesCreator = (uName === creatorFilterVal);
+        }
+        
+        return matchesTier && matchesSearch && matchesCreator;
+    });
     renderConfigs();
 }
 
@@ -82,37 +124,54 @@ function renderConfigs() {
     const container = document.getElementById('config-container'), btnWrap = document.getElementById('showMoreConfigsBtnWrap');
     const toShow = currentFilteredConfigs.slice(0, currentVisibleCount);
     
-    container.innerHTML = toShow.map(t => `
+    container.innerHTML = toShow.map(t => {
+        let displayName = '';
+        let username = '';
+        if (Array.isArray(t.creator)) {
+            displayName = t.creator[0] || '';
+            username = t.creator[1] || displayName;
+        } else if (typeof t.creator === 'string') {
+            const parts = t.creator.split(',');
+            displayName = parts[0].trim();
+            username = parts[1] ? parts[1].trim() : parts[0].trim();
+        }
+
+        return `
         <div class="config-card">
             <div>
                 <div class="card-head"><div class="config-title">${escapeHTML(t.title)} | ${escapeHTML(t.ping_tier) || 'N/A'} PING</div></div>
                 <div class="data-section">
-                    <span class="section-label">🎯 PREDICTION</span>
+                    <span class="section-label">識 PREDICTION</span>
                     <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">${escapeHTML(t.sim_timer) || '-'}</span></div>
                     <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">${escapeHTML(t.pred_interval) || '-'}</span></div>
                 </div>
                 <div class="data-section">
-                    <span class="section-label">⚙️ TOGGLES</span>
+                    <span class="section-label">笞呻ｸTOGGLES</span>
                     <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
                     <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
                     <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
                     <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
                 </div>
                 <div class="data-section">
-                    <span class="section-label">📊 MULTIPLIERS</span>
+                    <span class="section-label">投 MULTIPLIERS</span>
                     <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${escapeHTML(t.vertical) || '155'}</span></div>
                     <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${escapeHTML(t.horizontal) || '165'}</span></div>
                 </div>
                 <div class="data-section">
-                    <span class="section-label">📍 OFFSETS</span>
+                    <span class="section-label">桃 OFFSETS</span>
                     <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">${escapeHTML(t.offsets) || '0 / -5 / 0'}</span></div>
                 </div>
             </div>
             
             <div class="card-footer" style="flex-direction: column; align-items: stretch; gap: 15px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <span class="system-tag">Revert | ${escapeHTML(t.hit_rate) || '85%'} Hit Rate | <i class="fas fa-star" style="color:#f1c40f;"></i> ${t.calc_rating}</span>
-                    <span class="creator-tag">by <a href="profile.html?name=${encodeURIComponent(t.creator)}" style="color:var(--text-main); font-weight:700;">${escapeHTML(t.creator)}</a></span>
+                <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span class="system-tag">Revert | ${escapeHTML(t.hit_rate) || '85%'} Hit Rate | <i class="fas fa-star" style="color:#f1c40f;"></i> ${t.calc_rating}</span>
+                        <span class="creator-tag">by <a href="profile.html?name=${encodeURIComponent(username)}" style="color:var(--text-main); font-weight:700;">${escapeHTML(displayName)}</a></span>
+                    </div>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-signal" style="color: var(--accent); font-size: 0.7rem;"></i> Supports ${escapeHTML(t.ping_range || 'All Pings')}
+                    </div>
                 </div>
                 <button class="review-trigger-btn" onclick="openReviews(${t.id})" style="width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; cursor: pointer; font-weight: 800; font-family: inherit; transition: 0.2s;" onmouseover="this.style.background='var(--text-main)'; this.style.color='var(--bg-body)';" onmouseout="this.style.background='transparent'; this.style.color='var(--text-main)';">
                     <i class="fas fa-comments"></i> View Reviews
@@ -128,7 +187,6 @@ function renderConfigs() {
 async function fetchContributors() {
     const {data} = await _supabase.from('contributors').select('*');
     
-    // THE FIX: Aggressively filters out anyone with is_private set to true
     allContributors = (data || [])
         .filter(c => c.is_private !== true && c.is_private !== 'true') 
         .sort((a,b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
@@ -151,10 +209,21 @@ function renderContributors() {
             return `<span class="con-tag" style="color: ${tData.color}; border-color: ${tData.color}; font-size: 0.75rem;"><i class="${tData.icon}"></i> ${escapeHTML(tag)}</span>`;
         }).join('');
         
-        return `<div class="member-card" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="window.location.href='profile.html?name=${encodeURIComponent(t.name)}'">
+        let displayName = '';
+        let username = '';
+        if (Array.isArray(t.name)) {
+            displayName = t.name[0] || '';
+            username = t.name[1] || displayName;
+        } else if (typeof t.name === 'string') {
+            const parts = t.name.split(',');
+            displayName = parts[0].trim();
+            username = parts[1] ? parts[1].trim() : parts[0].trim();
+        }
+        
+        return `<div class="member-card" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="window.location.href='profile.html?name=${encodeURIComponent(username)}'">
             <div class="member-header">
                 <i class="${t.role_icon ? escapeHTML(t.role_icon.trim()) : 'fa-solid fa-user'}" style="color: ${escapeHTML(t.icon_color) || '#ffffff'}; font-size: 1.2rem;"></i> 
-                <span style="font-weight: 900; font-size: 1.2rem;">${escapeHTML(t.name) || 'Unknown'}</span>
+                <span style="font-weight: 900; font-size: 1.2rem;">${escapeHTML(displayName) || 'Unknown'}</span>
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:8px;">${badges}</div>
         </div>`;
