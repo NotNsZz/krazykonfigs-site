@@ -58,27 +58,23 @@ async function initProfileLogic() {
         const dName = user.display_name || user.username.split('#')[0];
         const uName = user.username.split('#')[0]; 
 
-        const cleanDName = dName.toLowerCase().trim();
         const cleanUName = uName.toLowerCase().trim();
         const { data: allConfigs } = await _supabase.from('configs').select('id, hit_rate, title, creator');
         
-        let userConfigs = [];
-        let dNameMatch = (allConfigs || []).filter(c => {
+        // --- FIX: Safely parse the creator array to get the exact username match ---
+        let userConfigs = (allConfigs || []).filter(c => {
             if(!c.creator) return false;
-            const cr = c.creator.toLowerCase().trim();
-            return cr === cleanDName || cr.includes(cleanDName) || cleanDName.includes(cr);
+            let configUsername = '';
+            
+            if (Array.isArray(c.creator)) {
+                configUsername = c.creator[1] || c.creator[0];
+            } else if (typeof c.creator === 'string') {
+                const parts = c.creator.split(',');
+                configUsername = parts[1] ? parts[1].trim() : parts[0].trim();
+            }
+            
+            return configUsername.toLowerCase() === cleanUName;
         });
-
-        if (dNameMatch.length > 0) {
-            userConfigs = dNameMatch;
-        } else {
-            let uNameMatch = (allConfigs || []).filter(c => {
-                if(!c.creator) return false;
-                const cr = c.creator.toLowerCase().trim();
-                return cr === cleanUName || cr.includes(cleanUName) || cleanUName.includes(cr);
-            });
-            if (uNameMatch.length > 0) userConfigs = uNameMatch;
-        }
         
         const isCreator = userConfigs.length > 0;
         let avgHitRate = "-", avgRating = "0.0";
@@ -108,7 +104,7 @@ async function initProfileLogic() {
                     let totalAvgSum = 0;
                     let validConfigCount = 0;
                     for (let cid in configSums) {
-                        if (configCounts[cid] > 0) {
+                        if (configCounts[cid] > 0) { // Safety check: Only count if it has reviews
                             let cAvg = configSums[cid] / configCounts[cid];
                             totalAvgSum += cAvg;
                             validConfigCount++;
@@ -145,7 +141,6 @@ async function initProfileLogic() {
                 tags = Array.isArray(matchedContributor.tags) ? matchedContributor.tags : matchedContributor.tags.split(',');
             }
         }
-        // --- END IDENTITY FIX ---
 
         const configIds = [...new Set(userReviews.map(r => r.config_id))];
         if(configIds.length > 0) {
@@ -203,23 +198,9 @@ async function initProfileLogic() {
 
             if (extProfile.bg_color) document.body.style.backgroundColor = escapeHTML(extProfile.bg_color);
 
-            // --- BUG FIX: Text Color applied securely to override Dark Mode ---
             if (extProfile.text_color) {
-                const tColor = escapeHTML(extProfile.text_color);
-                const customStyle = document.createElement('style');
-                customStyle.innerHTML = `
-                    .profile-container, .modal-overlay, .profile-card, .history-card, .modal-content {
-                        color: ${tColor} !important;
-                        --text-main: ${tColor} !important;
-                        --text-muted: ${tColor}cc !important;
-                    }
-                    .profile-bio, .profile-username, .stat-label,
-                    .review-text, .profile-review-username, .joined-date,
-                    .history-card p, .modal-body label {
-                        color: var(--text-main) !important;
-                    }
-                `;
-                document.head.appendChild(customStyle);
+                document.documentElement.style.setProperty('--text-main', escapeHTML(extProfile.text_color));
+                document.documentElement.style.setProperty('--text-muted', escapeHTML(extProfile.text_color) + 'cc'); 
             }
 
             if (extProfile.nav_color) {
