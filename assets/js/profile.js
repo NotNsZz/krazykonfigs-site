@@ -58,27 +58,23 @@ async function initProfileLogic() {
         const dName = user.display_name || user.username.split('#')[0];
         const uName = user.username.split('#')[0]; 
 
-        const cleanDName = dName.toLowerCase().trim();
         const cleanUName = uName.toLowerCase().trim();
         const { data: allConfigs } = await _supabase.from('configs').select('id, hit_rate, title, creator');
         
-        let userConfigs = [];
-        let dNameMatch = (allConfigs || []).filter(c => {
+        // --- FIX: Safely parse the creator array to get the exact username match ---
+        let userConfigs = (allConfigs || []).filter(c => {
             if(!c.creator) return false;
-            const cr = c.creator.toLowerCase().trim();
-            return cr === cleanDName || cr.includes(cleanDName) || cleanDName.includes(cr);
+            let configUsername = '';
+            
+            if (Array.isArray(c.creator)) {
+                configUsername = c.creator[1] || c.creator[0];
+            } else if (typeof c.creator === 'string') {
+                const parts = c.creator.split(',');
+                configUsername = parts[1] ? parts[1].trim() : parts[0].trim();
+            }
+            
+            return configUsername.toLowerCase() === cleanUName;
         });
-
-        if (dNameMatch.length > 0) {
-            userConfigs = dNameMatch;
-        } else {
-            let uNameMatch = (allConfigs || []).filter(c => {
-                if(!c.creator) return false;
-                const cr = c.creator.toLowerCase().trim();
-                return cr === cleanUName || cr.includes(cleanUName) || cleanUName.includes(cr);
-            });
-            if (uNameMatch.length > 0) userConfigs = uNameMatch;
-        }
         
         const isCreator = userConfigs.length > 0;
         let avgHitRate = "-", avgRating = "0.0";
@@ -91,7 +87,7 @@ async function initProfileLogic() {
             });
             if (validHit > 0) avgHitRate = Math.round(totalHit / validHit) + "%";
 
-            // THE FIX: Smart Rating Math (Ignores 0-review configs)
+            // Smart Rating Math (Ignores 0-review configs)
             const configIds = userConfigs.map(c => c.id);
             if (configIds.length > 0) {
                 const { data: configReviews } = await _supabase.from('reviews').select('config_id, rating').in('config_id', configIds).not('rating', 'is', null);
@@ -145,7 +141,6 @@ async function initProfileLogic() {
                 tags = Array.isArray(matchedContributor.tags) ? matchedContributor.tags : matchedContributor.tags.split(',');
             }
         }
-        // --- END IDENTITY FIX ---
 
         const configIds = [...new Set(userReviews.map(r => r.config_id))];
         if(configIds.length > 0) {
