@@ -607,6 +607,7 @@ function openConfigModal(id = null) {
         <div class="form-grid">
             <div class="form-group full"><label>Title</label><input type="text" name="title" class="form-control" value="${escapeHTML(obj.title || '')}" required></div>
             <div class="form-group"><label>Ping Tier</label><input type="text" name="ping_tier" class="form-control" value="${escapeHTML(obj.ping_tier || 'Mid')}"></div>
+            <div class="form-group"><label>Ping Range</label><input type="text" name="ping_range" class="form-control" value="${escapeHTML(obj.ping_range || '')}" placeholder="e.g. 50-100ms"></div>
             <div class="form-group"><label>Creator</label><input type="text" name="creator" class="form-control" value="${escapeHTML(obj.creator || 'Kriz')}"></div>
             <div class="form-group"><label>Sim Timer</label><input type="number" name="sim_timer" class="form-control" value="${escapeHTML(obj.sim_timer || 123)}"></div>
             <div class="form-group"><label>Pred Interval</label><input type="text" name="pred_interval" class="form-control" value="${escapeHTML(obj.pred_interval || '')}"></div>
