@@ -72,7 +72,7 @@ async function fetchConfigs() {
             username = parts[1] ? parts[1].trim() : parts[0].trim();
         }
         if (username) {
-            creatorMap.set(username, displayName); // Map binds exact username to visual display name
+            creatorMap.set(username, displayName); 
         }
     });
 
@@ -101,7 +101,6 @@ function applyFilters(tier = null, btn = null) {
         const matchesTier = currentPingTier === 'all' || (c.ping_tier || '').toLowerCase().includes(currentPingTier);
         const matchesSearch = (c.title || '').toLowerCase().includes(search);
         
-        // Strict Match: Validate only against the exact extracted username
         let matchesCreator = true;
         if (creatorFilterVal !== 'all') {
             let uName = '';
@@ -142,24 +141,24 @@ function renderConfigs() {
             <div>
                 <div class="card-head"><div class="config-title">${escapeHTML(t.title)} | ${escapeHTML(t.ping_tier) || 'N/A'} PING</div></div>
                 <div class="data-section">
-                    <span class="section-label">識 PREDICTION</span>
+                    <span class="section-label"><i class="fas fa-eye"></i> PREDICTION</span>
                     <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">${escapeHTML(t.sim_timer) || '-'}</span></div>
                     <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">${escapeHTML(t.pred_interval) || '-'}</span></div>
                 </div>
                 <div class="data-section">
-                    <span class="section-label">笞呻ｸTOGGLES</span>
+                    <span class="section-label"><i class="fas fa-toggle-on"></i> TOGGLES</span>
                     <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
                     <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
                     <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
                     <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
                 </div>
                 <div class="data-section">
-                    <span class="section-label">投 MULTIPLIERS</span>
+                    <span class="section-label"><i class="fas fa-rocket"></i> MULTIPLIERS</span>
                     <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${escapeHTML(t.vertical) || '155'}</span></div>
                     <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${escapeHTML(t.horizontal) || '165'}</span></div>
                 </div>
                 <div class="data-section">
-                    <span class="section-label">桃 OFFSETS</span>
+                    <span class="section-label"><i class="fas fa-crosshairs"></i> OFFSETS</span>
                     <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">${escapeHTML(t.offsets) || '0 / -5 / 0'}</span></div>
                 </div>
             </div>
@@ -289,7 +288,7 @@ function renderReviewNode(r, depth=0) {
         <img src="${escapeHTML(r.poster_avatar) || '/assets/images/logo.png'}" class="review-avatar" onerror="this.src='/assets/images/logo.png'">
         <div class="review-content">
             <div class="review-user-row">
-                <a href="profile.html?user=${r.poster_id}" style="font-weight: 800; font-size:0.95rem; color:var(--text-main); text-decoration:none;">${cleanUsername}</a>
+                <a href="profile.html?name=${encodeURIComponent(cleanUsername)}" style="font-weight: 800; font-size:0.95rem; color:var(--text-main); text-decoration:none;">${cleanUsername}</a>
                 <div>${depth === 0 ? `<span class="review-stars" style="margin-right:8px; color:#f1c40f;">${stars}</span>` : ''}${delBtn}</div>
             </div>
             <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom: 8px;">${escapeHTML(r.comment)}</p>
