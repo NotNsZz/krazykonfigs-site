@@ -57,7 +57,7 @@ async function fetchConfigs() {
     allConfigs = (data || []).map(c => ({...c, calc_rating: ratingMap[c.id] || "0.0"}))
                              .sort((a, b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
     
-    // Build an exact unique lookup map of Creator Usernames to Display Names for the dropdown options
+    // Exact unique lookup map to separate Display Names from Usernames
     const creatorMap = new Map();
     allConfigs.forEach(c => {
         if (!c.creator) return;
@@ -72,7 +72,7 @@ async function fetchConfigs() {
             username = parts[1] ? parts[1].trim() : parts[0].trim();
         }
         if (username) {
-            creatorMap.set(username, displayName);
+            creatorMap.set(username, displayName); // Map binds exact username to visual display name
         }
     });
 
@@ -101,6 +101,7 @@ function applyFilters(tier = null, btn = null) {
         const matchesTier = currentPingTier === 'all' || (c.ping_tier || '').toLowerCase().includes(currentPingTier);
         const matchesSearch = (c.title || '').toLowerCase().includes(search);
         
+        // Strict Match: Validate only against the exact extracted username
         let matchesCreator = true;
         if (creatorFilterVal !== 'all') {
             let uName = '';
@@ -169,15 +170,17 @@ function renderConfigs() {
                         <span class="system-tag">Revert | ${escapeHTML(t.hit_rate) || '85%'} Hit Rate | <i class="fas fa-star" style="color:#f1c40f;"></i> ${t.calc_rating}</span>
                         <span class="creator-tag">by <a href="profile.html?name=${encodeURIComponent(username)}" style="color:var(--text-main); font-weight:700;">${escapeHTML(displayName)}</a></span>
                     </div>
+                    ${t.ping_range ? `
                     <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-signal" style="color: var(--accent); font-size: 0.7rem;"></i> Supports ${escapeHTML(t.ping_range || 'All Pings')}
-                    </div>
+                        <i class="fas fa-signal" style="color: var(--accent); font-size: 0.7rem;"></i> Supports ${escapeHTML(t.ping_range)}
+                    </div>` : ''}
                 </div>
-                <button class="review-trigger-btn" onclick="openReviews(${t.id})" style="width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; cursor: pointer; font-weight: 800; font-family: inherit; transition: 0.2s;" onmouseover="this.style.background='var(--text-main)'; this.style.color='var(--bg-body)';" onmouseout="this.style.background='transparent'; this.style.color='var(--text-main)';">
+                <button class="review-trigger-btn" onclick="openReviews('${t.id}')" style="width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; cursor: pointer; font-weight: 800; font-family: inherit; transition: 0.2s;" onmouseover="this.style.background='var(--text-main)'; this.style.color='var(--bg-body)';" onmouseout="this.style.background='transparent'; this.style.color='var(--text-main)';">
                     <i class="fas fa-comments"></i> View Reviews
                 </button>
             </div>
-        </div>`).join('');
+        </div>`;
+    }).join('');
         
     if(toShow.length === 0) container.innerHTML = `<p style="color:var(--text-muted); text-align:center; grid-column: 1/-1; padding: 2rem;">No configs match your search criteria.</p>`;
     if(btnWrap) btnWrap.style.display = currentVisibleCount >= currentFilteredConfigs.length ? 'none' : 'block';
@@ -277,7 +280,7 @@ function renderReviewNode(r, depth=0) {
     const margin = depth > 0 ? 30 : 0;
     const stars = Array(5).fill(0).map((_,i) => i < r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('');
     const isMine = currentUser && String(r.poster_id) === String(currentUser.discord_id);
-    const delBtn = isMine ? `<button class="delete-btn" title="Delete" onclick="deleteReview(${r.id})"><i class="fas fa-trash"></i></button>` : '';
+    const delBtn = isMine ? `<button class="delete-btn" title="Delete" onclick="deleteReview('${r.id}')"><i class="fas fa-trash"></i></button>` : '';
     
     const cleanUsername = escapeHTML(r.poster_username).split('#')[0];
     
@@ -291,8 +294,8 @@ function renderReviewNode(r, depth=0) {
             </div>
             <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom: 8px;">${escapeHTML(r.comment)}</p>
             <div style="display:flex; gap: 15px; font-size: 0.8rem; font-weight: 700;">
-                <span style="color:var(--text-muted); cursor:pointer; transition:0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'" onclick="setReplyTo(${r.id}, '${cleanUsername}')"><i class="fas fa-reply"></i> Reply</span>
-                ${r.children.length > 0 ? `<span style="color:var(--accent); cursor:pointer;" onclick="toggleReplies(${r.id})"><i class="fas fa-chevron-down"></i> View ${r.children.length} Replies</span>` : ''}
+                <span style="color:var(--text-muted); cursor:pointer; transition:0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'" onclick="setReplyTo('${r.id}', '${cleanUsername}')"><i class="fas fa-reply"></i> Reply</span>
+                ${r.children.length > 0 ? `<span style="color:var(--accent); cursor:pointer;" onclick="toggleReplies('${r.id}')"><i class="fas fa-chevron-down"></i> View ${r.children.length} Replies</span>` : ''}
             </div>
         </div>
     </div>`;
