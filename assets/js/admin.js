@@ -155,7 +155,7 @@ async function loadModule(moduleName, btnElement) {
             case 'drafts': html = await renderConfigs('true'); break;
             case 'reviews': html = await renderReviews(); break;
             case 'contributors': html = await renderContributors(); break; 
-            case 'private-tags': html = await renderPrivateTags(); break; // NEW TAB!
+            case 'private-tags': html = await renderPrivateTags(); break;
             case 'db': html = await renderDB(); break;
             case 'settings': html = await renderSettings(); break;
         }
@@ -298,7 +298,7 @@ async function renderConfigs(isArchivedStr) {
     adminFilteredConfigs = [...adminAllConfigs];
     adminVisibleCount = 9;
 
-    const creators = [...new Set(adminAllConfigs.map(c => c.creator).filter(Boolean))];
+    const creators = [...new Set(adminAllConfigs.map(c => Array.isArray(c.creator) ? c.creator.join(', ') : c.creator).filter(Boolean))];
     const dropdownOptions = '<option value="all">By Creator</option>' + creators.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
 
     return `
@@ -321,7 +321,8 @@ function adminApplyFilters() {
     const creator = document.getElementById('adminCreatorFilter')?.value || 'all';
     
     adminFilteredConfigs = adminAllConfigs.filter(c => {
-        return (c.title || '').toLowerCase().includes(search) && (creator === 'all' || c.creator === creator);
+        const creatorStr = Array.isArray(c.creator) ? c.creator.join(', ') : c.creator;
+        return (c.title || '').toLowerCase().includes(search) && (creator === 'all' || creatorStr === creator);
     });
     
     adminVisibleCount = 9;
@@ -339,13 +340,14 @@ function buildAdminConfigGridHTML(configs) {
     return configs.map(c => {
         const actionBtnTxt = c.is_archived === 'true' ? 'Publish' : 'Archive';
         const newArchivedVal = c.is_archived === 'true' ? 'false' : 'true';
+        const displayCreator = Array.isArray(c.creator) ? c.creator.join(', ') : c.creator;
         
         return `
         <div class="item-card">
             <h3>${escapeHTML(c.title)}</h3>
             <div class="card-section">
                 <div class="data-row"><span class="data-label">Status:</span> <span class="data-val" style="color: #f1c40f;"><i class="fas fa-star"></i> ${c.calc_rating} Avg Rating</span></div>
-                <div class="data-row"><span class="data-label">Creator:</span> <span class="data-val">${escapeHTML(c.creator)}</span></div>
+                <div class="data-row"><span class="data-label">Creator:</span> <span class="data-val">${escapeHTML(displayCreator)}</span></div>
                 <div class="data-row"><span class="data-label">Pri:</span> <span class="data-val">${escapeHTML(c.priority)}</span></div>
             </div>
             <div class="card-actions" style="justify-content:flex-end;">
@@ -389,11 +391,13 @@ async function renderContributors() {
             return `<span class="con-tag" style="color: ${tData.color}; border-color: ${tData.color}; margin-top: 5px;"><i class="${tData.icon}"></i> ${escapeHTML(tag)}</span>`;
         }).join(' ');
 
+        const displayName = Array.isArray(c.name) ? c.name.join(', ') : c.name;
+
         return `
         <div class="item-card">
             <h3 style="display:flex; align-items:center; gap: 10px;">
                 <i class="${escapeHTML(c.role_icon)}" style="color:${escapeHTML(c.icon_color)}"></i> 
-                ${escapeHTML(c.name)}
+                ${escapeHTML(displayName)}
             </h3>
             <div style="margin-bottom: 15px;">${renderedTags}</div>
             <div class="card-actions" style="justify-content:flex-end; margin-top:auto;">
@@ -429,11 +433,13 @@ async function renderPrivateTags() {
             return `<span class="con-tag" style="color: ${tData.color}; border-color: ${tData.color}; margin-top: 5px;"><i class="${tData.icon}"></i> ${escapeHTML(tag)}</span>`;
         }).join(' ');
 
+        const displayName = Array.isArray(c.name) ? c.name.join(', ') : c.name;
+
         return `
         <div class="item-card" style="border-style: dashed; border-color: var(--text-dim);">
             <h3 style="display:flex; align-items:center; gap: 10px; color: var(--text-dim);">
                 <i class="fas fa-user-secret"></i> 
-                ${escapeHTML(c.name)}
+                ${escapeHTML(displayName)}
             </h3>
             <div style="margin-bottom: 15px;">${renderedTags}</div>
             <div class="card-actions" style="justify-content:flex-end; margin-top:auto;">
@@ -602,13 +608,15 @@ function openConfigModal(id = null) {
     document.querySelector('.modal-content').style.maxWidth = "650px";
     let obj = id ? activeDataStore.find(t => String(t.id) === String(id)) : {};
     
+    const displayCreator = Array.isArray(obj.creator) ? obj.creator.join(', ') : (obj.creator || '');
+
     openModal(id ? 'Edit Config' : 'Create New Config', `
     <form id="configForm" onsubmit="saveForm(event, 'configs', '${id || ''}')">
         <div class="form-grid">
             <div class="form-group full"><label>Title</label><input type="text" name="title" class="form-control" value="${escapeHTML(obj.title || '')}" required></div>
             <div class="form-group"><label>Ping Tier</label><input type="text" name="ping_tier" class="form-control" value="${escapeHTML(obj.ping_tier || 'Mid')}"></div>
             <div class="form-group"><label>Ping Range</label><input type="text" name="ping_range" class="form-control" value="${escapeHTML(obj.ping_range || '')}" placeholder="e.g. 50-100ms"></div>
-            <div class="form-group"><label>Creator</label><input type="text" name="creator" class="form-control" value="${escapeHTML(obj.creator || 'Kriz')}"></div>
+            <div class="form-group"><label>Creator (Display Name, Username)</label><input type="text" name="creator" class="form-control" value="${escapeHTML(displayCreator)}" placeholder="e.g. Kriz, krizzster"></div>
             <div class="form-group"><label>Sim Timer</label><input type="number" name="sim_timer" class="form-control" value="${escapeHTML(obj.sim_timer || 123)}"></div>
             <div class="form-group"><label>Pred Interval</label><input type="text" name="pred_interval" class="form-control" value="${escapeHTML(obj.pred_interval || '')}"></div>
             <div class="form-group"><label>Vertical Multiplier</label><input type="number" name="vertical" class="form-control" value="${escapeHTML(obj.vertical || 155)}"></div>
@@ -630,7 +638,7 @@ function openConfigModal(id = null) {
     </form>`);
 }
 
-// NEW: SMART CONTRIBUTOR MODAL (Handles both Public and Private)
+// SMART CONTRIBUTOR MODAL (Handles both Public and Private)
 function openContributorModal(id = null, isPrivate = false) {
     document.querySelector('.modal-content').style.maxWidth = "500px";
     let obj = id ? activeDataStore.find(t => String(t.id) === String(id)) : {};
@@ -645,10 +653,11 @@ function openContributorModal(id = null, isPrivate = false) {
     `;
 
     const title = id ? (isPrivate ? 'Edit Private Tag' : 'Edit Contributor') : (isPrivate ? 'Create Private Tag' : 'Create Contributor');
+    const displayName = Array.isArray(obj.name) ? obj.name.join(', ') : (obj.name || '');
 
     openModal(title, `
     <form id="contributorForm" onsubmit="saveContributorForm(event, '${id || ''}', ${isPrivate})">
-        <div class="form-group"><label>Name</label><input type="text" name="name" class="form-control" value="${escapeHTML(obj.name || '')}" required></div>
+        <div class="form-group"><label>Name (Display Name, Username)</label><input type="text" name="name" class="form-control" value="${escapeHTML(displayName)}" required placeholder="e.g. Kriz, krizzster"></div>
         ${extraFields}
         <div class="form-group"><label>Tags (Comma separated)</label><input type="text" name="tags" class="form-control" value="${escapeHTML((obj.tags || []).join(', '))}"></div>
         <div style="text-align:right; margin-top:20px; border-top:1px solid var(--border); padding-top:15px;">
@@ -658,12 +667,16 @@ function openContributorModal(id = null, isPrivate = false) {
     </form>`);
 }
 
-// Default save logic for configs
+// Save logic for configs
 async function saveForm(e, table, id) {
     e.preventDefault();
     if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
     
     const formData = Object.fromEntries(new FormData(e.target).entries());
+    
+    // Array conversion for Creator
+    if (formData.creator) formData.creator = formData.creator.split(',').map(s => s.trim());
+    
     if (id) formData.id = id;
 
     const { error } = await _supabase.from(table).upsert(formData);
@@ -671,13 +684,17 @@ async function saveForm(e, table, id) {
     else { closeModal(); refreshCurrentView(); }
 }
 
-// NEW: Specialized Save Logic for Contributors / Private Tags
+// Specialized Save Logic for Contributors / Private Tags
 async function saveContributorForm(e, id, isPrivate) {
     e.preventDefault();
     if (!(await verifyAdminAuth())) return await customAlert("Security Error: Admin rights required.", "Access Denied");
     
     const formData = Object.fromEntries(new FormData(e.target).entries());
+    
+    // Array conversions
     if (formData.tags) formData.tags = formData.tags.split(',').map(s => s.trim());
+    if (formData.name) formData.name = formData.name.split(',').map(s => s.trim());
+    
     if (id) formData.id = id;
 
     // RULE ENFORCEMENT: If private, auto-nullify directory rendering fields!
