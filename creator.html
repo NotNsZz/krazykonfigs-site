@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KrazyKonfigs | Creator Dashboard</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="/assets/css/global.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <link rel="stylesheet" href="/assets/css/creator.css"> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body id="body">
+    <div class="bg-fx"></div>
+    <div id="smooth-cursor"></div>
+
+    <div data-include="/components/modals.html"></div>
+    <div data-include="/components/navbar.html"></div>
+
+    <div class="creator-wrapper">
+        
+        <aside class="creator-sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-hammer" style="color: var(--accent);"></i> Creator Studio</h2>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="nav-item active" onclick="switchTab('home')"><i class="fas fa-home"></i> Home</li>
+                <li class="nav-item" onclick="switchTab('configs')"><i class="fas fa-file-code"></i> My Configs</li>
+                <li class="nav-item" onclick="switchTab('reviews')"><i class="fas fa-comments"></i> Feedback</li>
+                <li class="nav-item" onclick="switchTab('theme')"><i class="fas fa-paint-brush"></i> Card Theme</li>
+            </ul>
+        </aside>
+
+        <main class="creator-main">
+            
+            <div id="tab-home" class="dashboard-tab active">
+                
+                <div class="greeting-header">
+                    <h1 id="creator-greeting">Good Afternoon, krizzster</h1>
+                    <p>Welcome back to your Creator Command Center.</p>
+                </div>
+
+                <div class="sub-nav">
+                    <button class="sub-btn active">Main</button>
+                    <button class="sub-btn">Analytics</button>
+                </div>
+
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <i class="fas fa-file-upload stat-icon" style="color: #2ecc71;"></i>
+                        <p class="stat-title">Total Configs</p>
+                        <h3 class="stat-number">14</h3>
+                    </div>
+                    <div class="admin-stat-card">
+                        <i class="fas fa-star stat-icon" style="color: #f1c40f;"></i>
+                        <p class="stat-title">Avg Rating</p>
+                        <h3 class="stat-number">4.8</h3>
+                    </div>
+                    <div class="admin-stat-card">
+                        <i class="fas fa-crosshairs stat-icon" style="color: #3498db;"></i>
+                        <p class="stat-title">Avg Hit Rate</p>
+                        <h3 class="stat-number">92%</h3>
+                    </div>
+                    <div class="admin-stat-card">
+                        <i class="fas fa-download stat-icon" style="color: #9b59b6;"></i>
+                        <p class="stat-title">Total Downloads</p>
+                        <h3 class="stat-number">1,204</h3>
+                    </div>
+                </div>
+
+                <div class="content-panel" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;"><i class="fas fa-bolt"></i> Recent Activity</h3>
+                    <div class="empty-state">
+                        <p style="color: var(--text-muted); font-style: italic;">We will wire up your recent reviews and downloads here later.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="tab-configs" class="dashboard-tab">
+                <h2><i class="fas fa-file-code"></i> My Configs</h2>
+                <p style="color: var(--text-muted);">Manage your published configurations here.</p>
+            </div>
+            
+            <div id="tab-reviews" class="dashboard-tab">
+                <h2><i class="fas fa-comments"></i> User Feedback</h2>
+                <p style="color: var(--text-muted);">Read and reply to reviews on your configs.</p>
+            </div>
+
+            <div id="tab-theme" class="dashboard-tab">
+                <h2><i class="fas fa-paint-brush"></i> Card Customizer</h2>
+                <p style="color: var(--text-muted);">Edit the colors of your config cards.</p>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/creator.js"></script> </body>
+</html>
