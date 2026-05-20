@@ -61,7 +61,7 @@ async function initProfileLogic() {
         const cleanUName = uName.toLowerCase().trim();
         const { data: allConfigs } = await _supabase.from('configs').select('id, hit_rate, title, creator');
         
-        // --- FIX: Safely parse the creator array to get the exact username match ---
+        // --- FIX 1: Safely parse the creator array to prevent the .toLowerCase() crash ---
         let userConfigs = (allConfigs || []).filter(c => {
             if(!c.creator) return false;
             let configUsername = '';
@@ -104,7 +104,7 @@ async function initProfileLogic() {
                     let totalAvgSum = 0;
                     let validConfigCount = 0;
                     for (let cid in configSums) {
-                        if (configCounts[cid] > 0) { // Safety check: Only count if it has reviews
+                        if (configCounts[cid] > 0) { 
                             let cAvg = configSums[cid] / configCounts[cid];
                             totalAvgSum += cAvg;
                             validConfigCount++;
@@ -121,7 +121,7 @@ async function initProfileLogic() {
         const { data: reviews } = await _supabase.from('reviews').select('*').eq('poster_id', user.discord_id).order('created_at', { ascending: false });
         userReviews = reviews || [];
         
-        // --- IDENTITY FIX: Exact Match Username after comma ---
+        // --- FIX 2: Exact Match Username lookup for Contributor Tags ---
         const { data: allContributors } = await _supabase.from('contributors').select('*');
         let tags = [];
         
@@ -134,7 +134,7 @@ async function initProfileLogic() {
                     const parts = c.name.split(',');
                     storedUsername = parts[1] ? parts[1].trim() : parts[0].trim();
                 }
-                return storedUsername.toLowerCase() === uName.toLowerCase();
+                return storedUsername.toLowerCase() === cleanUName; // Exact match only
             });
 
             if (matchedContributor && matchedContributor.tags) {
@@ -198,9 +198,23 @@ async function initProfileLogic() {
 
             if (extProfile.bg_color) document.body.style.backgroundColor = escapeHTML(extProfile.bg_color);
 
+            // --- FIX 3: Text Color safely applied to override Dark Mode ---
             if (extProfile.text_color) {
-                document.documentElement.style.setProperty('--text-main', escapeHTML(extProfile.text_color));
-                document.documentElement.style.setProperty('--text-muted', escapeHTML(extProfile.text_color) + 'cc'); 
+                const tColor = escapeHTML(extProfile.text_color);
+                const customStyle = document.createElement('style');
+                customStyle.innerHTML = `
+                    .profile-container, .modal-overlay, .profile-card, .history-card, .modal-content {
+                        color: ${tColor} !important;
+                        --text-main: ${tColor} !important;
+                        --text-muted: ${tColor}cc !important;
+                    }
+                    .profile-bio, .profile-username, .stat-label,
+                    .review-text, .profile-review-username, .joined-date,
+                    .history-card p, .modal-body label {
+                        color: var(--text-main) !important;
+                    }
+                `;
+                document.head.appendChild(customStyle);
             }
 
             if (extProfile.nav_color) {
