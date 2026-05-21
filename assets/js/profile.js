@@ -65,7 +65,7 @@ async function initProfileLogic() {
         let userConfigs = [];
         let dNameMatch = (allConfigs || []).filter(c => {
             if(!c.creator) return false;
-            const cr = String(c.creator).toLowerCase().trim();
+            const cr = c.creator.toLowerCase().trim();
             return cr === cleanDName || cr.includes(cleanDName) || cleanDName.includes(cr);
         });
 
@@ -74,7 +74,7 @@ async function initProfileLogic() {
         } else {
             let uNameMatch = (allConfigs || []).filter(c => {
                 if(!c.creator) return false;
-                const cr = String(c.creator).toLowerCase().trim();
+                const cr = c.creator.toLowerCase().trim();
                 return cr === cleanUName || cr.includes(cleanUName) || cleanUName.includes(cr);
             });
             if (uNameMatch.length > 0) userConfigs = uNameMatch;
@@ -203,7 +203,10 @@ async function initProfileLogic() {
                         }
                         #profileContainer, #profileContainer .profile-bio, #profileContainer .profile-username, 
                         #profileContainer .stat-label, #profileContainer .review-text, #profileContainer .joined-date,
-                        #profileContainer .profile-review-username {
+                        #profileContainer .profile-review-username,
+                        #profileContainer h1, #profileContainer h2, #profileContainer h3,
+                        #profileContainer .profile-name, #profileContainer .history-title,
+                        #profileContainer .stat-value {
                             color: ${tColor} !important;
                         }
                     `;
@@ -216,12 +219,12 @@ async function initProfileLogic() {
                         #profileContainer .stat-value {
                             color: ${hColor} !important;
                         }
-                        
-                        #body header h1, #body nav h1, #body .navbar h1,
-                        #body header h2, #body nav h2, #body .navbar h2,
-                        #body header .brand, #body nav .brand, #body .navbar .brand,
-                        #body header a.brand, #body nav a.brand, #body .navbar a.brand {
-                            color: ${hColor} !important;
+                        body header, body nav, body .navbar {
+                            background-color: ${hColor} !important;
+                            background: ${hColor} !important;
+                        }
+                        body header *, body nav *, body .navbar * {
+                            color: #ffffff !important;
                         }
                     `;
                 }
