@@ -136,7 +136,9 @@ body:not(.dark-mode) .bg-fx {
 
 /* --- STRICT NAVBAR WHITE TEXT ENFORCEMENT --- */
 body header, body nav, body .navbar,
-body header *, body nav *, body .navbar * {
+body header *:not(h1):not(h2):not(.brand), 
+body nav *:not(h1):not(h2):not(.brand), 
+body .navbar *:not(h1):not(h2):not(.brand) {
     color: #ffffff !important;
 }
 body header svg, body nav svg, body .navbar svg,
