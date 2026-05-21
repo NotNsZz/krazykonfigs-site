@@ -217,10 +217,10 @@ async function initProfileLogic() {
                             color: ${hColor} !important;
                         }
                         
-                        body header h1, body nav h1, body .navbar h1,
-                        body header h2, body nav h2, body .navbar h2,
-                        body header .brand, body nav .brand, body .navbar .brand,
-                        body header a.brand, body nav a.brand, body .navbar a.brand {
+                        #body header h1, #body nav h1, #body .navbar h1,
+                        #body header h2, #body nav h2, #body .navbar h2,
+                        #body header .brand, #body nav .brand, #body .navbar .brand,
+                        #body header a.brand, #body nav a.brand, #body .navbar a.brand {
                             color: ${hColor} !important;
                         }
                     `;
