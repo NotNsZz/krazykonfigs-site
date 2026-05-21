@@ -58,23 +58,27 @@ async function initProfileLogic() {
         const dName = user.display_name || user.username.split('#')[0];
         const uName = user.username.split('#')[0]; 
 
+        const cleanDName = dName.toLowerCase().trim();
         const cleanUName = uName.toLowerCase().trim();
         const { data: allConfigs } = await _supabase.from('configs').select('id, hit_rate, title, creator');
         
-        // --- FIX 1: Safely parse the creator array to prevent the .toLowerCase() crash ---
-        let userConfigs = (allConfigs || []).filter(c => {
+        let userConfigs = [];
+        let dNameMatch = (allConfigs || []).filter(c => {
             if(!c.creator) return false;
-            let configUsername = '';
-            
-            if (Array.isArray(c.creator)) {
-                configUsername = c.creator[1] || c.creator[0];
-            } else if (typeof c.creator === 'string') {
-                const parts = c.creator.split(',');
-                configUsername = parts[1] ? parts[1].trim() : parts[0].trim();
-            }
-            
-            return configUsername.toLowerCase() === cleanUName;
+            const cr = c.creator.toLowerCase().trim();
+            return cr === cleanDName || cr.includes(cleanDName) || cleanDName.includes(cr);
         });
+
+        if (dNameMatch.length > 0) {
+            userConfigs = dNameMatch;
+        } else {
+            let uNameMatch = (allConfigs || []).filter(c => {
+                if(!c.creator) return false;
+                const cr = c.creator.toLowerCase().trim();
+                return cr === cleanUName || cr.includes(cleanUName) || cleanUName.includes(cr);
+            });
+            if (uNameMatch.length > 0) userConfigs = uNameMatch;
+        }
         
         const isCreator = userConfigs.length > 0;
         let avgHitRate = "-", avgRating = "0.0";
@@ -87,7 +91,6 @@ async function initProfileLogic() {
             });
             if (validHit > 0) avgHitRate = Math.round(totalHit / validHit) + "%";
 
-            // Smart Rating Math (Ignores 0-review configs)
             const configIds = userConfigs.map(c => c.id);
             if (configIds.length > 0) {
                 const { data: configReviews } = await _supabase.from('reviews').select('config_id, rating').in('config_id', configIds).not('rating', 'is', null);
@@ -121,26 +124,8 @@ async function initProfileLogic() {
         const { data: reviews } = await _supabase.from('reviews').select('*').eq('poster_id', user.discord_id).order('created_at', { ascending: false });
         userReviews = reviews || [];
         
-        // --- FIX 2: Exact Match Username lookup for Contributor Tags ---
-        const { data: allContributors } = await _supabase.from('contributors').select('*');
-        let tags = [];
-        
-        if (allContributors) {
-            const matchedContributor = allContributors.find(c => {
-                let storedUsername = '';
-                if (Array.isArray(c.name)) {
-                    storedUsername = c.name[1] || c.name[0];
-                } else if (typeof c.name === 'string') {
-                    const parts = c.name.split(',');
-                    storedUsername = parts[1] ? parts[1].trim() : parts[0].trim();
-                }
-                return storedUsername.toLowerCase() === cleanUName; // Exact match only
-            });
-
-            if (matchedContributor && matchedContributor.tags) {
-                tags = Array.isArray(matchedContributor.tags) ? matchedContributor.tags : matchedContributor.tags.split(',');
-            }
-        }
+        const { data: contributorData } = await _supabase.from('contributors').select('tags').in('name', [user.username, dName, uName]).limit(1);
+        const tags = contributorData && contributorData[0]?.tags ? (Array.isArray(contributorData[0].tags) ? contributorData[0].tags : contributorData[0].tags.split(',')) : [];
 
         const configIds = [...new Set(userReviews.map(r => r.config_id))];
         if(configIds.length > 0) {
@@ -198,28 +183,46 @@ async function initProfileLogic() {
 
             if (extProfile.bg_color) document.body.style.backgroundColor = escapeHTML(extProfile.bg_color);
 
-            // --- FIX 3: Text Color safely applied to override Dark Mode ---
-            if (extProfile.text_color) {
-                const tColor = escapeHTML(extProfile.text_color);
-                const customStyle = document.createElement('style');
-                customStyle.innerHTML = `
-                    .profile-container, .modal-overlay, .profile-card, .history-card, .modal-content {
-                        color: ${tColor} !important;
-                        --text-main: ${tColor} !important;
-                        --text-muted: ${tColor}cc !important;
-                    }
-                    .profile-bio, .profile-username, .stat-label,
-                    .review-text, .profile-review-username, .joined-date,
-                    .history-card p, .modal-body label {
-                        color: var(--text-main) !important;
-                    }
-                `;
-                document.head.appendChild(customStyle);
+            // --- FIX: Navbar Heading Color Issue & Navbar Text Color to White ---
+            let tColor = extProfile.text_color ? escapeHTML(extProfile.text_color) : null;
+            let hColor = extProfile.nav_color ? escapeHTML(extProfile.nav_color) : null;
+
+            if (hColor === '#0a0a0c' || hColor === '#000000') {
+                hColor = tColor; 
             }
 
-            if (extProfile.nav_color) {
-                const navElement = document.querySelector('nav') || document.querySelector('.navbar');
-                if (navElement) navElement.style.backgroundColor = escapeHTML(extProfile.nav_color);
+            if (tColor || hColor) {
+                const customStyle = document.createElement('style');
+                let cssText = '';
+
+                if (tColor) {
+                    cssText += `
+                        #profileContainer {
+                            --text-main: ${tColor} !important;
+                            --text-muted: ${tColor}cc !important;
+                        }
+                        #profileContainer, #profileContainer .profile-bio, #profileContainer .profile-username, 
+                        #profileContainer .stat-label, #profileContainer .review-text, #profileContainer .joined-date,
+                        #profileContainer .profile-review-username {
+                            color: ${tColor} !important;
+                        }
+                    `;
+                }
+
+                if (hColor) {
+                    cssText += `
+                        #profileContainer h1, #profileContainer h2, #profileContainer h3,
+                        #profileContainer .profile-name, #profileContainer .history-title, 
+                        #profileContainer .stat-value {
+                            color: ${hColor} !important;
+                        }
+                    `;
+                }
+
+                if (cssText !== '') {
+                    customStyle.innerHTML = cssText;
+                    document.head.appendChild(customStyle);
+                }
             }
 
             if (extProfile.ui_box_color) {
@@ -335,10 +338,15 @@ async function openEditProfileModal() {
                 document.getElementById('edit-color-mode').value = 'static';
             }
         }
-        if (extProfileData.bg_color) document.getElementById('edit-bg-color').value = extProfileData.bg_color;
-        if (extProfileData.text_color) document.getElementById('edit-text-color').value = extProfileData.text_color;
-        if (extProfileData.nav_color) document.getElementById('edit-nav-color').value = extProfileData.nav_color;
-        if (extProfileData.ui_box_color) document.getElementById('edit-ui-color').value = extProfileData.ui_box_color;
+        document.getElementById('edit-bg-color').value = extProfileData.bg_color || '#0a0a0c';
+        document.getElementById('edit-text-color').value = extProfileData.text_color || '#ffffff';
+        document.getElementById('edit-ui-color').value = extProfileData.ui_box_color || '#16161e';
+        
+        let safeNavColor = extProfileData.nav_color || '';
+        if (!safeNavColor || safeNavColor.toLowerCase() === '#0a0a0c' || safeNavColor.toLowerCase() === '#000000') {
+            safeNavColor = extProfileData.text_color || '#ffffff';
+        }
+        document.getElementById('edit-nav-color').value = safeNavColor;
     }
     
     toggleColorMode();
