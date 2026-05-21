@@ -135,9 +135,16 @@ body:not(.dark-mode) .bg-fx {
 }
 
 /* --- STRICT NAVBAR WHITE TEXT ENFORCEMENT --- */
-nav, .navbar, nav *, .navbar * {
+body header, body nav, body .navbar,
+body header *, body nav *, body .navbar * {
     color: #ffffff !important;
 }
-nav svg, nav path, .navbar svg, .navbar path {
+body header svg, body nav svg, body .navbar svg,
+body header path, body nav path, body .navbar path {
     fill: #ffffff !important;
 }
+
+/* Protect the dropdown visibility */
+.dropdown { background: #16161e !important; border: 1px solid #2a2b38 !important; }
+.dropdown a, .dropdown .dropdown-item { color: #ffffff !important; }
+.dropdown a:hover, .dropdown .dropdown-item:hover { background: #2a2b38 !important; color: #ffffff !important; }
