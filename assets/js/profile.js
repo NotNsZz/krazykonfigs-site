@@ -234,7 +234,11 @@ async function initProfileLogic() {
                 #p-badges .badge-creator, #p-badges .badge-creator i { color: #f1c40f !important; border-color: #f1c40f !important; }
                 #creator-stats-card > h3, #creator-stats-card > h3 i { color: #5865F2 !important; }
                 #creator-stats-card .stat-value, #creator-stats-card .stat-label { color: #f1c40f !important; }
-                .history-title { color: #5865F2 !important; }
+                #creator-stats-card .fa-star { color: #f1c40f !important; }
+                #profileContainer .history-title { color: #5865F2 !important; }
+                #p-verified { color: #1abc9c !important; }
+                #p-verified path:first-child { fill: #1abc9c !important; }
+                #p-verified path:last-child { fill: #ffffff !important; }
             `;
             document.head.appendChild(fixedStyle);
 
@@ -259,7 +263,7 @@ async function initProfileLogic() {
                     if(nameRow) {
                         const playBtn = document.createElement('button');
                         playBtn.className = 'social-icon-btn';
-                        playBtn.style.color = 'var(--accent)';
+                        playBtn.style.color = '#5865F2';
                         playBtn.title = "Play Theme Song";
                         playBtn.innerHTML = '<i class="fas fa-play-circle"></i>';
                         playBtn.onclick = () => { profileAudio.play(); playBtn.style.display = 'none'; };
