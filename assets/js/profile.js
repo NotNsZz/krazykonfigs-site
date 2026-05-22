@@ -227,6 +227,17 @@ async function initProfileLogic() {
                 }
             }
 
+            // Fixed element colors — always applied regardless of theme
+            const fixedStyle = document.createElement('style');
+            fixedStyle.innerHTML = `
+                #p-discord-link, #p-discord-link i { color: #5865F2 !important; }
+                #p-badges .badge-creator, #p-badges .badge-creator i { color: #f1c40f !important; border-color: #f1c40f !important; }
+                #creator-stats-card > h3, #creator-stats-card > h3 i { color: #5865F2 !important; }
+                #creator-stats-card .stat-value, #creator-stats-card .stat-label { color: #f1c40f !important; }
+                .history-title { color: #5865F2 !important; }
+            `;
+            document.head.appendChild(fixedStyle);
+
             if (extProfile.ui_box_color) {
                 const uiColor = escapeHTML(extProfile.ui_box_color);
                 document.documentElement.style.setProperty('--card-bg', uiColor);
@@ -302,7 +313,7 @@ function renderProfileReviews(userObj) {
 
         let contextText = `<span style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:4px;">Reviewed <strong style="color:inherit;">${escapeHTML(reviewConfigsMap[r.config_id] || `Config #${r.config_id}`)}</strong></span>`;
         if (r.replying_to_id && parentReviewMap[r.replying_to_id]) {
-            contextText = `<span style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:4px;">Reply to <strong style="color:var(--accent);">@${escapeHTML(parentReviewMap[r.replying_to_id])}</strong> on <strong style="color:inherit;">${escapeHTML(reviewConfigsMap[r.config_id] || `Config #${r.config_id}`)}</strong></span>`;
+            contextText = `<span style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:4px;">Reply to <strong style="color:#5865F2 !important;">@${escapeHTML(parentReviewMap[r.replying_to_id])}</strong> on <strong style="color:inherit;">${escapeHTML(reviewConfigsMap[r.config_id] || `Config #${r.config_id}`)}</strong></span>`;
         }
 
         return `
@@ -311,7 +322,7 @@ function renderProfileReviews(userObj) {
             <div class="review-content">
                 ${contextText}
                 <div class="review-meta">
-                    <span class="profile-review-username" style="color:inherit;">${cleanReviewerName}</span>
+                    <span class="profile-review-username" style="color:${r.replying_to_id ? '#5865F2' : 'inherit'};">${cleanReviewerName}</span>
                     <span class="review-stars">${r.rating ? stars : '<i class="fas fa-reply" style="color:var(--text-muted)"></i> Reply'}</span>
                 </div>
                 <p class="review-text" style="color:inherit;">${escapeHTML(r.comment)}</p>
