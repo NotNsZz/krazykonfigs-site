@@ -65,7 +65,7 @@ async function initProfileLogic() {
         let userConfigs = [];
         let dNameMatch = (allConfigs || []).filter(c => {
             if(!c.creator) return false;
-            const cr = c.creator.toLowerCase().trim();
+            const cr = String(c.creator).toLowerCase().trim();
             return cr === cleanDName || cr.includes(cleanDName) || cleanDName.includes(cr);
         });
 
@@ -74,7 +74,7 @@ async function initProfileLogic() {
         } else {
             let uNameMatch = (allConfigs || []).filter(c => {
                 if(!c.creator) return false;
-                const cr = c.creator.toLowerCase().trim();
+                const cr = String(c.creator).toLowerCase().trim();
                 return cr === cleanUName || cr.includes(cleanUName) || cleanUName.includes(cr);
             });
             if (uNameMatch.length > 0) userConfigs = uNameMatch;
