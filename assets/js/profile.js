@@ -187,10 +187,6 @@ async function initProfileLogic() {
             let tColor = extProfile.text_color ? escapeHTML(extProfile.text_color) : null;
             let hColor = extProfile.nav_color ? escapeHTML(extProfile.nav_color) : null;
 
-            if (hColor === '#0a0a0c' || hColor === '#000000') {
-                hColor = tColor; 
-            }
-
             if (tColor || hColor) {
                 const customStyle = document.createElement('style');
                 let cssText = '';
@@ -201,12 +197,13 @@ async function initProfileLogic() {
                             --text-main: ${tColor} !important;
                             --text-muted: ${tColor}cc !important;
                         }
-                        #profileContainer, #profileContainer .profile-bio, #profileContainer .profile-username, 
-                        #profileContainer .stat-label, #profileContainer .review-text, #profileContainer .joined-date,
-                        #profileContainer .profile-review-username,
+                        #profileContainer *,
+                        #profileContainer .profile-name, #profileContainer .profile-username,
+                        #profileContainer .profile-bio, #profileContainer .joined-date,
                         #profileContainer h1, #profileContainer h2, #profileContainer h3,
-                        #profileContainer .profile-name, #profileContainer .history-title,
-                        #profileContainer .stat-value {
+                        #profileContainer .history-title, #profileContainer .stat-value,
+                        #profileContainer .stat-label, #profileContainer .review-text,
+                        #profileContainer .profile-review-username {
                             color: ${tColor} !important;
                         }
                     `;
@@ -214,11 +211,6 @@ async function initProfileLogic() {
 
                 if (hColor) {
                     cssText += `
-                        #profileContainer h1, #profileContainer h2, #profileContainer h3,
-                        #profileContainer .profile-name, #profileContainer .history-title, 
-                        #profileContainer .stat-value {
-                            color: ${hColor} !important;
-                        }
                         body header, body nav, body .navbar {
                             background-color: ${hColor} !important;
                             background: ${hColor} !important;
@@ -352,11 +344,7 @@ async function openEditProfileModal() {
         document.getElementById('edit-text-color').value = extProfileData.text_color || '#ffffff';
         document.getElementById('edit-ui-color').value = extProfileData.ui_box_color || '#16161e';
         
-        let safeNavColor = extProfileData.nav_color || '';
-        if (!safeNavColor || safeNavColor.toLowerCase() === '#0a0a0c' || safeNavColor.toLowerCase() === '#000000') {
-            safeNavColor = extProfileData.text_color || '#ffffff';
-        }
-        document.getElementById('edit-nav-color').value = safeNavColor;
+        document.getElementById('edit-nav-color').value = extProfileData.nav_color || '#1a1b26';
     }
     
     toggleColorMode();
