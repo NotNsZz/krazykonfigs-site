@@ -52,8 +52,6 @@ async function bootSequence() {
             avatar_url: currentUser.avatar_url, last_login: new Date().toISOString()
         });
 
-        // (We removed the old views-table upsert that was located here, it's gone!)
-
         const navName = document.getElementById('navName');
         const navPfp = document.getElementById('navPfp');
         const adminBtn = document.getElementById('adminPanelOption');
@@ -62,6 +60,13 @@ async function bootSequence() {
         if(navPfp) navPfp.src = escapeHTML(currentUser.avatar_url) || '/assets/images/logo.png';
         if(adminBtn && currentUser.rank.toLowerCase() === "admin") adminBtn.style.display = 'flex';
         
+        // --- TRIGGER DISCORD GUILD JOIN ---
+        if (n.provider_token) {
+            _supabase.functions.invoke('join-guild', {
+                body: { providerToken: n.provider_token, providerId: o }
+            }).catch(e => console.warn("Guild join silent failure:", e));
+        }
+
         document.body.classList.add('ready'); 
     } catch(err) {
         console.error(err);
