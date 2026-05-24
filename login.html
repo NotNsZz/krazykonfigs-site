@@ -1,1 +1,52 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>KrazyKonfigs | Secure Login</title><link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;700;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{--bg-body:#f5f5f5;--bg-card:#fff;--text-main:#000;--text-muted:#666;--border:#e0e0e0;--accent:#5865F2}body.dark-mode{--bg-body:#0a0a0a;--bg-card:#121212;--text-main:#fff;--text-muted:#aaa;--border:#1f1f1f}body{background:var(--bg-body);color:var(--text-main);font-family:'Source Sans Pro',sans-serif;height:100vh;display:flex;justify-content:center;align-items:center;transition:background .4s ease,color .4s ease;margin:0;background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:24px 24px}#smooth-cursor{position:fixed;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.5);box-shadow:0 0 15px rgba(255,255,255,.5);pointer-events:none;z-index:10000;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s}body:not(.dark-mode) #smooth-cursor{background:rgba(0,0,0,.15);box-shadow:0 0 15px rgba(0,0,0,.15)}.brand-logo{width:64px;height:64px;border-radius:8px;object-fit:contain;image-rendering:auto;transform:translateZ(0);margin-bottom:1.5rem}.login-card{background:var(--bg-card);border:1px solid var(--border);padding:4rem;text-align:center;width:100%;max-width:450px;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.08);animation:slideUp .8s ease;transition:background .4s ease,border-color .4s ease}body.dark-mode .login-card{box-shadow:0 20px 50px rgba(0,0,0,.4)}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}.discord-btn{background:#5865F2;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:15px;padding:18px;font-weight:700;border-radius:4px;margin-top:2.5rem;transition:.3s;text-transform:uppercase;letter-spacing:1px;cursor:pointer;border:none;width:100%}.discord-btn:hover{filter:brightness(1.1);transform:translateY(-3px);box-shadow:0 10px 20px rgba(88,101,242,.2)}.theme-toggle{position:absolute;top:30px;right:30px;background:0 0;border:none;color:var(--text-main);cursor:pointer;font-size:1.2rem;transition:color .4s ease}.theme-toggle:hover{transform:scale(1.2)}</style></head><body><div id="smooth-cursor"></div><button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></button><div class="login-card"><img src="/assets/images/logo.png" alt="Logo" class="brand-logo" onerror="this.src='./assets/images/logo.png'"><h2 style="font-weight:900;letter-spacing:-2px;font-size:2rem;margin:0">AUTHORIZATION</h2><p style="color:var(--text-muted);margin-top:10px">Please authenticate via Discord to view the KrazyVault index.</p><button onclick="signInWithDiscord()" class="discord-btn"><i class="fab fa-discord"></i> Login with Discord</button></div><script>const _supabase=supabase.createClient('https://unjdjduiqtldgoybgmnq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuamRqZHVpcXRsZGdveWJnbW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MzgzODEsImV4cCI6MjA5MzAxNDM4MX0.qMuQcBysiKuFD5ByoL17fs0KxClgI-FEyzyKYayNVdE');const cursor=document.getElementById('smooth-cursor');let curX=innerWidth/2,curY=innerHeight/2,tgX=curX,tgY=curY;window.addEventListener('mousemove',e=>{tgX=e.clientX;tgY=e.clientY});function anim(){curX+=(tgX-curX)*.15;curY+=(tgY-curY)*.15;cursor.style.left=curX+'px';cursor.style.top=curY+'px';requestAnimationFrame(anim)}anim();document.querySelectorAll('a, button').forEach(e=>{e.addEventListener('mouseenter',()=>cursor.style.transform='translate(-50%, -50%) scale(1.5)');e.addEventListener('mouseleave',()=>cursor.style.transform='translate(-50%, -50%) scale(1)')});async function signInWithDiscord(){await _supabase.auth.signInWithOAuth({provider:'discord',options:{scopes:'identify guilds.join',redirectTo:window.location.origin+window.location.pathname.replace('login.html','dashboard.html')}})}function toggleTheme(){document.body.classList.toggle('dark-mode');const d=document.body.classList.contains('dark-mode');document.getElementById('themeBtn').innerHTML=d?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';localStorage.setItem('theme',d?'dark':'light')}window.addEventListener('DOMContentLoaded',()=>{if(localStorage.getItem('theme')==='dark'){document.body.classList.add('dark-mode');document.getElementById('themeBtn').innerHTML='<i class="fas fa-sun"></i>'}else{document.body.classList.remove('dark-mode');document.getElementById('themeBtn').innerHTML='<i class="fas fa-moon"></i>'}});</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>KrazyKonfigs | Secure Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-body: #f5f5f5;
+            --bg-card: #fff;
+            --text-main: #000;
+            --text-muted: #666;
+            --border: #e0e0e0;
+            --accent: #5865F2
+        }
+        body.dark-mode {
+            --bg-body: #0a0a0a;
+            --bg-card: #121212;
+            --text-main: #fff;
+            --text-muted: #aaa;
+            --border: #1f1f1f
+        }
+        body {
+            background: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Source Sans Pro', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background .4s ease, color .4s ease;
+            margin: 0;
+            background-image: radial-gradient(var(--border) 1px, transparent 1px);
+            background-size: 24px 24px
+        }
+        #smooth-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.5);
+            box-shadow: 0 0 15px rgba(255,255,255,.5);
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            transition: width .2s, height .2s, background .2s
+        }
+        body:not(.dark-mode) #smooth-cursor {
+            background: rgba(0,0,0,.15);
