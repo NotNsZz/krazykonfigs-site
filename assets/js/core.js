@@ -28,14 +28,10 @@ async function bootSequence() {
         const i = n.user, c = i.user_metadata, o = c.provider_id || i.id;
         const {data: r} = await _supabase.from('users').select('rank, isBlacklisted').eq('id', i.id).single();
         
-        // --- GLOBAL AUTOMATED BLACKLIST ENFORCER ---
-        if(r?.isBlacklisted === 'true' || r?.isBlacklisted === true) {
+        if(r?.isBlacklisted === 'true') {
             await _supabase.auth.signOut();
-            if (!window.location.pathname.includes('404')) {
-                return window.location.href = '404.html';
-            }
+            return window.location.href = 'maintenance.html';
         }
-        
         if(isMaintenance && r?.rank !== 'admin') return window.location.href = 'maintenance.html';
         
         const dName = c.custom_claims?.global_name || c.full_name || c.name || 'User';
