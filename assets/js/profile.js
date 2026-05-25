@@ -1,24 +1,27 @@
-let userReviews = [], visibleReviewCount = 4;
+let userReviews = [];
+let visibleReviewCount = 4;
 let activeProfileUser = null; 
 let extProfileData = null;
 let profileAudio = null;
 
-// Context Maps for Reviews
+// Keep track of review context
 let reviewConfigsMap = {};
 let parentReviewMap = {};
-
 let profileTagData = {}; 
 
 async function loadProfileTags() {
     try { 
         const res = await fetch('/assets/data/tags.json'); 
         if (res.ok) profileTagData = await res.json(); 
-    } catch (e) { console.warn("Failed to load tag data."); }
+    } catch (e) { 
+        console.warn("Failed to load tag data."); 
+    }
 }
 
 function getTagData(t) {
     const cleanTag = t.trim().toUpperCase();
     if (profileTagData[cleanTag]) return profileTagData[cleanTag];
+    
     for (const key in profileTagData) { 
         if (cleanTag.includes(key.toUpperCase())) return profileTagData[key]; 
     }
@@ -28,7 +31,8 @@ function getTagData(t) {
 loadProfileTags();
 
 async function initProfileLogic() {
-    if(typeof bootSequence === 'function') await bootSequence();
+    // ensure core is loaded first
+    if (typeof bootSequence === 'function') await bootSequence();
 
     const urlParams = new URLSearchParams(window.location.search);
     const targetDiscordId = urlParams.get('user');
@@ -39,17 +43,26 @@ async function initProfileLogic() {
     try {
         let user = null;
 
+        // Fetch user based on URL param preference
         if (targetDiscordId) {
             const { data } = await _supabase.from('users').select('*').eq('discord_id', targetDiscordId).limit(1);
-            if(data && data.length > 0) user = data[0];
+            if (data && data.length > 0) user = data[0];
         } 
         
         if (!user && targetName) {
             const cleanName = decodeURIComponent(targetName).trim(); 
             let { data } = await _supabase.from('users').select('*').ilike('username', cleanName).limit(1);
-            if (!data || data.length === 0) ({ data } = await _supabase.from('users').select('*').ilike('display_name', cleanName).limit(1));
-            if (!data || data.length === 0) ({ data } = await _supabase.from('users').select('*').or(`display_name.ilike.%${cleanName}%,username.ilike.%${cleanName}%`).limit(1));
-            if(data && data.length > 0) user = data[0];
+            
+            // fallback to display name search
+            if (!data || data.length === 0) {
+                ({ data } = await _supabase.from('users').select('*').ilike('display_name', cleanName).limit(1));
+            }
+            // fuzzy fallback
+            if (!data || data.length === 0) {
+                ({ data } = await _supabase.from('users').select('*').or(`display_name.ilike.%${cleanName}%,username.ilike.%${cleanName}%`).limit(1));
+            }
+            
+            if (data && data.length > 0) user = data[0];
         }
 
         if (!user) return window.location.href = '/404.html';
@@ -57,14 +70,15 @@ async function initProfileLogic() {
 
         const dName = user.display_name || user.username.split('#')[0];
         const uName = user.username.split('#')[0]; 
-
         const cleanDName = dName.toLowerCase().trim();
         const cleanUName = uName.toLowerCase().trim();
+
+        // Check if user is a creator
         const { data: allConfigs } = await _supabase.from('configs').select('id, hit_rate, title, creator');
-        
         let userConfigs = [];
+        
         let dNameMatch = (allConfigs || []).filter(c => {
-            if(!c.creator) return false;
+            if (!c.creator) return false;
             const cr = String(c.creator).toLowerCase().trim();
             return cr === cleanDName || cr.includes(cleanDName) || cleanDName.includes(cr);
         });
@@ -73,7 +87,7 @@ async function initProfileLogic() {
             userConfigs = dNameMatch;
         } else {
             let uNameMatch = (allConfigs || []).filter(c => {
-                if(!c.creator) return false;
+                if (!c.creator) return false;
                 const cr = String(c.creator).toLowerCase().trim();
                 return cr === cleanUName || cr.includes(cleanUName) || cleanUName.includes(cr);
             });
@@ -81,14 +95,22 @@ async function initProfileLogic() {
         }
         
         const isCreator = userConfigs.length > 0;
-        let avgHitRate = "-", avgRating = "0.0";
+        let avgHitRate = "-";
+        let avgRating = "0.0";
         
+        // Calculate creator stats if applicable
         if (isCreator) {
-            let totalHit = 0, validHit = 0;
+            let totalHit = 0;
+            let validHit = 0;
+            
             userConfigs.forEach(c => {
                 let hRate = parseInt((c.hit_rate || '').replace('%', ''));
-                if (!isNaN(hRate)) { totalHit += hRate; validHit++; }
+                if (!isNaN(hRate)) { 
+                    totalHit += hRate; 
+                    validHit++; 
+                }
             });
+            
             if (validHit > 0) avgHitRate = Math.round(totalHit / validHit) + "%";
 
             const configIds = userConfigs.map(c => c.id);
@@ -96,10 +118,14 @@ async function initProfileLogic() {
                 const { data: configReviews } = await _supabase.from('reviews').select('config_id, rating').in('config_id', configIds).not('rating', 'is', null);
 
                 if (configReviews && configReviews.length > 0) {
-                    let configSums = {}, configCounts = {};
+                    let configSums = {};
+                    let configCounts = {};
 
                     configReviews.forEach(r => {
-                        if (!configSums[r.config_id]) { configSums[r.config_id] = 0; configCounts[r.config_id] = 0; }
+                        if (!configSums[r.config_id]) { 
+                            configSums[r.config_id] = 0; 
+                            configCounts[r.config_id] = 0; 
+                        }
                         configSums[r.config_id] += r.rating;
                         configCounts[r.config_id] += 1;
                     });
@@ -121,31 +147,40 @@ async function initProfileLogic() {
             }
         }
 
+        // Fetch user's own reviews
         const { data: reviews } = await _supabase.from('reviews').select('*').eq('poster_id', user.discord_id).order('created_at', { ascending: false });
         userReviews = reviews || [];
         
+        // Fetch custom contributor tags if they exist
         const { data: contributorData } = await _supabase.from('contributors').select('tags').in('name', [user.username, dName, uName]).limit(1);
-        const tags = contributorData && contributorData[0]?.tags ? (Array.isArray(contributorData[0].tags) ? contributorData[0].tags : contributorData[0].tags.split(',')) : [];
+        const tags = contributorData && contributorData[0]?.tags 
+            ? (Array.isArray(contributorData[0].tags) ? contributorData[0].tags : contributorData[0].tags.split(',')) 
+            : [];
 
-        const configIds = [...new Set(userReviews.map(r => r.config_id))];
-        if(configIds.length > 0) {
-            const {data: rConfigs} = await _supabase.from('configs').select('id, title').in('id', configIds);
-            if(rConfigs) rConfigs.forEach(c => reviewConfigsMap[c.id] = c.title);
+        // Build context maps for the reviews so we aren't showing raw IDs
+        const rConfigIds = [...new Set(userReviews.map(r => r.config_id))];
+        if (rConfigIds.length > 0) {
+            const { data: rConfigs } = await _supabase.from('configs').select('id, title').in('id', rConfigIds);
+            if (rConfigs) rConfigs.forEach(c => reviewConfigsMap[c.id] = c.title);
         }
+        
         const parentIds = [...new Set(userReviews.filter(r => r.replying_to_id).map(r => r.replying_to_id))];
-        if(parentIds.length > 0) {
-            const {data: pReviews} = await _supabase.from('reviews').select('id, poster_username').in('id', parentIds);
-            if(pReviews) pReviews.forEach(r => parentReviewMap[r.id] = r.poster_username.split('#')[0]);
+        if (parentIds.length > 0) {
+            const { data: pReviews } = await _supabase.from('reviews').select('id, poster_username').in('id', parentIds);
+            if (pReviews) pReviews.forEach(r => parentReviewMap[r.id] = r.poster_username.split('#')[0]);
         }
 
         const { data: extProfile } = await _supabase.from('user_profiles').select('*').eq('id', user.id).single();
         extProfileData = extProfile;
 
-        // --- DOM SYNCHRONIZATION ---
-        if(document.getElementById('p-avatar')) document.getElementById('p-avatar').src = escapeHTML(user.avatar_url) || '/assets/images/logo.png';
-        if(document.getElementById('p-dname')) document.getElementById('p-dname').innerText = escapeHTML(dName);
-        if(document.getElementById('p-uname')) document.getElementById('p-uname').innerText = "@" + escapeHTML(uName).toLowerCase().replace(/\s/g, '');
-        if(document.getElementById('stat-joined')) document.getElementById('stat-joined').innerText = user.created_at ? "Joined: " + new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Joined: Unknown';
+        // Apply basic data to DOM
+        if (document.getElementById('p-avatar')) document.getElementById('p-avatar').src = escapeHTML(user.avatar_url) || '/assets/images/logo.png';
+        if (document.getElementById('p-dname')) document.getElementById('p-dname').innerText = escapeHTML(dName);
+        if (document.getElementById('p-uname')) document.getElementById('p-uname').innerText = "@" + escapeHTML(uName).toLowerCase().replace(/\s/g, '');
+        
+        if (document.getElementById('stat-joined')) {
+            document.getElementById('stat-joined').innerText = user.created_at ? "Joined: " + new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Joined: Unknown';
+        }
         
         if (isCreator) {
             document.getElementById('creator-stats-card').style.display = 'flex';
@@ -154,12 +189,17 @@ async function initProfileLogic() {
             document.getElementById('stat-hitrate').innerText = avgHitRate;
         }
 
+        // Apply extended profile UI modifications if user has set them up
         if (extProfile) {
-            if(document.getElementById('p-bio')) document.getElementById('p-bio').innerText = escapeHTML(extProfile.bio) || "No bio set.";
-            if(extProfile.is_verified && document.getElementById('p-verified')) document.getElementById('p-verified').style.display = 'inline-block';
+            if (document.getElementById('p-bio')) {
+                document.getElementById('p-bio').innerText = escapeHTML(extProfile.bio) || "No bio set.";
+            }
+            if (extProfile.is_verified && document.getElementById('p-verified')) {
+                document.getElementById('p-verified').style.display = 'inline-block';
+            }
             
             const dcLinkEl = document.getElementById('p-discord-link');
-            if(dcLinkEl) {
+            if (dcLinkEl) {
                 dcLinkEl.style.display = 'flex';
                 dcLinkEl.href = `https://discord.com/users/${escapeHTML(extProfile.discord_id || user.discord_id)}`;
             }
@@ -171,6 +211,7 @@ async function initProfileLogic() {
                 statusDot.title = status.charAt(0).toUpperCase() + status.slice(1);
             }
 
+            // apply card gradients
             if (extProfile.theme_colors && extProfile.theme_colors.length > 0) {
                 const c1 = escapeHTML(extProfile.theme_colors[0]);
                 const c2 = extProfile.theme_colors.length > 1 ? escapeHTML(extProfile.theme_colors[1]) : c1;
@@ -183,7 +224,7 @@ async function initProfileLogic() {
 
             if (extProfile.bg_color) document.body.style.backgroundColor = escapeHTML(extProfile.bg_color);
 
-            // --- FIX: Navbar Heading Color Issue & Navbar Text Color to White ---
+            // patch for custom text/nav colors via dynamic stylesheet
             let tColor = extProfile.text_color ? escapeHTML(extProfile.text_color) : null;
             let hColor = extProfile.nav_color ? escapeHTML(extProfile.nav_color) : null;
 
@@ -227,7 +268,7 @@ async function initProfileLogic() {
                 }
             }
 
-            // Fixed element colors — always applied regardless of theme
+            // Fixed element colors — force override user theme breaking them
             const fixedStyle = document.createElement('style');
             fixedStyle.innerHTML = `
                 #p-discord-link, #p-discord-link i { color: #5865F2 !important; }
@@ -242,6 +283,7 @@ async function initProfileLogic() {
             `;
             document.head.appendChild(fixedStyle);
 
+            // override custom UI block colors
             if (extProfile.ui_box_color) {
                 const uiColor = escapeHTML(extProfile.ui_box_color);
                 document.documentElement.style.setProperty('--card-bg', uiColor);
@@ -253,49 +295,80 @@ async function initProfileLogic() {
                 document.querySelectorAll('.review-item').forEach(item => { item.style.backgroundColor = uiColor; });
             }
 
+            // Custom profile music player
             if (extProfile.music_track) {
                 profileAudio = new Audio(extProfile.music_track);
                 profileAudio.loop = true;
                 profileAudio.volume = 0.5;
                 
+                // Browsers usually block autoplay, so we catch it and show a play button
                 profileAudio.play().catch(() => {
                     const nameRow = document.getElementById('p-name-row');
-                    if(nameRow) {
+                    if (nameRow) {
                         const playBtn = document.createElement('button');
                         playBtn.className = 'social-icon-btn';
                         playBtn.style.color = '#5865F2';
                         playBtn.title = "Play Theme Song";
                         playBtn.innerHTML = '<i class="fas fa-play-circle"></i>';
-                        playBtn.onclick = () => { profileAudio.play(); playBtn.style.display = 'none'; };
+                        playBtn.onclick = () => { 
+                            profileAudio.play(); 
+                            playBtn.style.display = 'none'; 
+                        };
                         nameRow.appendChild(playBtn);
                     }
                 });
             }
         } else {
+            // default fallback if no extended profile
             const dcLinkEl = document.getElementById('p-discord-link');
-            if(dcLinkEl) { dcLinkEl.style.display = 'flex'; dcLinkEl.href = `https://discord.com/users/${escapeHTML(user.discord_id)}`; }
+            if (dcLinkEl) { 
+                dcLinkEl.style.display = 'flex'; 
+                dcLinkEl.href = `https://discord.com/users/${escapeHTML(user.discord_id)}`; 
+            }
         }
 
+        // Let the user edit if it's their profile
         const editBtn = document.getElementById('p-edit-btn');
-        if(editBtn && currentUser && currentUser.id === user.id) editBtn.style.display = 'flex';
+        if (editBtn && currentUser && currentUser.id === user.id) {
+            editBtn.style.display = 'flex';
+        }
 
+        // populate role badge
         const badgesEl = document.getElementById('p-badges');
-        if (badgesEl) badgesEl.innerHTML = isCreator ? `<span class="role-badge badge-creator"><i class="fas fa-hammer"></i> Creator</span>` : `<span class="role-badge badge-user"><i class="fas fa-user"></i> User</span>`;
+        if (badgesEl) {
+            badgesEl.innerHTML = isCreator 
+                ? `<span class="role-badge badge-creator"><i class="fas fa-hammer"></i> Creator</span>` 
+                : `<span class="role-badge badge-user"><i class="fas fa-user"></i> User</span>`;
+        }
 
+        // populate custom tags
         const tagsContainer = document.getElementById('p-tags');
         if (tags.length > 0 && tagsContainer) {
-            tagsContainer.style.display = 'flex'; tagsContainer.style.gap = '8px'; tagsContainer.style.flexWrap = 'wrap';
+            tagsContainer.style.display = 'flex'; 
+            tagsContainer.style.gap = '8px'; 
+            tagsContainer.style.flexWrap = 'wrap';
+            
             tagsContainer.innerHTML = tags.map(t => {
                 const tData = getTagData(t);
                 return `<span class="con-tag" style="color: ${tData.color}; border-color: ${tData.color};"><i class="${tData.icon}"></i> ${escapeHTML(t.trim())}</span>`;
             }).join('');
-        } else if (tagsContainer) tagsContainer.style.display = 'none';
+        } else if (tagsContainer) {
+            tagsContainer.style.display = 'none';
+        }
 
         renderProfileReviews(user);
+        
         const showMoreBtn = document.getElementById('show-more-reviews-btn');
-        if(showMoreBtn) showMoreBtn.onclick = () => { visibleReviewCount += 4; renderProfileReviews(user); };
+        if (showMoreBtn) {
+            showMoreBtn.onclick = () => { 
+                visibleReviewCount += 4; 
+                renderProfileReviews(user); 
+            };
+        }
 
-    } catch (err) { console.error("Profile Engine Load Error:", err); }
+    } catch (err) { 
+        console.error("Profile Engine Load Error:", err); 
+    }
 }
 
 function renderProfileReviews(userObj) {
@@ -305,41 +378,48 @@ function renderProfileReviews(userObj) {
 
     if (userReviews.length === 0) {
         reviewsContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem; font-weight:600; text-align:center; padding: 1rem 0;">This user hasn't left any reviews yet.</p>`;
-        if(showMoreBtn) showMoreBtn.style.display = 'none';
+        if (showMoreBtn) showMoreBtn.style.display = 'none';
         return;
     }
 
     const activeSlice = userReviews.slice(0, visibleReviewCount);
+    
     reviewsContainer.innerHTML = activeSlice.map(r => {
         const stars = Array(5).fill(0).map((_, i) => i < r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('');
         const cleanReviewerName = escapeHTML(r.poster_username).split('#')[0];
         const avatarToUse = escapeHTML(userObj.avatar_url || '/assets/images/logo.png');
 
+        // Figure out what they are reviewing
         let contextText = `<span style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:4px;">Reviewed <strong style="color:inherit;">${escapeHTML(reviewConfigsMap[r.config_id] || `Config #${r.config_id}`)}</strong></span>`;
+        
         if (r.replying_to_id && parentReviewMap[r.replying_to_id]) {
             contextText = `<span style="color:var(--text-muted); font-size:0.8rem; display:block; margin-bottom:4px;">Reply to <strong style="color:#5865F2 !important;">@${escapeHTML(parentReviewMap[r.replying_to_id])}</strong> on <strong style="color:inherit;">${escapeHTML(reviewConfigsMap[r.config_id] || `Config #${r.config_id}`)}</strong></span>`;
         }
 
         return `
-        <div class="review-item">
-            <img src="${avatarToUse}" class="review-avatar" onerror="this.src='/assets/images/logo.png'">
-            <div class="review-content">
-                ${contextText}
-                <div class="review-meta">
-                    <span class="profile-review-username" style="color:${r.replying_to_id ? '#5865F2' : 'inherit'};">${cleanReviewerName}</span>
-                    <span class="review-stars">${r.rating ? stars : '<i class="fas fa-reply" style="color:var(--text-muted)"></i> Reply'}</span>
+            <div class="review-item">
+                <img src="${avatarToUse}" class="review-avatar" onerror="this.src='/assets/images/logo.png'">
+                <div class="review-content">
+                    ${contextText}
+                    <div class="review-meta">
+                        <span class="profile-review-username" style="color:${r.replying_to_id ? '#5865F2' : 'inherit'};">${cleanReviewerName}</span>
+                        <span class="review-stars">${r.rating ? stars : '<i class="fas fa-reply" style="color:var(--text-muted)"></i> Reply'}</span>
+                    </div>
+                    <p class="review-text" style="color:inherit;">${escapeHTML(r.comment)}</p>
                 </div>
-                <p class="review-text" style="color:inherit;">${escapeHTML(r.comment)}</p>
             </div>
-        </div>`;
+        `;
     }).join('');
 
-    if(showMoreBtn) showMoreBtn.style.display = visibleReviewCount >= userReviews.length ? 'none' : 'block';
+    if (showMoreBtn) {
+        showMoreBtn.style.display = visibleReviewCount >= userReviews.length ? 'none' : 'block';
+    }
 }
 
+// Edit Profile settings modal handlers
 async function openEditProfileModal() {
     const modal = document.getElementById('editProfileModal');
-    if(!modal) return;
+    if (!modal) return;
 
     if (extProfileData) {
         document.getElementById('edit-status').value = extProfileData.status || 'offline';
@@ -348,7 +428,8 @@ async function openEditProfileModal() {
         
         if (extProfileData.theme_colors && extProfileData.theme_colors.length > 0) {
             document.getElementById('edit-color-1').value = extProfileData.theme_colors[0];
-            if(extProfileData.theme_colors.length > 1 && extProfileData.theme_colors[0] !== extProfileData.theme_colors[1]) {
+            
+            if (extProfileData.theme_colors.length > 1 && extProfileData.theme_colors[0] !== extProfileData.theme_colors[1]) {
                 document.getElementById('edit-color-mode').value = 'gradient';
                 document.getElementById('edit-color-2').value = extProfileData.theme_colors[1];
             } else {
@@ -358,28 +439,34 @@ async function openEditProfileModal() {
         document.getElementById('edit-bg-color').value = extProfileData.bg_color || '#0a0a0c';
         document.getElementById('edit-text-color').value = extProfileData.text_color || '#ffffff';
         document.getElementById('edit-ui-color').value = extProfileData.ui_box_color || '#16161e';
-        
         document.getElementById('edit-nav-color').value = extProfileData.nav_color || '#1a1b26';
     }
     
     toggleColorMode();
 
+    // fetch current music tracks
     try {
         const res = await fetch('/assets/music/music-manifest.json');
         const manifest = await res.json();
         const musicSelect = document.getElementById('edit-music');
+        
         let optionsHtml = '<option value="">None</option>';
         manifest.forEach(track => {
             const selected = (extProfileData && extProfileData.music_track === track.src) ? 'selected' : '';
             optionsHtml += `<option value="${escapeHTML(track.src)}" ${selected}>${escapeHTML(track.title)}</option>`;
         });
         musicSelect.innerHTML = optionsHtml;
-    } catch(err) { console.error("Failed to load music manifest", err); }
+        
+    } catch(err) { 
+        console.error("Failed to load music manifest", err); 
+    }
 
     modal.classList.add('show');
 }
 
-function closeEditProfileModal() { document.getElementById('editProfileModal').classList.remove('show'); }
+function closeEditProfileModal() { 
+    document.getElementById('editProfileModal').classList.remove('show'); 
+}
 
 document.getElementById('edit-bio')?.addEventListener('input', (e) => {
     document.getElementById('bio-counter').innerText = `${e.target.value.length} / 150`;
@@ -387,7 +474,7 @@ document.getElementById('edit-bio')?.addEventListener('input', (e) => {
 
 function toggleColorMode() {
     const mode = document.getElementById('edit-color-mode').value;
-    if(mode === 'static') {
+    if (mode === 'static') {
         document.getElementById('color-2-wrap').style.display = 'none';
     } else {
         document.getElementById('color-2-wrap').style.display = 'flex';
@@ -401,6 +488,7 @@ function updateGradientPreview() {
     const c2 = mode === 'gradient' ? document.getElementById('edit-color-2').value : c1;
     document.getElementById('gradient-preview').style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
 }
+
 document.getElementById('edit-color-1')?.addEventListener('input', updateGradientPreview);
 document.getElementById('edit-color-2')?.addEventListener('input', updateGradientPreview);
 
