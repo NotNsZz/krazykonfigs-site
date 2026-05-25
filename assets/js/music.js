@@ -1,45 +1,84 @@
-let playlist = [], currentTrackIndex = 0, isPlaying = false;
-let audioEngine = null, dragEco = null, musicPlayer = null, ecoResizer = null;
-let isDraggingEco=false, isResizingEco=false;
-let ecoX=0, ecoY=0, tgEcoX=0, tgEcoY=0, ecoScale=1, tgEcoScale=1, startScale=1, mouseStartX=0, mouseStartY=0, ecoStartX=0, ecoStartY=0;
+let playlist = [];
+let currentTrackIndex = 0;
+let isPlaying = false;
+let audioEngine = null;
+
+// UI elements
+let dragEco = null;
+let musicPlayer = null;
+let ecoResizer = null;
+
+// Drag and resize state
+let isDraggingEco = false;
+let isResizingEco = false;
+
+// Physics tracking
+let ecoX = 0, ecoY = 0;
+let tgEcoX = 0, tgEcoY = 0;
+let ecoScale = 1, tgEcoScale = 1;
+let startScale = 1;
+let mouseStartX = 0, mouseStartY = 0;
+let ecoStartX = 0, ecoStartY = 0;
 
 function formatTime(t) {
-    if(isNaN(t)) return "0:00";
-    return `${Math.floor(t/60)}:${Math.floor(t%60).toString().padStart(2, '0')}`;
+    if (isNaN(t)) return "0:00";
+    return `${Math.floor(t / 60)}:${Math.floor(t % 60).toString().padStart(2, '0')}`;
 }
 
+// Parse category from file path
 function extractCategoryFromSrc(src) {
-    if(!src) return "Unknown";
+    if (!src) return "Unknown";
     const match = src.match(/\/assets\/music\/([^\/]+)\//);
     let cat = match ? match[1] : "Unknown";
+    
     cat = decodeURIComponent(cat);
-    return cat.toLowerCase() === 'gta' ? 'Grand Theft Auto' : cat.charAt(0).toUpperCase() + cat.slice(1);
+    
+    // quick formatting exception
+    if (cat.toLowerCase() === 'gta') return 'Grand Theft Auto';
+    
+    return cat.charAt(0).toUpperCase() + cat.slice(1);
 }
 
 async function fetchMusicManifest() {
     try {
         const res = await fetch('/assets/music/music-manifest.json?v=' + new Date().getTime());
         const data = await res.json();
-        playlist = data.map((t, i) => { t.originalIndex = i; t.category = extractCategoryFromSrc(t.src); return t; });
-        if(playlist && playlist.length > 0) {
-            loadTrack(0); populateLibraryCategories(); buildLibraryUI(playlist);
+        
+        playlist = data.map((t, i) => { 
+            t.originalIndex = i; 
+            t.category = extractCategoryFromSrc(t.src); 
+            return t; 
+        });
+        
+        if (playlist && playlist.length > 0) {
+            loadTrack(0); 
+            populateLibraryCategories(); 
+            buildLibraryUI(playlist);
         } else {
             document.getElementById('player-title').innerText = "No Tracks Found";
         }
-    } catch(err) { console.error("Manifest Load Error:", err); }
+    } catch(err) { 
+        console.error("Manifest Load Error:", err); 
+    }
 }
 
 function initMusicPlayer() {
     audioEngine = document.getElementById('global-audio');
-    if(!audioEngine) return;
+    if (!audioEngine) return;
+    
     fetchMusicManifest();
+    
     audioEngine.addEventListener('timeupdate', () => {
-        if(audioEngine.duration) {
+        if (audioEngine.duration) {
             document.getElementById('progress-bar').style.width = `${(audioEngine.currentTime / audioEngine.duration) * 100}%`;
             document.getElementById('current-time').innerText = formatTime(audioEngine.currentTime);
         }
     });
-    audioEngine.addEventListener('loadedmetadata', () => document.getElementById('duration-time').innerText = formatTime(audioEngine.duration));
+    
+    audioEngine.addEventListener('loadedmetadata', () => {
+        document.getElementById('duration-time').innerText = formatTime(audioEngine.duration);
+    });
+    
     audioEngine.addEventListener('ended', nextTrack);
     bindPlayerDrag();
 }
@@ -47,16 +86,20 @@ function initMusicPlayer() {
 function loadTrack(idx) {
     currentTrackIndex = idx;
     const track = playlist[idx];
+    
     audioEngine.src = track.src;
     document.getElementById('player-category').innerText = escapeHTML(track.category);
     document.getElementById('player-title').innerText = escapeHTML(track.title);
     document.getElementById('vinyl-spin').src = track.cover || '/assets/images/logo.png';
+    
     updateLibraryHighlight();
 }
 
 function togglePlay() {
-    const btn = document.getElementById('play-btn'), vinyl = document.getElementById('vinyl-spin');
-    if(isPlaying) {
+    const btn = document.getElementById('play-btn');
+    const vinyl = document.getElementById('vinyl-spin');
+    
+    if (isPlaying) {
         audioEngine.pause();
         btn.innerHTML = '<i class="fas fa-circle-play"></i>';
         vinyl.classList.remove('playing');
@@ -66,107 +109,186 @@ function togglePlay() {
             btn.innerHTML = '<i class="fas fa-circle-pause"></i>';
             vinyl.classList.add('playing');
             isPlaying = true;
-        }).catch(err => console.warn(err));
+        }).catch(err => {
+            console.warn("Autoplay blocked or playback failed:", err);
+        });
     }
 }
 
-function nextTrack() { loadTrack((currentTrackIndex + 1) % playlist.length); if(isPlaying) audioEngine.play(); }
-function prevTrack() { loadTrack((currentTrackIndex - 1 + playlist.length) % playlist.length); if(isPlaying) audioEngine.play(); }
+function nextTrack() { 
+    loadTrack((currentTrackIndex + 1) % playlist.length); 
+    if (isPlaying) audioEngine.play(); 
+}
+
+function prevTrack() { 
+    loadTrack((currentTrackIndex - 1 + playlist.length) % playlist.length); 
+    if (isPlaying) audioEngine.play(); 
+}
+
 function seekAudio(e) {
     const rect = document.getElementById('progress-bar-container').getBoundingClientRect();
     audioEngine.currentTime = ((e.clientX - rect.left) / rect.width) * audioEngine.duration;
 }
 
 function togglePlayerSize() {
-    const player = document.getElementById('music-player'), btn = document.getElementById('resize-btn');
-    if(player.classList.contains('maximized')) {
+    const player = document.getElementById('music-player');
+    const btn = document.getElementById('resize-btn');
+    
+    if (player.classList.contains('maximized')) {
         player.classList.replace('maximized', 'minimized');
-        btn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>'; btn.title = "Maximize";
-        if(document.getElementById('music-ecosystem').classList.contains('ecosystem-active')) toggleLibrary();
+        btn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>'; 
+        btn.title = "Maximize";
+        
+        // close lib if minimizing
+        if (document.getElementById('music-ecosystem').classList.contains('ecosystem-active')) {
+            toggleLibrary();
+        }
     } else {
         player.classList.replace('minimized', 'maximized');
-        btn.innerHTML = '<i class="fas fa-compress-alt"></i>'; btn.title = "Minimize";
+        btn.innerHTML = '<i class="fas fa-compress-alt"></i>'; 
+        btn.title = "Minimize";
     }
 }
 
 function toggleLibrary() {
-    const eco = document.getElementById('music-ecosystem'), player = document.getElementById('music-player');
-    if(!eco.classList.contains('ecosystem-active') && player.classList.contains('minimized')) togglePlayerSize();
+    const eco = document.getElementById('music-ecosystem');
+    const player = document.getElementById('music-player');
+    
+    // auto-maximize player if trying to open library while tiny
+    if (!eco.classList.contains('ecosystem-active') && player.classList.contains('minimized')) {
+        togglePlayerSize();
+    }
     eco.classList.toggle('ecosystem-active');
 }
 
 function populateLibraryCategories() {
     const cats = [...new Set(playlist.map(t => t.category))];
-    document.getElementById('libCategory').innerHTML = '<option value="all">All Categories</option>' + cats.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+    const catOptions = cats.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+    
+    document.getElementById('libCategory').innerHTML = '<option value="all">All Categories</option>' + catOptions;
 }
 
 function filterLibrary() {
-    const search = document.getElementById('libSearch').value.toLowerCase(), cat = document.getElementById('libCategory').value;
-    buildLibraryUI(playlist.filter(t => t.title.toLowerCase().includes(search) && (cat === 'all' || t.category === cat)));
+    const search = document.getElementById('libSearch').value.toLowerCase();
+    const cat = document.getElementById('libCategory').value;
+    
+    const filtered = playlist.filter(t => {
+        const matchesSearch = t.title.toLowerCase().includes(search);
+        const matchesCat = (cat === 'all' || t.category === cat);
+        return matchesSearch && matchesCat;
+    });
+    
+    buildLibraryUI(filtered);
 }
 
 function buildLibraryUI(tracks) {
     const list = document.getElementById('library-list');
-    if(tracks.length === 0) return list.innerHTML = '<p style="text-align:center; padding: 2rem 0; color:var(--text-muted); font-size:0.85rem;">No tracks found.</p>';
-    list.innerHTML = tracks.map(t => `<div class="lib-item" id="lib-track-${t.originalIndex}" onclick="playFromLibrary(${t.originalIndex})"><img src="${t.cover || '/assets/images/logo.png'}" class="lib-item-cover" alt="Cover" onerror="this.src='./assets/images/logo.png'"><div class="lib-item-info"><h4>${escapeHTML(t.title)}</h4><span>${escapeHTML(t.category)}</span></div></div>`).join('');
+    
+    if (tracks.length === 0) {
+        list.innerHTML = '<p style="text-align:center; padding: 2rem 0; color:var(--text-muted); font-size:0.85rem;">No tracks found.</p>';
+        return;
+    }
+    
+    list.innerHTML = tracks.map(t => `
+        <div class="lib-item" id="lib-track-${t.originalIndex}" onclick="playFromLibrary(${t.originalIndex})">
+            <img src="${t.cover || '/assets/images/logo.png'}" class="lib-item-cover" alt="Cover" onerror="this.src='./assets/images/logo.png'">
+            <div class="lib-item-info">
+                <h4>${escapeHTML(t.title)}</h4>
+                <span>${escapeHTML(t.category)}</span>
+            </div>
+        </div>
+    `).join('');
+    
     updateLibraryHighlight();
 }
 
 function playFromLibrary(idx) {
-    if(idx !== currentTrackIndex) { loadTrack(idx); if(isPlaying) audioEngine.play(); else togglePlay(); } 
-    else togglePlay();
+    if (idx !== currentTrackIndex) { 
+        loadTrack(idx); 
+        if (isPlaying) audioEngine.play(); 
+        else togglePlay(); 
+    } else {
+        togglePlay();
+    }
 }
 
 function updateLibraryHighlight() {
     document.querySelectorAll('.lib-item').forEach(el => el.classList.remove('active'));
-    document.getElementById(`lib-track-${currentTrackIndex}`)?.classList.add('active');
+    const activeItem = document.getElementById(`lib-track-${currentTrackIndex}`);
+    if (activeItem) activeItem.classList.add('active');
 }
 
-// --- DRAG AND RESIZE LOGIC (REPAIRED) ---
+// Window drag / resize event binding
 function bindPlayerDrag() {
     dragEco = document.getElementById('music-ecosystem'); 
     musicPlayer = document.getElementById('music-player'); 
     ecoResizer = document.getElementById('eco-resizer');
 
-    if(ecoResizer) {
+    if (ecoResizer) {
         ecoResizer.addEventListener('mousedown', e => {
-            e.stopPropagation(); isResizingEco = true; 
-            mouseStartX = e.clientX; mouseStartY = e.clientY; startScale = tgEcoScale;
-            document.body.style.cursor = 'nwse-resize'; document.body.style.userSelect = 'none';
+            e.stopPropagation(); 
+            isResizingEco = true; 
+            mouseStartX = e.clientX; 
+            mouseStartY = e.clientY; 
+            startScale = tgEcoScale;
+            
+            document.body.style.cursor = 'nwse-resize'; 
+            document.body.style.userSelect = 'none';
         });
     }
-    if(musicPlayer) {
+    
+    if (musicPlayer) {
         musicPlayer.style.cursor = 'grab';
         musicPlayer.addEventListener('mousedown', e => {
-            if(e.target.closest('button') || e.target.closest('.progress-container') || e.target.tagName.toLowerCase() === 'img' || e.target.closest('.eco-resizer')) return;
+            // ignore drags on buttons/controls
+            if (e.target.closest('button') || e.target.closest('.progress-container') || e.target.tagName.toLowerCase() === 'img' || e.target.closest('.eco-resizer')) return;
+            
             isDraggingEco = true; 
-            mouseStartX = e.clientX; mouseStartY = e.clientY; 
-            ecoStartX = tgEcoX; ecoStartY = tgEcoY;
-            musicPlayer.style.cursor = 'grabbing'; document.body.style.userSelect = 'none';
+            mouseStartX = e.clientX; 
+            mouseStartY = e.clientY; 
+            ecoStartX = tgEcoX; 
+            ecoStartY = tgEcoY;
+            
+            musicPlayer.style.cursor = 'grabbing'; 
+            document.body.style.userSelect = 'none';
         });
     }
 }
 
 window.addEventListener('mousemove', e => {
-    if(isDraggingEco) { 
+    if (isDraggingEco) { 
         tgEcoX = ecoStartX + (e.clientX - mouseStartX); 
         tgEcoY = ecoStartY + (e.clientY - mouseStartY); 
     }
-    if(isResizingEco) { 
-        tgEcoScale = Math.max(0.5, Math.min(2.5, startScale + ((mouseStartX - e.clientX) + (mouseStartY - e.clientY)) * 0.003)); 
+    if (isResizingEco) { 
+        // calculate uniform scale delta based on mouse drag direction
+        const delta = ((mouseStartX - e.clientX) + (mouseStartY - e.clientY)) * 0.003;
+        tgEcoScale = Math.max(0.5, Math.min(2.5, startScale + delta)); 
     }
 });
 
 window.addEventListener('mouseup', () => {
-    if(isDraggingEco) { isDraggingEco = false; if(musicPlayer) musicPlayer.style.cursor = 'grab'; document.body.style.userSelect = ''; }
-    if(isResizingEco) { isResizingEco = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
+    if (isDraggingEco) { 
+        isDraggingEco = false; 
+        if (musicPlayer) musicPlayer.style.cursor = 'grab'; 
+        document.body.style.userSelect = ''; 
+    }
+    if (isResizingEco) { 
+        isResizingEco = false; 
+        document.body.style.cursor = ''; 
+        document.body.style.userSelect = ''; 
+    }
 });
 
+// smooth lerp animation loop
 function animatePlayerLoop() {
     ecoX += (tgEcoX - ecoX) * 0.15;
     ecoY += (tgEcoY - ecoY) * 0.15;
     ecoScale += (tgEcoScale - ecoScale) * 0.15;
-    if(dragEco) dragEco.style.transform = `translate(${ecoX}px, ${ecoY}px) scale(${ecoScale})`;
+    
+    if (dragEco) {
+        dragEco.style.transform = `translate(${ecoX}px, ${ecoY}px) scale(${ecoScale})`;
+    }
     requestAnimationFrame(animatePlayerLoop);
 }
 animatePlayerLoop();
