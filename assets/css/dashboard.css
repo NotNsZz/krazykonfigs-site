@@ -1,4 +1,4 @@
-/* --- HERO SECTION --- */
+/* Hero Intro Area */
 .hero {
     height: 65vh;
     display: flex;
@@ -9,8 +9,17 @@
     padding: 0 5%;
     margin-top: 60px;
 }
-.hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; margin-bottom: 1rem; letter-spacing: -1.5px; color: var(--text-main); }
-.hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin-bottom: 2rem; }
+.hero h1 { 
+    font-size: clamp(2.5rem, 6vw, 4rem); 
+    font-weight: 900; margin-bottom: 1rem; 
+    letter-spacing: -1.5px; color: var(--text-main); 
+}
+.hero p { 
+    color: var(--text-muted); 
+    font-size: 1.1rem; 
+    max-width: 600px; 
+    margin-bottom: 2rem; 
+}
 
 .btn-get-started {
     padding: 12px 32px;
@@ -22,9 +31,12 @@
     display: inline-block;
     transition: var(--transition);
 }
-.btn-get-started:hover { transform: scale(1.05); opacity: 0.9; }
+.btn-get-started:hover { 
+    transform: scale(1.05); 
+    opacity: 0.9; 
+}
 
-/* --- SECTION PADDING & HEADERS --- */
+/* Layout Utilities */
 .section-padding { padding: 4rem 10%; }
 
 .config-header {
@@ -35,25 +47,60 @@
     flex-wrap: wrap;
     gap: 1.5rem;
 }
-.config-header h2 { font-size: 2rem; letter-spacing: -1px; margin-bottom: 0; font-weight: 900; text-transform: uppercase; color: var(--text-main); }
+.config-header h2 { 
+    font-size: 2rem; letter-spacing: -1px; 
+    margin-bottom: 0; font-weight: 900; 
+    text-transform: uppercase; color: var(--text-main); 
+}
 
-/* --- FILTERS --- */
+/* Search and Filters */
 .filter-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
 .search-box { position: relative; display: flex; align-items: center; }
 .search-box i { position: absolute; left: 14px; color: var(--text-muted); }
-.search-box input { padding: 8px 14px 8px 38px; border-radius: 50px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.85rem; font-weight: 600; outline: none; transition: 0.3s; width: 200px; }
+.search-box input { 
+    padding: 8px 14px 8px 38px; 
+    border-radius: 50px; border: 1px solid var(--border); 
+    background: var(--card-bg); color: var(--text-main); 
+    font-family: inherit; font-size: 0.85rem; font-weight: 600; 
+    outline: none; transition: 0.3s; width: 200px; 
+}
 .search-box input:focus { border-color: var(--text-main); width: 250px; }
 
-.creator-dropdown { padding: 8px 14px; border-radius: 50px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-main); font-family: inherit; font-size: 0.85rem; font-weight: 700; outline: none; cursor: pointer; }
+.creator-dropdown { 
+    padding: 8px 14px; border-radius: 50px; 
+    border: 1px solid var(--border); background: var(--card-bg); 
+    color: var(--text-main); font-family: inherit; 
+    font-size: 0.85rem; font-weight: 700; outline: none; cursor: pointer; 
+}
 
 .filter-group { display: flex; gap: 0.8rem; }
-.filter-btn { padding: 8px 20px; border-radius: 50px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
-.filter-btn:hover { transform: scale(1.05); background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); }
-.filter-btn.active { background: var(--text-main); color: var(--bg-body); border-color: var(--text-main); transform: scale(1.05); }
+.filter-btn { 
+    padding: 8px 20px; border-radius: 50px; 
+    border: 1px solid var(--border); background: var(--card-bg); 
+    color: var(--text-main); font-size: 0.85rem; font-weight: 600; 
+    cursor: pointer; transition: var(--transition); 
+}
+.filter-btn:hover { 
+    transform: scale(1.05); background: var(--text-main); 
+    color: var(--bg-body); border-color: var(--text-main); 
+}
+.filter-btn.active { 
+    background: var(--text-main); color: var(--bg-body); 
+    border-color: var(--text-main); transform: scale(1.05); 
+}
 
-/* --- CONFIG CARDS --- */
-.config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; }
-.config-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.8rem; transition: var(--transition); display: flex; flex-direction: column; justify-content: space-between;}
+/* Base Cards */
+.config-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); 
+    gap: 2rem; 
+}
+.config-card { 
+    background: var(--card-bg); border: 1px solid var(--border); 
+    border-radius: 12px; padding: 1.8rem; transition: var(--transition); 
+    display: flex; flex-direction: column; justify-content: space-between;
+}
 .config-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 body.dark-mode .config-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.4); border-color: var(--text-muted); }
 
@@ -61,20 +108,29 @@ body.dark-mode .config-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.4); bor
 .config-title { font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
 
 .data-section { margin-bottom: 1.2rem; }
-.section-label { font-size: 0.75rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; display: block; border-bottom: 1px solid var(--border); padding-bottom: 2px; text-transform: uppercase; }
+.section-label { 
+    font-size: 0.75rem; font-weight: 800; color: var(--text-main); 
+    margin-bottom: 0.5rem; display: block; border-bottom: 1px solid var(--border); 
+    padding-bottom: 2px; text-transform: uppercase; 
+}
 
 .data-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem;}
 .data-label { color: var(--text-muted); }
 .data-val { font-family: monospace; font-weight: 700; color: var(--text-main); }
 
-.card-footer { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+.card-footer { 
+    margin-top: 1rem; padding-top: 1rem; 
+    border-top: 1px dashed var(--border); display: flex; 
+    justify-content: space-between; align-items: center; 
+    flex-wrap: wrap; gap: 10px;
+}
 .creator-tag { font-size: 0.75rem; font-style: italic; color: var(--text-muted); font-weight: 600;}
 
-/* --- THE SYSTEM TAG FIX --- */
+/* Tag fixes for system indicators */
 .system-tag { 
     font-size: 0.7rem; 
     font-weight: 900; 
-    background: #2a2a2a; /* Nice subtle grey for Dark Mode */
+    background: #2a2a2a; 
     color: #ffffff; 
     padding: 6px 10px; 
     border-radius: 6px; 
@@ -84,15 +140,20 @@ body.dark-mode .config-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.4); bor
     border: 1px solid var(--border);
 }
 
-/* Switches to White for Light Mode! */
+/* Need to invert it specifically for light theme */
 body:not(.dark-mode) .system-tag {
     background: #ffffff; 
     color: #000000;
 }
 
-/* --- CONTRIBUTORS GRID --- */
+/* User display grid */
 .contributor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-.member-card { background: var(--card-bg); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem; transition: var(--transition); cursor: pointer; }
+
+.member-card { 
+    background: var(--card-bg); border: 1px solid var(--border); 
+    padding: 1.5rem; border-radius: 12px; display: flex; 
+    flex-direction: column; gap: 1rem; transition: var(--transition); cursor: pointer; 
+}
 .member-card:hover { transform: scale(1.05); box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-color: var(--text-main); z-index: 10; }
 body.dark-mode .member-card:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.4); border-color: var(--text-muted); }
 
@@ -100,11 +161,16 @@ body.dark-mode .member-card:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.4); bor
 .member-name { font-weight: 900; font-size: 1.2rem; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* Dashboard-Style Pill Tags */
-.con-tag { font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; border: 1.5px solid; font-weight: 800; background: transparent; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+/* standard pill tags */
+.con-tag { 
+    font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; 
+    border: 1.5px solid; font-weight: 800; background: transparent; 
+    text-transform: uppercase; letter-spacing: 0.5px; 
+    display: inline-flex; align-items: center; justify-content: center; line-height: 1; 
+}
 .con-tag i { margin-right: 6px; font-size: 0.9em; transform: translateY(-1px); }
 
-/* --- FOOTER --- */
+/* Bottom */
 footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); background: var(--card-bg); }
 footer p { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px; font-weight: 600; margin: 0; }
 
