@@ -1,42 +1,83 @@
-/* --- HIDE NAVBAR LINKS ON PROFILE --- */
+/* Ensure nav links don't render on the profile specifically */
 .nav-links { display: none !important; }
 
-/* --- PROFILE LAYOUT --- */
-.profile-container { margin-top: 100px; width: 90%; max-width: 650px; display: flex; flex-direction: column; gap: 1.5rem; animation: fadeIn 0.5s ease; padding-bottom: 3rem; margin-left: auto; margin-right: auto; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.profile-container { 
+    margin-top: 100px; 
+    width: 90%; 
+    max-width: 650px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+    animation: fadeIn 0.5s ease; 
+    padding-bottom: 3rem; 
+    margin-left: auto; 
+    margin-right: auto; 
+}
 
-.back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 800; margin-bottom: 1.5rem; transition: 0.2s; font-size: 0.95rem; text-transform: uppercase; }
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(20px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+.back-btn { 
+    display: inline-flex; 
+    align-items: center; gap: 8px; 
+    color: var(--text-muted); 
+    text-decoration: none; 
+    font-weight: 800; margin-bottom: 1.5rem; 
+    transition: 0.2s; 
+    font-size: 0.95rem; text-transform: uppercase; 
+}
 .back-btn:hover { color: var(--text-main); transform: translateX(-5px); }
 
-.profile-card, .history-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 1.5rem; position: relative; overflow: hidden; }
-body.dark-mode .profile-card, body.dark-mode .history-card { box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+/* Core wrappers */
+.profile-card, .history-card { 
+    background: var(--card-bg); 
+    border: 1px solid var(--border); 
+    border-radius: 16px; 
+    padding: 2.5rem; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.05); 
+    display: flex; 
+    flex-direction: column; gap: 1.5rem; 
+    position: relative; overflow: hidden; 
+}
+body.dark-mode .profile-card, body.dark-mode .history-card { 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3); 
+}
 
-/* --- USER CARD STYLES --- */
+/* User header */
 .profile-header-row { display: flex; align-items: center; gap: 1.5rem; position: relative; width: 100%; }
-.profile-avatar { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--border); object-fit: cover; background: var(--bg-body); transition: border-color 0.3s; }
+
+.profile-avatar { 
+    width: 100px; height: 100px; 
+    border-radius: 50%; border: 4px solid var(--border); 
+    object-fit: cover; background: var(--bg-body); 
+    transition: border-color 0.3s; 
+}
 body.dark-mode .profile-avatar { border-color: #fff; }
 
 .profile-info { flex: 1; }
 .profile-name { font-size: 2rem; font-weight: 900; margin: 0; display: inline-block; }
 .profile-username { font-size: 1.1rem; color: var(--text-muted); font-weight: 600; margin: 4px 0 12px 0; }
 
-/* --- NAME & ICON CLUSTER --- */
 .name-badge-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.joined-date { position: absolute; top: 1.5rem; right: 1.5rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+
+/* Mini UI components */
 .social-icon-btn { background: transparent; border: none; font-size: 1.4rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; padding: 0; text-decoration: none !important; }
+
 .discord-color { color: #5865F2; }
 .discord-color:hover { color: #7289da; transform: scale(1.1); }
 .edit-color { color: var(--text-muted); margin-left: 5px; }
 .edit-color:hover { color: var(--text-main); transform: scale(1.1) rotate(5deg); }
-.joined-date { position: absolute; top: 1.5rem; right: 1.5rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
 
-/* --- DISCORD STATUS DOTS --- */
 .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; background: #80848e; margin-right: 5px; border: 2px solid var(--card-bg); transition: 0.3s; }
 .status-dot.online { background: #23a559; box-shadow: 0 0 8px rgba(35, 165, 89, 0.4); }
 .status-dot.idle { background: #f0b232; box-shadow: 0 0 8px rgba(240, 178, 50, 0.4); }
 .status-dot.dnd { background: #f23f43; box-shadow: 0 0 8px rgba(242, 63, 67, 0.4); }
 .status-dot.offline { background: #80848e; }
 
-/* --- BADGES & DASHBOARD-STYLE TAGS --- */
+/* Tags and Badges */
 .guild-tag { font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; background: var(--tag-bg); color: var(--text-main); font-weight: 800; border: 1px solid var(--border); }
 .badge-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .role-badge { font-size: 0.8rem; padding: 6px 14px; border-radius: 20px; font-weight: 800; text-transform: uppercase; }
@@ -44,37 +85,25 @@ body.dark-mode .profile-avatar { border-color: #fff; }
 .badge-creator { background: rgba(241, 196, 15, 0.1); color: #f1c40f; border: 1px solid #f1c40f; }
 
 .con-tag { 
-    font-size: 0.8rem; 
-    padding: 6px 14px; 
-    border-radius: 20px; 
-    border: 1.5px solid; 
-    font-weight: 800; 
-    background: transparent; 
-    text-transform: uppercase; 
-    letter-spacing: 0.5px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 0.8rem; padding: 6px 14px; 
+    border-radius: 20px; border: 1.5px solid; 
+    font-weight: 800; background: transparent; 
+    text-transform: uppercase; letter-spacing: 0.5px;
+    display: inline-flex; align-items: center; justify-content: center;
     line-height: 1; 
 }
-.con-tag i {
-    display: inline-flex;
-    align-items: center;
-    margin-right: 6px;
-    font-size: 0.9em; 
-    transform: translateY(-1px); 
-}
+.con-tag i { display: inline-flex; align-items: center; margin-right: 6px; font-size: 0.9em; transform: translateY(-1px); }
 
-/* --- BIO BOX --- */
+/* Bio */
 .bio-box { background: rgba(0, 0, 0, 0.15); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin-top: 0.5rem; }
 .profile-bio { font-size: 0.95rem; color: var(--text-muted); font-style: italic; margin: 0; line-height: 1.4; word-wrap: break-word; }
 
-/* --- CREATOR STATS CARD --- */
+/* Creator specific stuff */
 .creator-stats-card { padding: 1.5rem 2.5rem; }
 .creator-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .wide-stat { grid-column: 1 / -1; }
 
-/* --- REVIEWS HISTORY STYLES --- */
+/* Reviews */
 .history-title { font-size: 1.4rem; font-weight: 900; margin: 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: -0.5px; }
 .review-item { display: flex; gap: 15px; background: var(--card-inner); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; align-items: center; }
 .review-avatar { width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--border); object-fit: cover; }
@@ -84,21 +113,33 @@ body.dark-mode .profile-avatar { border-color: #fff; }
 .review-text { font-size: 0.95rem; color: var(--text-main); margin: 0; font-weight: 600; line-height: 1.4; }
 .profile-review-username { font-weight: 800; text-decoration: none; }
 
-/* --- WIDE SHOW MORE BUTTON --- */
 .show-more-wide-btn { width: 100%; padding: 14px; background: transparent; border: 1px solid var(--text-main); color: var(--text-main); font-weight: 800; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; border-radius: 8px; cursor: pointer; transition: var(--transition); display: block; }
 .show-more-wide-btn:hover { background: var(--text-main); color: var(--bg-body); }
 
-/* --- EDIT MODAL STYLES --- */
+/* Edit Profile Modal Settings */
 .input-group { margin-bottom: 1.2rem; display: flex; flex-direction: column; gap: 6px; }
 .input-group label { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-.form-input { width: 100%; padding: 10px 12px; border: 1px solid rgba(128, 128, 128, 0.3) !important; background: rgba(128, 128, 128, 0.1) !important; color: var(--text-main) !important; border-radius: 6px; font-family: inherit; font-size: 0.9rem; outline: none; transition: 0.3s; }
+
+.form-input { 
+    width: 100%; padding: 10px 12px; 
+    border: 1px solid rgba(128, 128, 128, 0.3) !important; 
+    background: rgba(128, 128, 128, 0.1) !important; 
+    color: var(--text-main) !important; 
+    border-radius: 6px; font-family: inherit; 
+    font-size: 0.9rem; outline: none; transition: 0.3s; 
+}
 .form-input:focus { border-color: var(--accent) !important; }
 select.form-input option { background-color: var(--bg-body); color: var(--text-main); font-weight: 600; }
-.color-picker { -webkit-appearance: none; -moz-appearance: none; appearance: none; width: 40px; height: 40px; background: transparent; border: none; cursor: pointer; padding: 0; border-radius: 8px; overflow: hidden; }
+
+.color-picker { 
+    -webkit-appearance: none; -moz-appearance: none; appearance: none; 
+    width: 40px; height: 40px; background: transparent; 
+    border: none; cursor: pointer; padding: 0; border-radius: 8px; overflow: hidden; 
+}
 .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
 .color-picker::-webkit-color-swatch { border: 1px solid var(--border); border-radius: 8px; }
 
-/* --- LIGHT MODE RESCUE --- */
+/* Hard fix for light mode bleeding */
 body:not(.dark-mode) .bg-fx { 
     background-image: none !important; 
     display: none !important; 
@@ -106,35 +147,7 @@ body:not(.dark-mode) .bg-fx {
     visibility: hidden !important; 
 }
 
-/* --- MOBILE OPTIMIZATION --- */
-@media (max-width: 768px) {
-    .profile-header-row {
-        flex-direction: column;
-        text-align: center;
-        gap: 1rem;
-    }
-    .name-badge-row {
-        justify-content: center;
-    }
-    .joined-date {
-        position: static;
-        display: block;
-        margin-top: 0.5rem;
-        width: 100%;
-        text-align: center;
-    }
-    .badge-row {
-        justify-content: center;
-    }
-    .creator-stats-grid {
-        grid-template-columns: 1fr;
-    }
-    .profile-card, .history-card {
-        padding: 1.5rem;
-    }
-}
-
-/* --- STRICT NAVBAR WHITE TEXT ENFORCEMENT --- */
+/* Force navbar visibility logic when dealing with profile themes */
 body header, body nav, body .navbar,
 body header *:not(h1):not(h2):not(.brand), 
 body nav *:not(h1):not(h2):not(.brand), 
@@ -146,7 +159,27 @@ body header path, body nav path, body .navbar path {
     fill: #ffffff !important;
 }
 
-/* Protect the dropdown visibility */
 .dropdown { background: #16161e !important; border: 1px solid #2a2b38 !important; }
 .dropdown a, .dropdown .dropdown-item { color: #ffffff !important; }
 .dropdown a:hover, .dropdown .dropdown-item:hover { background: #2a2b38 !important; color: #ffffff !important; }
+
+/* Mobile formatting */
+@media (max-width: 768px) {
+    .profile-header-row {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    .name-badge-row, .badge-row {
+        justify-content: center;
+    }
+    .joined-date {
+        position: static;
+        display: block;
+        margin-top: 0.5rem;
+        width: 100%;
+        text-align: center;
+    }
+    .creator-stats-grid { grid-template-columns: 1fr; }
+    .profile-card, .history-card { padding: 1.5rem; }
+}
