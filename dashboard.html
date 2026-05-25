@@ -15,6 +15,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body id="body">
+
     <div class="bg-fx"></div>
     <div id="smooth-cursor"></div>
 
@@ -37,9 +38,11 @@
                     <i class="fas fa-search"></i>
                     <input type="text" id="configSearch" placeholder="Search configs..." oninput="applyFilters()">
                 </div>
+                
                 <select id="creatorFilter" class="creator-dropdown" onchange="applyFilters()">
                     <option value="all">By Creator</option>
                 </select>
+                
                 <div class="filter-group">
                     <button class="filter-btn active" onclick="applyFilters('all', this)">All Pings</button>
                     <button class="filter-btn" onclick="applyFilters('low', this)">Low Ping</button>
@@ -50,14 +53,14 @@
         </div>
 
         <div id="config-container" class="config-grid">
-            <div style="text-align:center; grid-column: 1/-1; padding: 3rem; color:var(--text-main);">
+            <div style="text-align: center; grid-column: 1/-1; padding: 3rem; color: var(--text-main);">
                 <i class="fas fa-circle-notch fa-spin fa-3x"></i>
                 <p style="margin-top: 15px; font-weight: 800;">Fetching configs...</p>
             </div>
         </div>
         
         <div id="showMoreConfigsBtnWrap" style="display: none; margin-top: 2rem; text-align: center;">
-            <button class="btn-get-started" style="border:none; cursor:pointer;" onclick="showMoreConfigs()">Load More Configs</button>
+            <button class="btn-get-started" style="border: none; cursor: pointer;" onclick="showMoreConfigs()">Load More Configs</button>
         </div>
     </section>
 
@@ -67,11 +70,13 @@
         <div id="contributor-container" class="contributor-grid"></div>
         
         <div id="showMoreContributorsBtnWrap" style="display: none; margin-top: 2rem; text-align: center;">
-            <button class="btn-get-started" style="border:none; cursor:pointer;" onclick="showMoreContributors()">Show More Contributors</button>
+            <button class="btn-get-started" style="border: none; cursor: pointer;" onclick="showMoreContributors()">Show More Contributors</button>
         </div>
     </section>
 
-    <footer><p>© 2026 KRAZY KONFIGS • PURE PRECISION</p></footer>
+    <footer>
+        <p>© 2026 KRAZY KONFIGS • PURE PRECISION</p>
+    </footer>
 
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/music.js"></script>
@@ -79,8 +84,11 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // Load HTML components then boot app
             injectComponents().then(() => {
-                if(typeof initDashboardLogic === 'function') initDashboardLogic();
+                if (typeof initDashboardLogic === 'function') {
+                    initDashboardLogic();
+                }
             });
         });
     </script>
