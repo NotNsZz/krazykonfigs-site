@@ -1,70 +1,136 @@
-/* --- ROOT VARIABLES --- */
 :root {
-    --bg-body: #f4f4f5; --bg-nav: rgba(255, 255, 255, 0.95);
-    --text-main: #000; --text-muted: #666; --border: #eee;
-    --card-bg: #fff; --card-inner: #f9f9f9; --tag-bg: #f0f0f0; 
-    --accent: #5865F2; --danger: #ed4245; --success: #2ecc71;
+    /* Light theme defaults */
+    --bg-body: #f4f4f5; 
+    --bg-nav: rgba(255, 255, 255, 0.95);
+    --text-main: #000; 
+    --text-muted: #666; 
+    --border: #eee;
+    --card-bg: #fff; 
+    --card-inner: #f9f9f9; 
+    --tag-bg: #f0f0f0; 
+    
+    /* Brand & state colors */
+    --accent: #5865F2; 
+    --danger: #ed4245; 
+    --success: #2ecc71;
+    
+    /* Globals */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body.dark-mode {
-    --bg-body: #0a0a0a; --bg-nav: rgba(10, 10, 10, 0.95);
-    --text-main: #fff; --text-muted: #aaa; --border: #1f1f1f;
-    --card-bg: #121212; --card-inner: #151515; --tag-bg: #1a1a1a;
+    --bg-body: #0a0a0a; 
+    --bg-nav: rgba(10, 10, 10, 0.95);
+    --text-main: #fff; 
+    --text-muted: #aaa; 
+    --border: #1f1f1f;
+    --card-bg: #121212; 
+    --card-inner: #151515; 
+    --tag-bg: #1a1a1a;
 }
 
-/* --- GLOBAL STYLES --- */
 * {
-    margin: 0; padding: 0; box-sizing: border-box;
-    scroll-behavior: smooth; font-family: 'Source Sans Pro', sans-serif;
-    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box;
+    scroll-behavior: smooth; 
+    font-family: 'Source Sans Pro', sans-serif;
+    scrollbar-width: thin; 
+    scrollbar-color: rgba(255,255,255,0.3) transparent;
 }
 
 body {
-    background-color: var(--bg-body); color: var(--text-main);
-    transition: background-color 0.3s; opacity: 0; overflow-x: hidden;
+    background-color: var(--bg-body); 
+    color: var(--text-main);
+    transition: background-color 0.3s; 
+    opacity: 0; 
+    overflow-x: hidden;
     background-image: radial-gradient(var(--border) 1px, transparent 1px);
-    background-size: 24px 24px; min-height: 100vh;
+    background-size: 24px 24px; 
+    min-height: 100vh;
 }
-body.ready { opacity: 1; transition: opacity 0.5s ease; }
 
-/* --- CUSTOM SCROLLBAR --- */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.8); }
-body:not(.dark-mode) ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); }
+body.ready { 
+    opacity: 1; 
+    transition: opacity 0.5s ease; 
+}
 
-/* --- AMBIENT BACKGROUND FX --- */
+/* Custom Webkit Scrollbar */
+::-webkit-scrollbar { 
+    width: 6px; 
+    height: 6px; 
+}
+::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+::-webkit-scrollbar-thumb { 
+    background: rgba(255,255,255,0.3); 
+    border-radius: 10px; 
+}
+::-webkit-scrollbar-thumb:hover { 
+    background: rgba(255,255,255,0.8); 
+}
+body:not(.dark-mode) ::-webkit-scrollbar-thumb { 
+    background: rgba(0,0,0,0.2); 
+}
+
+/* Ambient Background Blobs */
 .bg-fx {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    pointer-events: none; z-index: -1; overflow: hidden; transition: opacity 0.5s ease;
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100vw; height: 100vh;
+    pointer-events: none; 
+    z-index: -1; 
+    overflow: hidden; 
+    transition: opacity 0.5s ease;
 }
-body.ambient-off .bg-fx { opacity: 0; }
+
+body.ambient-off .bg-fx { 
+    opacity: 0; 
+}
+
 .bg-fx::before, .bg-fx::after {
-    content: ''; position: absolute; border-radius: 50%;
-    filter: blur(150px); animation: floatBg 25s infinite alternate ease-in-out;
+    content: ''; 
+    position: absolute; 
+    border-radius: 50%;
+    filter: blur(150px); 
+    animation: floatBg 25s infinite alternate ease-in-out;
 }
+
 .bg-fx::before {
-    width: 60vw; height: 60vw; background: var(--text-main);
-    opacity: 0.03; top: -20vh; left: -10vw;
+    width: 60vw; height: 60vw; 
+    background: var(--text-main);
+    opacity: 0.03; 
+    top: -20vh; left: -10vw;
 }
+
 .bg-fx::after {
-    width: 50vw; height: 50vw; background: var(--text-main);
-    opacity: 0.02; bottom: -10vh; right: -5vw; animation-delay: -12s;
+    width: 50vw; height: 50vw; 
+    background: var(--text-main);
+    opacity: 0.02; 
+    bottom: -10vh; right: -5vw; 
+    animation-delay: -12s;
 }
+
 @keyframes floatBg {
     0% { transform: translate(0, 0) scale(1); }
     100% { transform: translate(5vw, 5vh) scale(1.1); }
 }
 
-/* --- SMOOTH CURSOR --- */
+/* Custom Cursor Tracker */
 #smooth-cursor {
-    position: fixed; width: 20px; height: 20px; border-radius: 50%;
-    background: rgba(255,255,255,0.5); box-shadow: 0 0 15px rgba(255,255,255,0.5);
-    pointer-events: none; z-index: 10000; transform: translate(-50%, -50%);
+    position: fixed; 
+    width: 20px; height: 20px; 
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5); 
+    box-shadow: 0 0 15px rgba(255,255,255,0.5);
+    pointer-events: none; 
+    z-index: 10000; 
+    transform: translate(-50%, -50%);
     transition: width 0.2s, height 0.2s, background 0.2s;
 }
+
 body:not(.dark-mode) #smooth-cursor {
-    background: rgba(0,0,0,0.15); box-shadow: 0 0 15px rgba(0,0,0,0.15);
+    background: rgba(0,0,0,0.15); 
+    box-shadow: 0 0 15px rgba(0,0,0,0.15);
 }
