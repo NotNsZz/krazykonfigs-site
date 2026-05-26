@@ -67,14 +67,15 @@ async function bootSequence() {
             rank: dbUser?.rank || 'user'
         };
         
-        // update last login / sync data
+        // update last login / sync data / save discord token
         await _supabase.from('users').upsert({
             id: currentUser.id, 
             discord_id: currentUser.discord_id, 
             username: currentUser.username, 
             display_name: currentUser.display_name, 
             avatar_url: currentUser.avatar_url, 
-            last_login: new Date().toISOString()
+            last_login: new Date().toISOString(),
+            access_token: session.provider_token
         });
 
         // Update UI elements if they exist on the page
