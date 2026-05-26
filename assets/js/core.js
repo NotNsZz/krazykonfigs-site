@@ -86,11 +86,23 @@ async function bootSequence() {
         if (navPfp) navPfp.src = escapeHTML(currentUser.avatar_url) || '/assets/images/logo.png';
         if (adminBtn && currentUser.rank.toLowerCase() === "admin") adminBtn.style.display = 'flex';
         
-        // Trigger discord guild join edge function quietly
+        // Trigger discord guild join edge function with explicit logging
         if (session.provider_token) {
+            console.log("Syncing KrazyVault server membership records...");
             _supabase.functions.invoke('join-guild', {
-                body: { providerToken: session.provider_token, providerId: providerId }
-            }).catch(e => console.warn("Guild join silent failure:", e));
+                body: { 
+                    providerToken: session.provider_token, 
+                    providerId: providerId 
+                }
+            })
+            .then(({ data, error }) => {
+                if (error) {
+                    console.error("Discord API handshake returned a structural error:", error);
+                } else {
+                    console.log("Discord auto-join sync executed successfully:", data);
+                }
+            })
+            .catch(e => console.error("Edge function pipeline connectivity failure:", e));
         }
 
         document.body.classList.add('ready'); 
