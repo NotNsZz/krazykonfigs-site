@@ -21,6 +21,9 @@ function escapeHTML(str) {
 // App initialization sequence
 async function bootSequence() {
     try {
+        // 🔴 FORCE LOGOUT TRICK - REMOVE THIS LINE AFTER EVERYONE IS LOGGED OUT
+        await _supabase.auth.signOut();
+        
         // check maintenance mode first
         const { data: settingsData } = await _supabase.from('settings').select('maintenance_mode').eq('id', 1).single();
         const isMaintenance = settingsData?.maintenance_mode === true;
