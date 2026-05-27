@@ -45,21 +45,21 @@ async function initProfileLogic() {
 
         // Fetch user based on URL param preference
         if (targetDiscordId) {
-            const { data } = await _supabase.from('users').select('*').eq('discord_id', targetDiscordId).limit(1);
+            const { data } = await _supabase.from('users').select('id, discord_id, username, display_name, avatar_url, created_at').eq('discord_id', targetDiscordId).limit(1);
             if (data && data.length > 0) user = data[0];
         } 
         
         if (!user && targetName) {
             const cleanName = decodeURIComponent(targetName).trim(); 
-            let { data } = await _supabase.from('users').select('*').ilike('username', cleanName).limit(1);
+            let { data } = await _supabase.from('users').select('id, discord_id, username, display_name, avatar_url, created_at').ilike('username', cleanName).limit(1);
             
             // fallback to display name search
             if (!data || data.length === 0) {
-                ({ data } = await _supabase.from('users').select('*').ilike('display_name', cleanName).limit(1));
+                ({ data } = await _supabase.from('users').select('id, discord_id, username, display_name, avatar_url, created_at').ilike('display_name', cleanName).limit(1));
             }
             // fuzzy fallback
             if (!data || data.length === 0) {
-                ({ data } = await _supabase.from('users').select('*').or(`display_name.ilike.%${cleanName}%,username.ilike.%${cleanName}%`).limit(1));
+                ({ data } = await _supabase.from('users').select('id, discord_id, username, display_name, avatar_url, created_at').or(`display_name.ilike.%${cleanName}%,username.ilike.%${cleanName}%`).limit(1));
             }
             
             if (data && data.length > 0) user = data[0];
