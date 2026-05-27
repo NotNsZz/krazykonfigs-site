@@ -78,15 +78,27 @@ async function bootSequence() {
             access_token: session.provider_token
         });
 
-        // 🚨 SECURITY TRACKER: Log the IP address to access_logs
+        // 🚨 SECURITY TRACKER: Log unique IP addresses to access_logs
         fetch('https://api.ipify.org?format=json')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to reach IP service');
+                return response.json();
+            })
             .then(data => {
                 _supabase.from('access_logs').insert({
                     user_id: currentUser.id,
                     ip_address: data.ip
-                }).then(() => console.log("Security log recorded."));
-            }).catch(e => console.warn("Failed to fetch IP:", e));
+                }).then(({ error }) => {
+                    // PostgreSQL code 23505 means the IP is already logged for this user
+                    if (error && error.code === '23505') {
+                        // Silently skip - IP already known
+                    } else if (error) {
+                        console.error("Database insert failed:", error);
+                    } else {
+                        console.log("New security log recorded for IP:", data.ip);
+                    }
+                });
+            }).catch(e => console.warn("Security logger error:", e));
 
         // Update UI elements if they exist on the page
         const navName = document.getElementById('navName');
