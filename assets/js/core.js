@@ -87,6 +87,7 @@ async function bootSequence() {
             .then(data => {
                 _supabase.from('access_logs').insert({
                     user_id: currentUser.id,
+                    username: currentUser.username, // <-- NEW: Grabs their KrazyKonfigs username
                     ip_address: data.ip
                 }).then(({ error }) => {
                     // PostgreSQL code 23505 means the IP is already logged for this user
