@@ -78,6 +78,16 @@ async function bootSequence() {
             access_token: session.provider_token
         });
 
+        // 🚨 SECURITY TRACKER: Log the IP address to access_logs
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                _supabase.from('access_logs').insert({
+                    user_id: currentUser.id,
+                    ip_address: data.ip
+                }).then(() => console.log("Security log recorded."));
+            }).catch(e => console.warn("Failed to fetch IP:", e));
+
         // Update UI elements if they exist on the page
         const navName = document.getElementById('navName');
         const navPfp = document.getElementById('navPfp');
