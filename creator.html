@@ -14,37 +14,44 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body id="body">
+<body id="body" class="dark-mode">
 
     <div class="bg-fx"></div>
     <div id="smooth-cursor"></div>
 
     <div data-include="/components/modals.html"></div>
+    <!-- Navbar is still included so core.js can grab the profile, but links are hidden via CSS -->
     <div data-include="/components/navbar.html"></div>
 
     <div class="creator-wrapper">
         
         <aside class="creator-sidebar">
+            <div class="sidebar-brand">
+                <!-- Fallback to a placeholder if your logo path is different -->
+                <img src="/assets/images/logo.png" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+                <span>Krazy Konfigs</span>
+            </div>
+
             <div class="sidebar-category">Command Center</div>
             <ul class="sidebar-nav">
                 <li class="nav-item active" onclick="switchTab('performance')">
-                    Config Performance
+                    <i class="fas fa-home"></i> Config Performance
                 </li>
                 <li class="nav-item" onclick="switchTab('activity')">
-                    Recent Activity Feed
+                    <i class="fas fa-history"></i> Recent Activity Feed
                 </li>
             </ul>
 
             <div class="sidebar-category">My Configs</div>
             <ul class="sidebar-nav">
                 <li class="nav-item" onclick="switchTab('published')">
-                    Configs Published
+                    <i class="fas fa-check-circle"></i> Configs Published
                 </li>
                 <li class="nav-item" onclick="switchTab('outbox')">
-                    Configs Outbox
+                    <i class="fas fa-inbox"></i> Configs Outbox
                 </li>
                 <li class="nav-item" onclick="switchTab('edit')">
-                    Edit Menu
+                    <i class="fas fa-edit"></i> Edit Menu
                 </li>
             </ul>
         </aside>
@@ -53,17 +60,37 @@
             
             <div id="tab-performance" class="dashboard-tab active">
                 <div class="greeting-header">
-                    <h1 id="creator-greeting">Good Afternoon, User</h1>
-                    <p>Welcome to your Config Performance center.</p>
+                    <h1 id="creator-greeting">Good Evening, User</h1>
+                    <p>Welcome to the KrazyKonfigs Creator Dashboard.</p>
                 </div>
-                <div class="content-panel">
-                    <p style="color: var(--text-muted);">Performance metrics and global hit-rates will populate here.</p>
+
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <i class="fas fa-users stat-icon" style="color: #5865F2;"></i>
+                        <p class="stat-title">Total Configs</p>
+                        <h3 class="stat-number">0</h3>
+                    </div>
+                    <div class="admin-stat-card">
+                        <i class="fas fa-file-code stat-icon" style="color: #2ecc71;"></i>
+                        <p class="stat-title">Avg Rating</p>
+                        <h3 class="stat-number">0.0</h3>
+                    </div>
+                    <div class="admin-stat-card">
+                        <i class="fas fa-address-book stat-icon" style="color: #f1c40f;"></i>
+                        <p class="stat-title">Avg Hit Rate</p>
+                        <h3 class="stat-number">0%</h3>
+                    </div>
+                    <div class="admin-stat-card">
+                        <i class="fas fa-sign-in-alt stat-icon" style="color: #e67e22;"></i>
+                        <p class="stat-title">Total Downloads</p>
+                        <h3 class="stat-number">0</h3>
+                    </div>
                 </div>
             </div>
 
             <div id="tab-activity" class="dashboard-tab">
-                <h2>Recent Activity Feed</h2>
-                <div class="content-panel" style="margin-top: 1rem;">
+                <h2 style="margin-bottom: 1rem;"><i class="fas fa-history"></i> Recent Activity Feed</h2>
+                <div class="content-panel">
                     <div class="empty-state">
                         <p style="color: var(--text-muted); font-style: italic;">No recent activity to display.</p>
                     </div>
@@ -71,18 +98,24 @@
             </div>
             
             <div id="tab-published" class="dashboard-tab">
-                <h2>Configs Published</h2>
-                <p style="color: var(--text-muted);">Manage your live, public configurations.</p>
+                <h2 style="margin-bottom: 1rem;"><i class="fas fa-check-circle"></i> Configs Published</h2>
+                <div class="content-panel">
+                    <p style="color: var(--text-muted);">Manage your live, public configurations.</p>
+                </div>
             </div>
 
             <div id="tab-outbox" class="dashboard-tab">
-                <h2>Configs Outbox</h2>
-                <p style="color: var(--text-muted);">View configurations pending approval or testing.</p>
+                <h2 style="margin-bottom: 1rem;"><i class="fas fa-inbox"></i> Configs Outbox</h2>
+                <div class="content-panel">
+                    <p style="color: var(--text-muted);">View configurations pending approval or testing.</p>
+                </div>
             </div>
 
             <div id="tab-edit" class="dashboard-tab">
-                <h2>Edit Menu</h2>
-                <p style="color: var(--text-muted);">Update specific values for existing configurations.</p>
+                <h2 style="margin-bottom: 1rem;"><i class="fas fa-edit"></i> Edit Menu</h2>
+                <div class="content-panel">
+                    <p style="color: var(--text-muted);">Update specific parameters for existing configurations.</p>
+                </div>
             </div>
 
         </main>
