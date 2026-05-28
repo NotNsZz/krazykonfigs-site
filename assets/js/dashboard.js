@@ -530,9 +530,12 @@ async function submitReview() {
         updateCharCount(); 
         cancelReply(); 
         openReviews(activeConfigId); 
-    } else if (error.message.includes('Cooldown active')) {
+    } else if (error.code === '23505') {
+        // Handle the new Compound Unique Constraint violation gracefully
+        await customAlert("You have already reviewed this configuration. You may reply to existing reviews, but cannot submit a new rating.", "Review Limit Reached");
+    } else if (error.message && error.message.includes('Cooldown active')) {
         await customAlert("The server blocked your request. You must wait 3 minutes.", "Security Block");
     } else {
-        await customAlert("Failed to post review.", "Error");
+        await customAlert("Failed to post review. Please try again.", "Error");
     }
 }
