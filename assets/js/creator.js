@@ -9,7 +9,7 @@ async function initCreatorDashboard() {
         await bootSequence();
     }
 
-    // 3. Dynamic Greeting (Replacing the hardcoded 'krizzster')
+    // 3. Dynamic Greeting
     if (typeof currentUser !== 'undefined' && currentUser) {
         const greeting = document.getElementById('creator-greeting');
         if (greeting) {
