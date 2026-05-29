@@ -3,11 +3,12 @@ let currentFilteredConfigs = [];
 let currentVisibleCount = 9;
 let currentPingTier = 'all';
 
-// review state tracking
+// review & unlock state tracking
 let activeConfigId = null;
 let currentRatingInput = 5;
 let replyingToId = null;
 let cooldownTimer = null;
+let userActiveUnlocks = []; // Tracks which configs the current user can see
 
 let allContributors = [];
 let visibleContributorsCount = 8;
@@ -20,16 +21,6 @@ async function loadDashTags() {
     } catch (e) { 
         console.warn("Failed to load tag data."); 
     }
-}
-
-function getDashTagData(t) {
-    const cleanTag = t.trim().toUpperCase();
-    if (dashTagData[cleanTag]) return dashTagData[cleanTag];
-    
-    for (const key in dashTagData) { 
-        if (cleanTag.includes(key.toUpperCase())) return dashTagData[key]; 
-    }
-    return { color: '#666', icon: 'fas fa-tag' }; 
 }
 
 async function initDashboardLogic() {
@@ -52,6 +43,18 @@ function closeCreatorPromo() {
 }
 
 async function fetchConfigs() {
+    // 🚨 LOOTLABS: Fetch active unlocks for the current user before rendering
+    if (currentUser) {
+        const { data: unlockData } = await _supabase
+            .from('user_unlocks')
+            .select('config_id')
+            .gt('expires_at', new Date().toISOString());
+        
+        if (unlockData) {
+            userActiveUnlocks = unlockData.map(u => u.config_id);
+        }
+    }
+
     const { data } = await _supabase.from('configs').select('*').eq('is_archived', 'false');
     const { data: allReviews } = await _supabase.from('reviews').select('config_id, rating').not('rating', 'is', null);
     
@@ -170,6 +173,26 @@ function renderConfigs() {
             username = parts[1] ? parts[1].trim() : parts[0].trim();
         }
 
+        // 🚨 LOOTLABS: Check if this specific config is unlocked
+        const isUnlocked = userActiveUnlocks.includes(t.id) || (currentUser && currentUser.rank.toLowerCase() === 'admin');
+
+        // Apply Blur logic to the actual numbers
+        const displaySimTimer = isUnlocked ? escapeHTML(t.sim_timer || '-') : '***';
+        const displayPredInt = isUnlocked ? escapeHTML(t.pred_interval || '-') : '***';
+        const displayVert = isUnlocked ? escapeHTML(t.vertical || '155') : '***';
+        const displayHoriz = isUnlocked ? escapeHTML(t.horizontal || '165') : '***';
+        const displayOffsets = isUnlocked ? escapeHTML(t.offsets || '0 / -5 / 0') : '*** / *** / ***';
+
+        const blurStyle = isUnlocked ? '' : 'filter: blur(5px); user-select: none; pointer-events: none;';
+
+        const unlockOverlay = !isUnlocked ? `
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); display: flex; justify-content: center; align-items: center; z-index: 10; border-radius: 12px; transition: var(--transition);">
+                <button onclick="initiateLootLabsUnlock('${t.id}')" style="background: var(--accent); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: 0.2s;">
+                    <i class="fas fa-eye"></i> Unlock Config
+                </button>
+            </div>
+        ` : '';
+
         const pingRangeHtml = t.ping_range 
             ? `<div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
                  <i class="fas fa-signal" style="color: var(--accent); font-size: 0.7rem;"></i> Supports ${escapeHTML(t.ping_range)}
@@ -177,16 +200,18 @@ function renderConfigs() {
             : '';
 
         return `
-            <div class="config-card">
-                <div>
+            <div class="config-card" style="position: relative;">
+                ${unlockOverlay}
+                
+                <div style="${blurStyle}">
                     <div class="card-head">
                         <div class="config-title">${escapeHTML(t.title)} | ${escapeHTML(t.ping_tier) || 'N/A'} PING</div>
                     </div>
                     
                     <div class="data-section">
                         <span class="section-label"><i class="fas fa-eye"></i> PREDICTION</span>
-                        <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">${escapeHTML(t.sim_timer) || '-'}</span></div>
-                        <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">${escapeHTML(t.pred_interval) || '-'}</span></div>
+                        <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">${displaySimTimer}</span></div>
+                        <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">${displayPredInt}</span></div>
                     </div>
                     
                     <div class="data-section">
@@ -199,17 +224,17 @@ function renderConfigs() {
                     
                     <div class="data-section">
                         <span class="section-label"><i class="fas fa-rocket"></i> MULTIPLIERS</span>
-                        <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${escapeHTML(t.vertical) || '155'}</span></div>
-                        <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${escapeHTML(t.horizontal) || '165'}</span></div>
+                        <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${displayVert}</span></div>
+                        <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${displayHoriz}</span></div>
                     </div>
                     
                     <div class="data-section">
                         <span class="section-label"><i class="fas fa-crosshairs"></i> OFFSETS</span>
-                        <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">${escapeHTML(t.offsets) || '0 / -5 / 0'}</span></div>
+                        <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">${displayOffsets}</span></div>
                     </div>
                 </div>
                 
-                <div class="card-footer" style="flex-direction: column; align-items: stretch; gap: 15px;">
+                <div class="card-footer" style="flex-direction: column; align-items: stretch; gap: 15px; position: relative; z-index: 11;">
                     <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <span class="system-tag">Revert | ${escapeHTML(t.hit_rate) || '85%'} Hit Rate | <i class="fas fa-star" style="color:#f1c40f;"></i> ${t.calc_rating}</span>
@@ -232,6 +257,25 @@ function renderConfigs() {
     if (btnWrap) {
         btnWrap.style.display = currentVisibleCount >= currentFilteredConfigs.length ? 'none' : 'block';
     }
+}
+
+// 🚨 LOOTLABS: The Trigger Function
+async function initiateLootLabsUnlock(configId) {
+    if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
+
+    // REPLACE THIS WITH YOUR ACTUAL LOOTLABS LINK ONCE GENERATED
+    const baseLootLabsUrl = "https://loot-link.com/s?target=YOUR_TARGET_ID"; 
+    
+    // Combine Discord ID and Config ID so the server knows who to unlock and what to unlock
+    const trackingId = `${currentUser.discord_id}_${configId}`;
+    
+    // Append it as a 'tid' (Tracking ID) or 'subid' based on LootLabs parameters
+    const finalUrl = `${baseLootLabsUrl}&tid=${trackingId}`;
+
+    // Open link in new tab so they don't lose the dashboard
+    window.open(finalUrl, '_blank');
+    
+    await customAlert("We have opened your unlock link in a new tab! Once you complete the quick steps, close that tab, come back here, and refresh this page to see your unblurred config.", "Unlock Initiated");
 }
 
 // Contributor Section
