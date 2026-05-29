@@ -280,12 +280,21 @@ function renderConfigs() {
 async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
-    const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
-    const trackingId = `${currentUser.discord_id}_${configId}`;
-    const finalUrl = `${baseLootLabsUrl}&uid=${trackingId}`;
+    const { error } = await _supabase.from('pending_unlocks').upsert({ 
+        discord_id: currentUser.discord_id, 
+        config_id: configId 
+    });
 
-    window.open(finalUrl, '_blank');
+    if (error) {
+        console.error(error);
+        return await customAlert("Failed to initialize unlock sequence. Try again.", "Error");
+    }
+
+    const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
     
+    const finalUrl = `${baseLootLabsUrl}&uid=${currentUser.discord_id}`;
+    window.open(finalUrl, '_blank');
+
     await customAlert("We have opened your unlock link in a new tab! Once you complete the quick steps, close that tab, come back here, and refresh this page to see your unblurred config.", "Unlock Initiated");
 }
 
