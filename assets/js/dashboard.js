@@ -182,7 +182,7 @@ function renderConfigs() {
 
         const isUnlocked = userActiveUnlocks.includes(String(t.id));
 
-        // 🚨 SECURITY: Data physically set to 0 when locked. Inspect Element is useless.
+        // SECURITY: Data physically set to 0 when locked. Inspect Element is useless.
         const displaySimTimer = isUnlocked ? escapeHTML(t.sim_timer || '-') : '0';
         const displayPredInt = isUnlocked ? escapeHTML(t.pred_interval || '-') : '0';
         const displayVert = isUnlocked ? escapeHTML(t.vertical || '155') : '0';
@@ -272,7 +272,7 @@ function renderConfigs() {
 async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
-    // 1. Generate a purely numeric tracking ID (avoids LootLabs string-stripping)
+    // 1. Generate a purely numeric tracking ID
     const trackingId = Math.floor(Math.random() * 1000000000);
 
     // 2. Save the intent to the database BEFORE opening LootLabs
@@ -289,8 +289,8 @@ async function initiateLootLabsUnlock(configId) {
 
     const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
     
-    // 3. Send ONLY the random number to LootLabs
-    const finalUrl = `${baseLootLabsUrl}&uid=${trackingId}`;
+    // 3. Send the tracking ID via multiple parameters to ensure LootLabs passes it forward
+    const finalUrl = `${baseLootLabsUrl}&uid=${trackingId}&custom=${trackingId}`;
 
     window.open(finalUrl, '_blank');
     
