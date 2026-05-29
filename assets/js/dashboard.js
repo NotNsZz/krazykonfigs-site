@@ -23,7 +23,6 @@ async function loadDashTags() {
     }
 }
 
-// 🚨 RESTORED: This was missing and caused the crash!
 function getDashTagData(t) {
     const cleanTag = t.trim().toUpperCase();
     if (dashTagData[cleanTag]) return dashTagData[cleanTag];
@@ -53,7 +52,7 @@ function closeCreatorPromo() {
 }
 
 async function fetchConfigs() {
-    // 🚨 Fetch active unlocks with safe error handling
+    // 🚨 LOOTLABS: Fetch active unlocks for the current user before rendering
     if (currentUser) {
         const { data: unlockData, error: unlockError } = await _supabase
             .from('user_unlocks')
@@ -63,21 +62,24 @@ async function fetchConfigs() {
         if (unlockError) {
             console.warn("User unlocks not found. Make sure you ran the SQL!", unlockError);
         } else if (unlockData) {
-            userActiveUnlocks = unlockData.map(u => u.config_id);
+            userActiveUnlocks = unlockData.map(u => String(u.config_id)); // Convert to string for safe comparison
         }
     }
 
     const { data } = await _supabase.from('configs').select('*').eq('is_archived', 'false');
     const { data: allReviews } = await _supabase.from('reviews').select('config_id, rating').not('rating', 'is', null);
     
+    // map average ratings per config
     let ratingMap = {};
     if (allReviews) {
         let sums = {};
         let counts = {};
+        
         allReviews.forEach(r => {
             sums[r.config_id] = (sums[r.config_id] || 0) + r.rating;
             counts[r.config_id] = (counts[r.config_id] || 0) + 1;
         });
+        
         for (let cid in sums) {
             ratingMap[cid] = (sums[cid] / counts[cid]).toFixed(1);
         }
@@ -88,11 +90,14 @@ async function fetchConfigs() {
         calc_rating: ratingMap[c.id] || "0.0"
     })).sort((a, b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
     
+    // Extract unique lookup map to separate Display Names from Usernames
     const creatorMap = new Map();
     allConfigs.forEach(c => {
         if (!c.creator) return;
+        
         let displayName = '';
         let username = '';
+        
         if (Array.isArray(c.creator)) {
             displayName = c.creator[0] || '';
             username = c.creator[1] || displayName;
@@ -101,7 +106,10 @@ async function fetchConfigs() {
             displayName = parts[0].trim();
             username = parts[1] ? parts[1].trim() : parts[0].trim();
         }
-        if (username) creatorMap.set(username, displayName); 
+        
+        if (username) {
+            creatorMap.set(username, displayName); 
+        }
     });
 
     const filter = document.getElementById('creatorFilter');
@@ -175,21 +183,23 @@ function renderConfigs() {
             username = parts[1] ? parts[1].trim() : parts[0].trim();
         }
 
-        // 🚨 LOOTLABS Overlay Logic
-        const isUnlocked = userActiveUnlocks.includes(t.id) || (currentUser && currentUser.rank.toLowerCase() === 'admin');
+        // 🚨 LOOTLABS: Check if unlocked. Admins bypass locks. Safe string comparison.
+        const isAdmin = currentUser && currentUser.rank && currentUser.rank.toLowerCase() === 'admin';
+        const isUnlocked = isAdmin || userActiveUnlocks.includes(String(t.id));
 
+        // Use masking when locked
         const displaySimTimer = isUnlocked ? escapeHTML(t.sim_timer || '-') : '***';
         const displayPredInt = isUnlocked ? escapeHTML(t.pred_interval || '-') : '***';
         const displayVert = isUnlocked ? escapeHTML(t.vertical || '155') : '***';
         const displayHoriz = isUnlocked ? escapeHTML(t.horizontal || '165') : '***';
         const displayOffsets = isUnlocked ? escapeHTML(t.offsets || '0 / -5 / 0') : '*** / *** / ***';
 
-        const blurStyle = isUnlocked ? '' : 'filter: blur(5px); user-select: none; pointer-events: none;';
+        const blurStyle = isUnlocked ? '' : 'filter: blur(8px); opacity: 0.5; user-select: none; pointer-events: none;';
 
         const unlockOverlay = !isUnlocked ? `
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); display: flex; justify-content: center; align-items: center; z-index: 10; border-radius: 12px; transition: var(--transition);">
-                <button onclick="initiateLootLabsUnlock('${t.id}')" style="background: var(--accent); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: 0.2s;">
-                    <i class="fas fa-eye"></i> Unlock Config
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 10;">
+                <button onclick="initiateLootLabsUnlock('${t.id}')" style="background: var(--text-main); color: var(--bg-body); border: none; padding: 14px 32px; border-radius: 50px; font-weight: 900; font-size: 1.1rem; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: 0.2s; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-eye"></i> View
                 </button>
             </div>
         ` : '';
@@ -201,41 +211,47 @@ function renderConfigs() {
             : '';
 
         return `
-            <div class="config-card" style="position: relative;">
-                ${unlockOverlay}
+            <div class="config-card" style="display: flex; flex-direction: column;">
                 
-                <div style="${blurStyle}">
-                    <div class="card-head">
-                        <div class="config-title">${escapeHTML(t.title)} | ${escapeHTML(t.ping_tier) || 'N/A'} PING</div>
-                    </div>
+                <!-- HEADER (Always Clear) -->
+                <div class="card-head">
+                    <div class="config-title">${escapeHTML(t.title)} | ${escapeHTML(t.ping_tier) || 'N/A'} PING</div>
+                </div>
+                
+                <!-- MIDDLE DATA AREA (Blurred when locked) -->
+                <div style="position: relative; flex: 1; margin-bottom: 1rem;">
+                    ${unlockOverlay}
                     
-                    <div class="data-section">
-                        <span class="section-label"><i class="fas fa-eye"></i> PREDICTION</span>
-                        <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">${displaySimTimer}</span></div>
-                        <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">${displayPredInt}</span></div>
-                    </div>
-                    
-                    <div class="data-section">
-                        <span class="section-label"><i class="fas fa-toggle-on"></i> TOGGLES</span>
-                        <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
-                        <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
-                        <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
-                        <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
-                    </div>
-                    
-                    <div class="data-section">
-                        <span class="section-label"><i class="fas fa-rocket"></i> MULTIPLIERS</span>
-                        <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${displayVert}</span></div>
-                        <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${displayHoriz}</span></div>
-                    </div>
-                    
-                    <div class="data-section">
-                        <span class="section-label"><i class="fas fa-crosshairs"></i> OFFSETS</span>
-                        <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">${displayOffsets}</span></div>
+                    <div style="${blurStyle}">
+                        <div class="data-section">
+                            <span class="section-label"><i class="fas fa-eye"></i> PREDICTION</span>
+                            <div class="data-row"><span class="data-label">Simulation Timer</span> <span class="data-val">${displaySimTimer}</span></div>
+                            <div class="data-row"><span class="data-label">Prediction Interval</span> <span class="data-val">${displayPredInt}</span></div>
+                        </div>
+                        
+                        <div class="data-section">
+                            <span class="section-label"><i class="fas fa-toggle-on"></i> TOGGLES</span>
+                            <div class="data-row"><span class="data-label">Prioritize Ping</span> <span class="data-val">ON</span></div>
+                            <div class="data-row"><span class="data-label">Predict Jump</span> <span class="data-val">ON</span></div>
+                            <div class="data-row"><span class="data-label">Predict Lag</span> <span class="data-val">ON</span></div>
+                            <div class="data-row"><span class="data-label">Ping Predict</span> <span class="data-val">ON</span></div>
+                        </div>
+                        
+                        <div class="data-section">
+                            <span class="section-label"><i class="fas fa-rocket"></i> MULTIPLIERS</span>
+                            <div class="data-row"><span class="data-label">Vertical</span> <span class="data-val">${displayVert}</span></div>
+                            <div class="data-row"><span class="data-label">Horizontal</span> <span class="data-val">${displayHoriz}</span></div>
+                        </div>
+                        
+                        <div class="data-section">
+                            <span class="section-label"><i class="fas fa-crosshairs"></i> OFFSETS</span>
+                            <div class="data-row"><span class="data-label">X / Y / Z</span> <span class="data-val">${displayOffsets}</span></div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="card-footer" style="flex-direction: column; align-items: stretch; gap: 15px; position: relative; z-index: 11;">
+                <!-- FOOTER (Always Clear) -->
+                <div class="card-footer" style="flex-direction: column; align-items: stretch; gap: 15px; margin-top: 0; padding-top: 15px; border-top: 1px dashed var(--border);">
                     <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <span class="system-tag">Revert | ${escapeHTML(t.hit_rate) || '85%'} Hit Rate | <i class="fas fa-star" style="color:#f1c40f;"></i> ${t.calc_rating}</span>
@@ -261,16 +277,20 @@ function renderConfigs() {
 }
 
 // 🚨 LOOTLABS: The Trigger Function
-// 🚨 LOOTLABS: The Trigger Function
 async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
+    // The Master LootLabs Link
     const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
     
+    // Combine Discord ID and Config ID for the Webhook to catch later
     const trackingId = `${currentUser.discord_id}_${configId}`;
+    
+    // Pass it into uid so LootLabs {UNIQUE_ID} macro picks it up
     const finalUrl = `${baseLootLabsUrl}&uid=${trackingId}`;
 
     window.open(finalUrl, '_blank');
+    
     await customAlert("We have opened your unlock link in a new tab! Once you complete the quick steps, close that tab, come back here, and refresh this page to see your unblurred config.", "Unlock Initiated");
 }
 
