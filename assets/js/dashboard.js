@@ -62,14 +62,13 @@ async function fetchConfigs() {
         if (unlockError) {
             console.warn("User unlocks not found. Make sure you ran the SQL!", unlockError);
         } else if (unlockData) {
-            userActiveUnlocks = unlockData.map(u => String(u.config_id)); // Convert to string for safe comparison
+            userActiveUnlocks = unlockData.map(u => String(u.config_id)); 
         }
     }
 
     const { data } = await _supabase.from('configs').select('*').eq('is_archived', 'false');
     const { data: allReviews } = await _supabase.from('reviews').select('config_id, rating').not('rating', 'is', null);
     
-    // map average ratings per config
     let ratingMap = {};
     if (allReviews) {
         let sums = {};
@@ -90,7 +89,6 @@ async function fetchConfigs() {
         calc_rating: ratingMap[c.id] || "0.0"
     })).sort((a, b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
     
-    // Extract unique lookup map to separate Display Names from Usernames
     const creatorMap = new Map();
     allConfigs.forEach(c => {
         if (!c.creator) return;
@@ -183,18 +181,20 @@ function renderConfigs() {
             username = parts[1] ? parts[1].trim() : parts[0].trim();
         }
 
-        // 🚨 LOOTLABS: Check if unlocked. Admins bypass locks. Safe string comparison.
-        const isAdmin = currentUser && currentUser.rank && currentUser.rank.toLowerCase() === 'admin';
-        const isUnlocked = isAdmin || userActiveUnlocks.includes(String(t.id));
+        // 🚨 I disabled `isAdmin` here temporarily so YOU can test the blur UI. 
+        // Once you are happy with how it looks, change this back to:
+        // const isUnlocked = (currentUser?.rank === 'admin') || userActiveUnlocks.includes(String(t.id));
+        const isUnlocked = userActiveUnlocks.includes(String(t.id));
 
-        // Use masking when locked
-        const displaySimTimer = isUnlocked ? escapeHTML(t.sim_timer || '-') : '***';
-        const displayPredInt = isUnlocked ? escapeHTML(t.pred_interval || '-') : '***';
-        const displayVert = isUnlocked ? escapeHTML(t.vertical || '155') : '***';
-        const displayHoriz = isUnlocked ? escapeHTML(t.horizontal || '165') : '***';
-        const displayOffsets = isUnlocked ? escapeHTML(t.offsets || '0 / -5 / 0') : '*** / *** / ***';
+        // SECURITY: If locked, inject FAKE random numbers so Inspect Element won't leak the real config!
+        const displaySimTimer = isUnlocked ? escapeHTML(t.sim_timer || '-') : Math.floor(Math.random() * 80 + 20);
+        const displayPredInt = isUnlocked ? escapeHTML(t.pred_interval || '-') : Math.floor(Math.random() * 150 + 50);
+        const displayVert = isUnlocked ? escapeHTML(t.vertical || '155') : Math.floor(Math.random() * 50 + 120);
+        const displayHoriz = isUnlocked ? escapeHTML(t.horizontal || '165') : Math.floor(Math.random() * 50 + 130);
+        const displayOffsets = isUnlocked ? escapeHTML(t.offsets || '0 / -5 / 0') : `${Math.floor(Math.random() * -20)} / ${Math.floor(Math.random() * -10)} / 0`;
 
-        const blurStyle = isUnlocked ? '' : 'filter: blur(8px); opacity: 0.5; user-select: none; pointer-events: none;';
+        // The exact blur CSS to match your mockup shapes
+        const blurStyle = isUnlocked ? '' : 'filter: blur(6px); opacity: 0.4; user-select: none; pointer-events: none;';
 
         const unlockOverlay = !isUnlocked ? `
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 10;">
@@ -280,13 +280,8 @@ function renderConfigs() {
 async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
-    // The Master LootLabs Link
     const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
-    
-    // Combine Discord ID and Config ID for the Webhook to catch later
     const trackingId = `${currentUser.discord_id}_${configId}`;
-    
-    // Pass it into uid so LootLabs {UNIQUE_ID} macro picks it up
     const finalUrl = `${baseLootLabsUrl}&uid=${trackingId}`;
 
     window.open(finalUrl, '_blank');
