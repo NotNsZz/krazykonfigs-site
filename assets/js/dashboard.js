@@ -279,13 +279,13 @@ async function initiateLootLabsUnlock(configId) {
     });
 
     if (error) {
-        console.error(error);
+        console.error("Database Error:", error);
         return await customAlert("Failed to initialize unlock sequence. Try again.", "Error");
     }
 
     const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
     
-    // 2. Send ONLY the Discord ID to LootLabs. 
+    // 2. Send the Discord ID to LootLabs via the uid parameter
     const finalUrl = `${baseLootLabsUrl}&uid=${currentUser.discord_id}`;
 
     window.open(finalUrl, '_blank');
