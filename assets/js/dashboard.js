@@ -53,9 +53,11 @@ function closeCreatorPromo() {
 
 async function fetchConfigs() {
     if (currentUser) {
+        // 🚨 SECURITY FIX: Added .eq() to prevent global unlock leak
         const { data: unlockData, error: unlockError } = await _supabase
             .from('user_unlocks')
             .select('config_id')
+            .eq('discord_id', currentUser.discord_id)
             .gt('expires_at', new Date().toISOString());
         
         if (unlockError) {
@@ -272,11 +274,11 @@ function renderConfigs() {
 async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
-    // 1. Save the specific config they clicked to their Discord ID in the pending table
-    const { error } = await _supabase.from('pending_unlocks').upsert({ 
-        discord_id: currentUser.discord_id, 
-        config_id: configId 
-    });
+    // 🚨 BUG FIX: Added onConflict to force replacement instead of stacking rows
+    const { error } = await _supabase.from('pending_unlocks').upsert(
+        { discord_id: currentUser.discord_id, config_id: configId },
+        { onConflict: 'discord_id' }
+    );
 
     if (error) {
         console.error("Database Error:", error);
@@ -285,7 +287,6 @@ async function initiateLootLabsUnlock(configId) {
 
     const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
     
-    // 2. Send the Discord ID to LootLabs via the uid parameter
     const finalUrl = `${baseLootLabsUrl}&uid=${currentUser.discord_id}`;
 
     window.open(finalUrl, '_blank');
