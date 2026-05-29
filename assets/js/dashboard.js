@@ -23,6 +23,17 @@ async function loadDashTags() {
     }
 }
 
+// 🚨 RESTORED: This was missing and caused the crash!
+function getDashTagData(t) {
+    const cleanTag = t.trim().toUpperCase();
+    if (dashTagData[cleanTag]) return dashTagData[cleanTag];
+    
+    for (const key in dashTagData) { 
+        if (cleanTag.includes(key.toUpperCase())) return dashTagData[key]; 
+    }
+    return { color: '#666', icon: 'fas fa-tag' }; 
+}
+
 async function initDashboardLogic() {
     if (typeof bootSequence === 'function') await bootSequence();
     if (typeof initMusicPlayer === 'function') initMusicPlayer();
@@ -31,7 +42,6 @@ async function initDashboardLogic() {
     fetchConfigs();
     fetchContributors();
 
-    // show promo modal once per session
     if (!sessionStorage.getItem('creatorPromoSeen')) {
         sessionStorage.setItem('creatorPromoSeen', 'true');
         document.getElementById('creatorPromoOverlay')?.classList.add('show');
@@ -43,14 +53,16 @@ function closeCreatorPromo() {
 }
 
 async function fetchConfigs() {
-    // 🚨 LOOTLABS: Fetch active unlocks for the current user before rendering
+    // 🚨 Fetch active unlocks with safe error handling
     if (currentUser) {
-        const { data: unlockData } = await _supabase
+        const { data: unlockData, error: unlockError } = await _supabase
             .from('user_unlocks')
             .select('config_id')
             .gt('expires_at', new Date().toISOString());
         
-        if (unlockData) {
+        if (unlockError) {
+            console.warn("User unlocks not found. Make sure you ran the SQL!", unlockError);
+        } else if (unlockData) {
             userActiveUnlocks = unlockData.map(u => u.config_id);
         }
     }
@@ -58,17 +70,14 @@ async function fetchConfigs() {
     const { data } = await _supabase.from('configs').select('*').eq('is_archived', 'false');
     const { data: allReviews } = await _supabase.from('reviews').select('config_id, rating').not('rating', 'is', null);
     
-    // map average ratings per config
     let ratingMap = {};
     if (allReviews) {
         let sums = {};
         let counts = {};
-        
         allReviews.forEach(r => {
             sums[r.config_id] = (sums[r.config_id] || 0) + r.rating;
             counts[r.config_id] = (counts[r.config_id] || 0) + 1;
         });
-        
         for (let cid in sums) {
             ratingMap[cid] = (sums[cid] / counts[cid]).toFixed(1);
         }
@@ -79,15 +88,11 @@ async function fetchConfigs() {
         calc_rating: ratingMap[c.id] || "0.0"
     })).sort((a, b) => (parseInt(a.priority) || 999) - (parseInt(b.priority) || 999));
     
-    // Extract unique lookup map to separate Display Names from Usernames
     const creatorMap = new Map();
     allConfigs.forEach(c => {
         if (!c.creator) return;
-        
         let displayName = '';
         let username = '';
-        
-        // Handle legacy string array vs string parsing
         if (Array.isArray(c.creator)) {
             displayName = c.creator[0] || '';
             username = c.creator[1] || displayName;
@@ -96,10 +101,7 @@ async function fetchConfigs() {
             displayName = parts[0].trim();
             username = parts[1] ? parts[1].trim() : parts[0].trim();
         }
-        
-        if (username) {
-            creatorMap.set(username, displayName); 
-        }
+        if (username) creatorMap.set(username, displayName); 
     });
 
     const filter = document.getElementById('creatorFilter');
@@ -173,10 +175,9 @@ function renderConfigs() {
             username = parts[1] ? parts[1].trim() : parts[0].trim();
         }
 
-        // 🚨 LOOTLABS: Check if this specific config is unlocked
+        // 🚨 LOOTLABS Overlay Logic
         const isUnlocked = userActiveUnlocks.includes(t.id) || (currentUser && currentUser.rank.toLowerCase() === 'admin');
 
-        // Apply Blur logic to the actual numbers
         const displaySimTimer = isUnlocked ? escapeHTML(t.sim_timer || '-') : '***';
         const displayPredInt = isUnlocked ? escapeHTML(t.pred_interval || '-') : '***';
         const displayVert = isUnlocked ? escapeHTML(t.vertical || '155') : '***';
@@ -263,22 +264,16 @@ function renderConfigs() {
 async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
-    // REPLACE THIS WITH YOUR ACTUAL LOOTLABS LINK ONCE GENERATED
     const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
     
-    // Combine Discord ID and Config ID so the server knows who to unlock and what to unlock
     const trackingId = `${currentUser.discord_id}_${configId}`;
-    
-    // Append it as a 'tid' (Tracking ID) or 'subid' based on LootLabs parameters
     const finalUrl = `${baseLootLabsUrl}&tid=${trackingId}`;
 
-    // Open link in new tab so they don't lose the dashboard
     window.open(finalUrl, '_blank');
     
     await customAlert("We have opened your unlock link in a new tab! Once you complete the quick steps, close that tab, come back here, and refresh this page to see your unblurred config.", "Unlock Initiated");
 }
 
-// Contributor Section
 async function fetchContributors() {
     const { data } = await _supabase.from('contributors').select('*');
     
@@ -338,7 +333,6 @@ function showMoreContributors() {
     renderContributors();
 }
 
-// Review System
 function updateCharCount() {
     const input = document.getElementById('reviewTextInput');
     const counter = document.getElementById('charCounter');
@@ -386,7 +380,6 @@ function showCooldownPopup(seconds) {
     btn.addEventListener('click', close);
 }
 
-// Maps flat review list to parent/child structure
 function buildReviewTree(data) {
     const tree = [];
     const map = {};
@@ -406,7 +399,6 @@ function buildReviewTree(data) {
     return tree;
 }
 
-// Recursive render for nested replies
 function renderReviewNode(r, depth = 0) {
     const margin = depth > 0 ? 30 : 0;
     const stars = Array(5).fill(0).map((_,i) => i < r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>').join('');
@@ -499,7 +491,6 @@ async function deleteReview(id) {
 }
 
 function closeReviews(e) {
-    // only close if clicking on overlay
     if (e && e.target !== document.getElementById('reviewModal')) return;
     
     document.getElementById('reviewModal').classList.remove('show');
@@ -507,7 +498,6 @@ function closeReviews(e) {
     replyingToId = null;
     document.getElementById('replyIndicator').style.display = 'none';
     
-    // reset stars UI
     currentRatingInput = 5;
     document.querySelectorAll('.input-star').forEach(s => {
         s.classList.remove('far');
@@ -515,7 +505,6 @@ function closeReviews(e) {
     });
 }
 
-// Generic star click handler
 document.addEventListener('click', (e) => {
     const star = e.target.closest('.input-star');
     if (star) {
@@ -545,12 +534,11 @@ async function submitReview() {
     
     input.disabled = true;
     
-    // check rate limit
     const { data } = await _supabase.from('reviews').select('created_at').eq('poster_id', currentUser.discord_id).order('created_at', { ascending: false }).limit(1).single();
     
     if (data) {
         const timeDiff = new Date().getTime() - new Date(data.created_at).getTime();
-        const cooldown = 3 * 60 * 1000; // 3 mins
+        const cooldown = 3 * 60 * 1000; 
         if (timeDiff < cooldown) { 
             input.disabled = false; 
             return showCooldownPopup(Math.ceil((cooldown - timeDiff) / 1000)); 
@@ -575,7 +563,6 @@ async function submitReview() {
         cancelReply(); 
         openReviews(activeConfigId); 
     } else if (error.code === '23505') {
-        // Handle the new Compound Unique Constraint violation gracefully
         await customAlert("You have already reviewed this configuration. You may reply to existing reviews, but cannot submit a new rating.", "Review Limit Reached");
     } else if (error.message && error.message.includes('Cooldown active')) {
         await customAlert("The server blocked your request. You must wait 3 minutes.", "Security Block");
