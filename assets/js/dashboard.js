@@ -268,33 +268,36 @@ function renderConfigs() {
     }
 }
 
-// 🚨 LOOTLABS: The Secure Tracking Trigger
+// 🚨 LOOTLABS: The IP-Matching Trigger
 async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
-    // 1. Generate a purely numeric tracking ID
-    const trackingId = Math.floor(Math.random() * 1000000000);
+    try {
+        // 1. Quietly fetch the user's IP Address
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        const userIp = ipData.ip;
 
-    // 2. Save the intent to the database BEFORE opening LootLabs
-    const { error } = await _supabase.from('pending_unlocks').insert({ 
-        tracking_id: trackingId,
-        discord_id: currentUser.discord_id, 
-        config_id: configId 
-    });
+        // 2. Save the IP to the database BEFORE opening LootLabs
+        const { error } = await _supabase.from('pending_unlocks').upsert({ 
+            ip_address: userIp,
+            discord_id: currentUser.discord_id, 
+            config_id: configId 
+        });
 
-    if (error) {
-        console.error(error);
-        return await customAlert("Failed to initialize unlock sequence. Try again.", "Error");
+        if (error) {
+            console.error(error);
+            return await customAlert("Failed to initialize unlock sequence. Try again.", "Error");
+        }
+
+        // 3. Open the naked shortlink. We don't need parameters anymore!
+        window.open("https://loot-link.com/s?1fNjhACg", '_blank');
+        
+        await customAlert("We have opened your unlock link in a new tab! Once you complete the quick steps, close that tab, come back here, and refresh this page to see your unblurred config.", "Unlock Initiated");
+    } catch (e) {
+        console.error("Network Error:", e);
+        await customAlert("Could not secure connection. Check your adblocker or try again.", "Network Error");
     }
-
-    const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
-    
-    // 3. Send the tracking ID via multiple parameters to ensure LootLabs passes it forward
-    const finalUrl = `${baseLootLabsUrl}&uid=${trackingId}&custom=${trackingId}`;
-
-    window.open(finalUrl, '_blank');
-    
-    await customAlert("We have opened your unlock link in a new tab! Once you complete the quick steps, close that tab, come back here, and refresh this page to see your unblurred config.", "Unlock Initiated");
 }
 
 async function fetchContributors() {
