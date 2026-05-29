@@ -261,16 +261,16 @@ function renderConfigs() {
 }
 
 // 🚨 LOOTLABS: The Trigger Function
+// 🚨 LOOTLABS: The Trigger Function
 async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
     const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
     
     const trackingId = `${currentUser.discord_id}_${configId}`;
-    const finalUrl = `${baseLootLabsUrl}&tid=${trackingId}`;
+    const finalUrl = `${baseLootLabsUrl}&uid=${trackingId}`;
 
     window.open(finalUrl, '_blank');
-    
     await customAlert("We have opened your unlock link in a new tab! Once you complete the quick steps, close that tab, come back here, and refresh this page to see your unblurred config.", "Unlock Initiated");
 }
 
