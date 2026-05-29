@@ -182,11 +182,12 @@ function renderConfigs() {
 
         const isUnlocked = userActiveUnlocks.includes(String(t.id));
 
-        const displaySimTimer = isUnlocked ? escapeHTML(t.sim_timer || '-') : Math.floor(Math.random() * 80 + 20);
-        const displayPredInt = isUnlocked ? escapeHTML(t.pred_interval || '-') : Math.floor(Math.random() * 150 + 50);
-        const displayVert = isUnlocked ? escapeHTML(t.vertical || '155') : Math.floor(Math.random() * 50 + 120);
-        const displayHoriz = isUnlocked ? escapeHTML(t.horizontal || '165') : Math.floor(Math.random() * 50 + 130);
-        const displayOffsets = isUnlocked ? escapeHTML(t.offsets || '0 / -5 / 0') : `${Math.floor(Math.random() * -20)} / ${Math.floor(Math.random() * -10)} / 0`;
+        // 🚨 SECURITY: Data physically set to 0 when locked. Inspect Element is useless.
+        const displaySimTimer = isUnlocked ? escapeHTML(t.sim_timer || '-') : '0';
+        const displayPredInt = isUnlocked ? escapeHTML(t.pred_interval || '-') : '0';
+        const displayVert = isUnlocked ? escapeHTML(t.vertical || '155') : '0';
+        const displayHoriz = isUnlocked ? escapeHTML(t.horizontal || '165') : '0';
+        const displayOffsets = isUnlocked ? escapeHTML(t.offsets || '0 / -5 / 0') : '0 / 0 / 0';
 
         const blurStyle = isUnlocked ? '' : 'filter: blur(6px); opacity: 0.4; user-select: none; pointer-events: none;';
 
@@ -267,14 +268,28 @@ function renderConfigs() {
     }
 }
 
-// 🚨 LOOTLABS: The Trigger Function (UPDATED TO USE 'x' AND BYPASS DB WRITE)
+// 🚨 LOOTLABS: The Secure Tracking Trigger
 async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
+    // 1. Generate a purely numeric tracking ID (avoids LootLabs string-stripping)
+    const trackingId = Math.floor(Math.random() * 1000000000);
+
+    // 2. Save the intent to the database BEFORE opening LootLabs
+    const { error } = await _supabase.from('pending_unlocks').insert({ 
+        tracking_id: trackingId,
+        discord_id: currentUser.discord_id, 
+        config_id: configId 
+    });
+
+    if (error) {
+        console.error(error);
+        return await customAlert("Failed to initialize unlock sequence. Try again.", "Error");
+    }
+
     const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
     
-    // Combine using the safe 'x' character so LootLabs doesn't break it
-    const trackingId = `${currentUser.discord_id}x${configId}`;
+    // 3. Send ONLY the random number to LootLabs
     const finalUrl = `${baseLootLabsUrl}&uid=${trackingId}`;
 
     window.open(finalUrl, '_blank');
