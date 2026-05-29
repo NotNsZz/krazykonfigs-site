@@ -264,7 +264,7 @@ async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
     // REPLACE THIS WITH YOUR ACTUAL LOOTLABS LINK ONCE GENERATED
-    const baseLootLabsUrl = "https://loot-link.com/s?target=YOUR_TARGET_ID"; 
+    const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
     
     // Combine Discord ID and Config ID so the server knows who to unlock and what to unlock
     const trackingId = `${currentUser.discord_id}_${configId}`;
