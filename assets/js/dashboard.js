@@ -8,7 +8,7 @@ let activeConfigId = null;
 let currentRatingInput = 5;
 let replyingToId = null;
 let cooldownTimer = null;
-let userActiveUnlocks = []; // Tracks which configs the current user can see
+let userActiveUnlocks = []; 
 
 let allContributors = [];
 let visibleContributorsCount = 8;
@@ -52,7 +52,6 @@ function closeCreatorPromo() {
 }
 
 async function fetchConfigs() {
-    // 🚨 LOOTLABS: Fetch active unlocks for the current user before rendering
     if (currentUser) {
         const { data: unlockData, error: unlockError } = await _supabase
             .from('user_unlocks')
@@ -60,7 +59,7 @@ async function fetchConfigs() {
             .gt('expires_at', new Date().toISOString());
         
         if (unlockError) {
-            console.warn("User unlocks not found. Make sure you ran the SQL!", unlockError);
+            console.warn("User unlocks fetch error:", unlockError);
         } else if (unlockData) {
             userActiveUnlocks = unlockData.map(u => String(u.config_id)); 
         }
@@ -181,19 +180,14 @@ function renderConfigs() {
             username = parts[1] ? parts[1].trim() : parts[0].trim();
         }
 
-        // 🚨 I disabled `isAdmin` here temporarily so YOU can test the blur UI. 
-        // Once you are happy with how it looks, change this back to:
-        // const isUnlocked = (currentUser?.rank === 'admin') || userActiveUnlocks.includes(String(t.id));
         const isUnlocked = userActiveUnlocks.includes(String(t.id));
 
-        // SECURITY: If locked, inject FAKE random numbers so Inspect Element won't leak the real config!
         const displaySimTimer = isUnlocked ? escapeHTML(t.sim_timer || '-') : Math.floor(Math.random() * 80 + 20);
         const displayPredInt = isUnlocked ? escapeHTML(t.pred_interval || '-') : Math.floor(Math.random() * 150 + 50);
         const displayVert = isUnlocked ? escapeHTML(t.vertical || '155') : Math.floor(Math.random() * 50 + 120);
         const displayHoriz = isUnlocked ? escapeHTML(t.horizontal || '165') : Math.floor(Math.random() * 50 + 130);
         const displayOffsets = isUnlocked ? escapeHTML(t.offsets || '0 / -5 / 0') : `${Math.floor(Math.random() * -20)} / ${Math.floor(Math.random() * -10)} / 0`;
 
-        // The exact blur CSS to match your mockup shapes
         const blurStyle = isUnlocked ? '' : 'filter: blur(6px); opacity: 0.4; user-select: none; pointer-events: none;';
 
         const unlockOverlay = !isUnlocked ? `
@@ -213,12 +207,10 @@ function renderConfigs() {
         return `
             <div class="config-card" style="display: flex; flex-direction: column;">
                 
-                <!-- HEADER (Always Clear) -->
                 <div class="card-head">
                     <div class="config-title">${escapeHTML(t.title)} | ${escapeHTML(t.ping_tier) || 'N/A'} PING</div>
                 </div>
                 
-                <!-- MIDDLE DATA AREA (Blurred when locked) -->
                 <div style="position: relative; flex: 1; margin-bottom: 1rem;">
                     ${unlockOverlay}
                     
@@ -250,7 +242,6 @@ function renderConfigs() {
                     </div>
                 </div>
                 
-                <!-- FOOTER (Always Clear) -->
                 <div class="card-footer" style="flex-direction: column; align-items: stretch; gap: 15px; margin-top: 0; padding-top: 15px; border-top: 1px dashed var(--border);">
                     <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -276,25 +267,18 @@ function renderConfigs() {
     }
 }
 
-// 🚨 LOOTLABS: The Trigger Function
+// 🚨 LOOTLABS: The Trigger Function (UPDATED TO USE 'x' AND BYPASS DB WRITE)
 async function initiateLootLabsUnlock(configId) {
     if (!currentUser) return await customAlert("You must be logged in with Discord to unlock configurations.", "Login Required");
 
-    const { error } = await _supabase.from('pending_unlocks').upsert({ 
-        discord_id: currentUser.discord_id, 
-        config_id: configId 
-    });
-
-    if (error) {
-        console.error(error);
-        return await customAlert("Failed to initialize unlock sequence. Try again.", "Error");
-    }
-
     const baseLootLabsUrl = "https://loot-link.com/s?1fNjhACg"; 
     
-    const finalUrl = `${baseLootLabsUrl}&uid=${currentUser.discord_id}`;
-    window.open(finalUrl, '_blank');
+    // Combine using the safe 'x' character so LootLabs doesn't break it
+    const trackingId = `${currentUser.discord_id}x${configId}`;
+    const finalUrl = `${baseLootLabsUrl}&uid=${trackingId}`;
 
+    window.open(finalUrl, '_blank');
+    
     await customAlert("We have opened your unlock link in a new tab! Once you complete the quick steps, close that tab, come back here, and refresh this page to see your unblurred config.", "Unlock Initiated");
 }
 
